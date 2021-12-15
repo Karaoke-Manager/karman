@@ -6,6 +6,10 @@ This document describes the `users` API entity located at
 GET <api-root>/<api-version>/users
 ```
 
+## Permissions
+
+Currently the `users` API is only available for authenticated users. In the future parts of the API may be available anonymously.
+
 ## Accessing Users
 
 In addition the the standard list and details endpoints a special endpoint `.../users/me` is supported. This special endpoint returns data on the user that is associated with the corresponding request.

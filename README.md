@@ -6,6 +6,7 @@ Conceptual documents on the development and the roadmap of Karman.
 In order to get an overview of the Karman Software you should continue reading this readme. Below we will explain the idea behind the software and what problems we hope it will solve. If you want to dive deeper into the technical details see the other files and folders in this repository:
 - **API Design** (```api``` folder): This folder is used to develop an API specification for the Karman backend so that any clients can rely on a consistent API.
 - **Technologies** (`technologies.md` file): This document summarizes the technologies that will be used for the Karman software.
+- **Workflow** (`workflow.md` file): This document describes the project management approach as well as the git workflow that will be used in development.
 
 ## Motivation
 

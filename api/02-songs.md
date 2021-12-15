@@ -24,10 +24,10 @@ The following fields are returned by the API when querying the *entity details* 
 | `lyrics`          | The complete lyrics of the song. For duets this contains the lyrics of the first voice. |
 | `lyrics2`         | Only included for duets. Contains the lyrics of the second voice. |
 | `duration`        | The duration of the song in seconds. If the song's duration can not be determined for some reason this field is set to `0`. Note that this field is guaranteed to be a number but not guaranteed to be an integer. |
-| `artwork`         | A boolean value indicating whether an artwork exists for the song.<br />==RFC==: Alternatively we could include URLs to the artwork, background, etc. |
-| `background`      | A boolean value indicating whether a background image exists for the song. |
-| `audio`           | A boolean value indicating whether an audio file exists for the song. |
-| `video`           | A boolean value indicating whether a music video exists for the song. |
+| `artworkUrl`      | A URL pointing to the song’s artwork, or `null` if the song does not have an artwork. |
+| `backgroundUrl`   | A URL pointing to the song’s background image, or `null` if the song does not have one. |
+| `audioUrl`        | A URL pointing to the song’s audio file, or `null` if the song does not have one. |
+| `videoUrl`        | A URL pointing to the song’s background video, or `null` if the song does not have one. |
 | `goldenNotes`     | A boolean value indicating whether the song contains golden notes. |
 | `verifiedBy`      | The ID of the user that verified the song (or `null` if the song is not verified yet). |
 

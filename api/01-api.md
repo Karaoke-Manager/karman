@@ -16,8 +16,6 @@ GET <api-root>/v0.1/...
 
 For simplicity the API version is omitted in the conceptual documentation.
 
-==RFC==: We could also do versioning based on a query paramter which defaults to the latest version.
-
 ## URL Schema
 
 The typical way to interact with the Karman API is via the standard REST endpoints in the following formats:
@@ -36,21 +34,21 @@ The *entity list* endpoints `/<entities>` return a (possibly paginated) list of 
 ```json
 {
     "total": 123,
-    "page": 2,
+    "offset": 50,
     "items": [
 
     ]
 }
 ```
-| Field   | Meaning                                   |
-| ------- | ----------------------------------------- |
-| `total` | The total number of entities in the list. |
-| `page`  | The current page number.                  |
-| `items` | The array of entities on this page.       |
+| Field    | Meaning                                                      |
+| -------- | ------------------------------------------------------------ |
+| `total`  | The total number of entities in the list.                    |
+| `offset` | The index of the first result. An offset of `0` means that the first element is actually the first element. In the above example the items would be item `50`, `51`, … |
+| `items`  | The array of entities on this page.                          |
 
 Every list of entities can be paginated using query parameters:
 - `/...?size=<count>` sets the maximum number of returned entities per page. The default value is `20`. Note that the last page may disrespect this parameter and return slightly more entities than specified.
-- `/api/...?page=<page>` specifies the page index that should be queried. Negative page indexes are invalid. If you specify a page index greater than the number of available pages an empty page is returned. `1` is always a valid page index.
+- `/api/...?offset=<page>` specifies the index of the first result. Negative indices are invalid. If you specify a page index greater than the number of available items an empty list is returned. `0` is always a valid page index (although the resulting list might still be empty).
 
 ## Searching
 

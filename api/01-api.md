@@ -22,11 +22,6 @@ The typical way to interact with the Karman API is via the standard REST endpoin
 
 - **Entity List**: `/<entities>/` returns a paginated list of `entity` (possibly filtered)
 - **Entity Details**: `/<entities>/<id>` returns details for a single entity with the specified id
-- **Entity Attribute**: `/<entities>/<id>/<attribute>` returns the value of a specific attribute
-
-Most details of an entity should be retrievable via the entity details endpoint (e.g. the title and duration of a song). However large-valued attributes (or non-JSON attributes) can only be retrieved via the entity attribute endpoint. For example you might fetch a song’s artwork via `/songs/123/artwork`.
-
-==RFC==: It might make more sense to include binary attributes as an URL. For example a song might have an `artworkURL` pointing to an URL for the artwork. This might be useful if one were to implement a CDN for delivering static files.
 
 ## Pagination
 

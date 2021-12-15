@@ -16,19 +16,12 @@ GET <api-root>/v0.1/...
 
 For simplicity the API version is omitted in the conceptual documentation.
 
-==RFC==: We could also do versioning based on a query paramter which defaults to the latest version.
-
 ## URL Schema
 
 The typical way to interact with the Karman API is via the standard REST endpoints in the following formats:
 
 - **Entity List**: `/<entities>/` returns a paginated list of `entity` (possibly filtered)
 - **Entity Details**: `/<entities>/<id>` returns details for a single entity with the specified id
-- **Entity Attribute**: `/<entities>/<id>/<attribute>` returns the value of a specific attribute
-
-Most details of an entity should be retrievable via the entity details endpoint (e.g. the title and duration of a song). However large-valued attributes (or non-JSON attributes) can only be retrieved via the entity attribute endpoint. For example you might fetch a song’s artwork via `/songs/123/artwork`.
-
-==RFC==: It might make more sense to include binary attributes as an URL. For example a song might have an `artworkURL` pointing to an URL for the artwork. This might be useful if one were to implement a CDN for delivering static files.
 
 ## Pagination
 
@@ -36,21 +29,21 @@ The *entity list* endpoints `/<entities>` return a (possibly paginated) list of 
 ```json
 {
     "total": 123,
-    "page": 2,
+    "offset": 50,
     "items": [
 
     ]
 }
 ```
-| Field   | Meaning                                   |
-| ------- | ----------------------------------------- |
-| `total` | The total number of entities in the list. |
-| `page`  | The current page number.                  |
-| `items` | The array of entities on this page.       |
+| Field    | Meaning                                                      |
+| -------- | ------------------------------------------------------------ |
+| `total`  | The total number of entities in the list.                    |
+| `offset` | The index of the first result. An offset of `0` means that the first element is actually the first element. In the above example the items would be item `50`, `51`, … |
+| `items`  | The array of entities on this page.                          |
 
 Every list of entities can be paginated using query parameters:
 - `/...?size=<count>` sets the maximum number of returned entities per page. The default value is `20`. Note that the last page may disrespect this parameter and return slightly more entities than specified.
-- `/api/...?page=<page>` specifies the page index that should be queried. Negative page indexes are invalid. If you specify a page index greater than the number of available pages an empty page is returned. `1` is always a valid page index.
+- `/api/...?offset=<page>` specifies the index of the first result. Negative indices are invalid. If you specify a page index greater than the number of available items an empty list is returned. `0` is always a valid page index (although the resulting list might still be empty).
 
 ## Searching
 

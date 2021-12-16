@@ -8,7 +8,7 @@ Songs reside at the API endpoint
 GET <api-root>/<api-version>/songs
 ```
 
-## Premissions
+## Permissions
 
 Currently all of the `song` API is only available for authenticated users. In the future parts of the API may be available anonymously.
 

@@ -29,6 +29,7 @@ The following fields are returned by the API when querying the *entity details* 
 | `audioUrl`        | A URL pointing to the song’s audio file, or `null` if the song does not have one. |
 | `videoUrl`        | A URL pointing to the song’s background video, or `null` if the song does not have one. |
 | `goldenNotes`     | A boolean value indicating whether the song contains golden notes. |
+| `rating`          | A decimal value indicating the average user rating of the song (out of `10`) or `null` if nobody has rated the song yet. |
 | `verifiedBy`      | The ID of the user that verified the song (or `null` if the song is not verified yet). |
 
 More fields will possibly be added to allow editing song files online such as `gap`, `medleyStart`, etc.
@@ -57,6 +58,7 @@ There are some other potential entities that have a strong relationship with Son
 
 - **Song Activities**: Song activities are used to keep track of changes made to a song.
 - **Song Issues**: Song problems are used for reporting issues with songs (such as synchronization issues, missing artwork, etc.)
+- **Song Ratings & Verifications** Songs can be rated and verified by users.
 
 ## Example Response
 
@@ -76,6 +78,7 @@ There are some other potential entities that have a strong relationship with Son
   "audio": true,
   "video": false,
   "goldenNotes": true,
+  "averageRating": 7.5,
   "verifiedBy": null
 }
 ```

@@ -7,11 +7,11 @@ assignees: ''
 
 ---
 
-**Is this a question about Karman or about the code?**
+### Is this a question about Karman or about the code?
 This helps getting the right people to answer your question.
 
-**What is your question?**
+### What is your question?
 Try to be as clear as possible.
 
-**Additional Context**
+### Additional Context
 If applicable add a screenshot or provide more context.

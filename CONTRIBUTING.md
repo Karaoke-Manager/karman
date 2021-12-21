@@ -34,6 +34,8 @@ A proposal with `status/draft` or `status/accepted`  may also receive the `far f
 
 Currently there is no preferred format for a proposal. However you should make an attempt at describing the proposed change as clearly as you can. Some proposals make take a lot of time to get implemented. The clearer you can describe the feature the lower are the chances that the understanding of the proposal changes during development.
 
+There is an issue template for feature proposals that we recommend you use. The finalized proposal should always be kept in the original issue. If the proposal has to be amended the issue is edited correspondingly. Maintainers may edit proposals to make notes about implications or implementation details. Ideally the issue itself contains only the proposal and all discussions are held in the comments (including any initial request for comments).
+
 ## Milestones and Projects
 
 We use milestones and GitHub projects to track the Karman roadmap. For each version there will be a milestone. Proposals and issues get assigned to these milestones to put them on the roadmap for that version.

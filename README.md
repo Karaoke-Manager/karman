@@ -42,18 +42,3 @@ Karman is intended for users with huge libraries consisting of hundreds of gigab
 
 
 // TODO: More questions, maybe?
-
-
-
-
-
-## Additional Features
-
-In the beginning Karman will only support importing songs. However there are many features that can be implemented to make Karman more effective at managing libraries. Some of these features include:
-
-- Allow for automatically fixing common issues (e.g. encoding issues, overlapping syllables, …)
-- Include a live editor for songs that allows for pitch correction, synchronization, …
-- Include an audio/video editor for media files.
-- A possibility to suggest new songs
-- Per-User workspaces where users can develop their own songs and then submit them for review for inclusion in the main library. Possibly a feature where multiple users can coordinate who works on which song suggestion.
-- An option to automatically search for song artwork

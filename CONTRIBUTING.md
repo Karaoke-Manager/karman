@@ -28,6 +28,8 @@ The Karman roadmap is managed through proposals. A proposal is in essence just a
 3. Either immediately after being accepted or some time later the proposal is put on the roadmap. This involves being assigned to a corresponding milestone and the `status/planned` label. At this point there should be corresponding issues in the frontend and backend repositories.
 4. The issue may be closed before the implementation is complete, depending on the nature of the proposal. This is usually the case if the proposal is either being tracked somewhere else or if the remaining challenges are purely technical and are represented through other issues.
 
+A proposal with `status/draft` or `status/accepted`  may also receive the `far future` label. This label indicates that although the proposal fits the design, it will probably not be implemented for quite some time. When the proposal reaches the `status/planned` the `far future` label should be removed.
+
 ### Anatomy of a proposal
 
 Currently there is no preferred format for a proposal. However you should make an attempt at describing the proposed change as clearly as you can. Some proposals make take a lot of time to get implemented. The clearer you can describe the feature the lower are the chances that the understanding of the proposal changes during development.

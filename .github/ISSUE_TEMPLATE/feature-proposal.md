@@ -7,11 +7,11 @@ assignees: ''
 
 ---
 
-**Describe the feature**
+**What feature do you want to propose?**
 A clear and concise description of what you want Karman to be able to do.
 
-**Proposed Implementation**
-How or where do you think this feature should be implemented? E.g. where could an action be triggered in the UI? When should this feature be triggered automatically?
+**How do users access the feature?**
+How or where would this feature be available in the Karman UI or API? When should this feature be triggered automatically (if applicable)?
 
 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.

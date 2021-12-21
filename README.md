@@ -1,11 +1,6 @@
-# Karman Concept Documents
-Conceptual documents on the development and the roadmap of Karman.
+# Karman – The Karaoke Manager
 
-## Where to begin?
-
-In order to get an overview of the Karman Software you should continue reading this readme. Below we will explain the idea behind the software and what problems we hope it will solve. If you want to dive deeper into the technical details see the other files and folders in this repository:
-- **API Design** (```api``` folder): This folder is used to develop an API specification for the Karman backend so that any clients can rely on a consistent API.
-- **Technologies** (`technologies.md` file): This document summarizes the technologies that will be used for the Karman software.
+The **Kar**aoke **Man**ager **Karman** [ˈkaɾmɛ̃n] is a software that manages your UltraStar song library. This repository does not contain any code of the Karman software but serves as a starting point for users and developers that want to contribute to the software.
 
 ## Motivation
 
@@ -13,19 +8,44 @@ Everyone who has tried to manage an UltraStar karaoke library has probably exper
 
 ## Karman Overview
 
-The most important aspect of the architecture of Karman is that it takes full control over your entire karaoke library. When using Karman you will not be moving songs into specific folders but instead you will use the import feature of the software. When importing songs, Karman does a lot of things for you:
+Karman is an application running on a server that takes full control over your entire karaoke library. When using Karman you will not be moving songs into specific folders but instead you will use the import feature of the software to upload songs to the server. The software then manages the library and moves files into the right places. When you want to sing you can either sync the songs to your machine or if your network connection is fast enough you can just mount the respective folder.
 
-- Validate that your files actually contain an UltraStar song
-- Scan the songs for obvious problems (low bitrate audio, missing files, …)
-- Rename files to a standard naming scheme
-- Discard unused files
-- …
+In contrast to existing software (most notably the [UltraStar Manager](https://github.com/UltraStar-Deluxe/UltraStar-Manager)) Karman takes a few different approaches:
 
-From this point on Karman manages the karaoke files.
+- Karman runs server-side and expects to be the only application or user with write access to the song library.
+- Karman has the concept of a library you import songs into. Cleaning up metadata of songs and correcting common errors usually takes place on import, not at some arbitrary time.
+- Karman can be easily extended to implement more complex optimizations for songs
+- Karman includes a library explorer that allows (potentially unauthenticated) users to browse the library. This can be very useful when singing karaoke and people want to know which songs are available.
 
-Users interact with their libraries through the Karman web interface which allows them to edit and delete their songs. Karman ensures that the files on the filesystem stay in sync with its internal state.
+In the future Karman might do even more, eventually integrating a sophisticated song editor and intelligent library management
 
-When singing karaoke all you need to do is point UltraStar to the location of your Karman library.
+## Karman Architecture
+
+Karman is designed to be compatible with modern development and deployment strategies. At its core the Karman software consists of the **Karman API Backend**. The backend provides a well-documented REST API through which clients can read data and make changes. The backend implements the song management logic and most of the import logic.
+
+The user interface is implemented via a **Web Frontend**. The frontend provides the user interface of the software. It communicates with the backend exclusively via the documented REST API.
+
+## Where do I go now?
+
+Currently there are three repositories that coud use your contribution. Depending on your background and what you want to do you should go to one of these repositories and start with that project’s README.md or their CONTRIBUTING.md.
+
+- **Karman** (this repo): This repository contains pretty much no code. Instead is is used as a high-level issue tracker for features and the roadmap of Karman. This is the right place to discuss major changes and completely new features for the software. This is also the place to ask questions about the software. Pull requests usually create or edit markdown files describing features of Karman.
+- [**Frontend**](https://github.com/Karaoke-Manager/frontend): This repository contains the web frontend of Karman. It is developed using React and the [Next.js](https://nextjs.org) framework. This is the right place if you want to improve the end user experience. Pull requests usually contain some changes to the design or UX of the webapp.
+- [**Backend**](https://github.com/Karaoke-Manager/backend): This repository contains both the Karman API as well as the code that acutally interfaces with the UltraStar files. The backend is written in Python using the [FastAPI](https://fastapi.tiangolo.com) framework. This is the right place if you want to start introducing new functionality or want to fix bugs. Pull requests either introduce changes to the Karman API or are concerned with the implementation of the API endpoints.
+
+## Frequently asked questions
+
+### Why is Karman a server-side application?
+
+Karman is intended for users with huge libraries consisting of hundreds of gigabytes of songs. These kinds of libraries cannot feasibly be managed manually by a single person. There were multiple factors involved in the decision of going server side: 1. Storage. Growing libraries with thousands of songs quickly exceed the free storage on typical PCs. 2. Backups. By storing songs on a server it is easy to include them in periodic backups that protect your valuable songs. 3. Multi user support. Large libraries often come into existence when many users merge their smaller libraries. We want to offer some kind of collaborative feature that makes it possible to work on new songs together. 4. Public index. When singing it is often very useful to be able to directo users to a website where they can search their favorite songs. This would not be possible without a server.
+
+
+
+// TODO: More questions, maybe?
+
+
+
+
 
 ## Additional Features
 

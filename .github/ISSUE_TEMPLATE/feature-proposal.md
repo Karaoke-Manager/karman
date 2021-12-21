@@ -19,7 +19,7 @@ A clear and concise description of any alternative solutions or features you've 
 **Additional context**
 Add any other context or screenshots about the feature request here.
 
-<!–
+<!--
 **Implementation Considerations**
 If this proposal is promising maintainers may add implementation considerations. If you are a contributor you can write something here, too.
 -->

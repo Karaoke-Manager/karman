@@ -10,6 +10,9 @@ assignees: ''
 ### What feature do you want to propose?
 A clear and concise description of what you want Karman to be able to do.
 
+### Why does Karman need this feature?
+Give one or more reasons why this is a problem that needs to be solved.
+
 ### How do users access the feature?
 How or where would this feature be available in the Karman UI or API? When should this feature be triggered automatically (if applicable)?
 

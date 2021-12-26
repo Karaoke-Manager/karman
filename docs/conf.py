@@ -27,8 +27,7 @@ copyright = f'2021, {author}.'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinxawesome_theme",
-    "sphinx_sitemap"
+    "sphinxawesome_theme"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -58,13 +57,11 @@ html_copy_source = False
 html_awesome_docsearch = False
 html_theme_options = {
     "show_scrolltop": False,
-    "extra_header_links": {
-        "Docs": "/index",
-        "About": "/about",
-    },
+    # "extra_header_links": {
+    #     "Docs": "/index",
+    #     "About": "/about",
+    # },
 }
-
-html_extra_path = ['robots.txt']
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

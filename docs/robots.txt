@@ -1,0 +1,3 @@
+User-agent: *
+
+Sitemap: https://karman.readthedocs.io/sitemap.xml

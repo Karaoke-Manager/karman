@@ -41,3 +41,25 @@ There is an issue template for feature proposals that we recommend you use. The 
 We use milestones and GitHub projects to track the Karman roadmap. For each version there will be a milestone. Proposals and issues get assigned to these milestones to put them on the roadmap for that version.
 
 For some versions there may also be a GitHub project keeping track of the progress until that version is released. The project usually aggregates the issues for a specific milestone from multiple repositories.
+
+## Building the documentation
+
+The documentation in this repository is written in ReStructuredText and can be compiled into various formats using Sphinx. The documentation is automatically generated and published on [ReadTheDocs](https://karman.readthedocs.io/). During development the documentation can be built locally as follows:
+
+```shell
+# Create a virtual environment and activate it. If you are using an IDE such as PyCharm this can also be done by configuring a project interpreter and using the integrated shell.
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install the required dependencies
+pip3 install -r docs/requirements.txt
+# Install dev requirements if needed
+pip3 install -r docs/requirements-dev.txt
+
+# Build the documentation
+make html
+
+# Start a development server with autoreloading (dev requirements needed)
+make serve
+```
+

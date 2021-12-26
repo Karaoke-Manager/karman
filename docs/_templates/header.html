@@ -1,0 +1,14 @@
+{% extends "!header.html" %}
+
+{%- block extra_header_links -%}
+<div class="shrink-0">
+  {%- if theme_extra_header_links is not true -%}
+    {%- for text, url in theme_extra_header_links.items() -%}
+    {{ extra_link(text, url) }}
+    {%- endfor -%}
+  {%- endif -%}
+  <a href="https://github.com/Karaoke-Manager/karman"
+     target="_blank"
+     class="h-14 sm:h-18 inline-block leading-14 sm:leading-18 text-gray-100 tracking-wide font-medium hover:text-brand focus:bg-gray-700 focus:outline-none hover:no-underline focus:text-brand px-4">GitHub</a>
+</div>
+{%- endblock -%}

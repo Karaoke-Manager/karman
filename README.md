@@ -1,5 +1,7 @@
 # Karman – The Karaoke Manager
 
+[![Documentation Status](https://readthedocs.org/projects/karman/badge/?version=latest)](https://karman.readthedocs.io/en/latest/?badge=latest)
+
 The **Kar**aoke **Man**ager **Karman** [ˈkaɾmɛ̃n] is a software that manages your UltraStar song library. This repository does not contain any code of the Karman software but serves as a starting point for users and developers that want to contribute to the software.
 
 ## Motivation

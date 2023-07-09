@@ -8,6 +8,7 @@ import (
 )
 
 type CreateRequestSchema struct {
+	render.NopBinder
 }
 
 type CreateResponseSchema struct {
@@ -16,8 +17,8 @@ type CreateResponseSchema struct {
 
 func (s *Server) Create(w http.ResponseWriter, r *http.Request) {
 	var data CreateRequestSchema
-	if err := render.Decode(r, &data); err != nil {
-		_ = apierror.DecodeError(w, r, err)
+	if err := render.Bind(r, &data); err != nil {
+		_ = apierror.BindError(w, r, err)
 		return
 	}
 
@@ -31,6 +32,6 @@ func (s *Server) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := CreateResponseSchema{SchemaFromModel(upload)}
-	_ = render.Respond(w, r, resp)
+	resp := CreateResponseSchema{s.SchemaFromModel(upload)}
+	_ = render.Render(w, r, resp)
 }

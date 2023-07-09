@@ -19,6 +19,6 @@ func (s *Server) Get(w http.ResponseWriter, r *http.Request) {
 		_ = apierror.DBError(w, r, err)
 		return
 	}
-	resp := GetResponseSchema{SchemaFromModel(upload)}
-	_ = render.Respond(w, r, resp)
+	resp := GetResponseSchema{s.SchemaFromModel(upload)}
+	_ = render.Render(w, r, resp)
 }

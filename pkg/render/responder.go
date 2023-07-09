@@ -79,7 +79,8 @@ func PlainText(w http.ResponseWriter, r *http.Request, v any) (err error) {
 	case interface{ String() string }:
 		_, err = w.Write([]byte(s.String()))
 	case io.Reader:
-		b, err := io.ReadAll(s)
+		var b []byte
+		b, err = io.ReadAll(s)
 		if err != nil {
 			return err
 		}
@@ -102,7 +103,8 @@ func Data(w http.ResponseWriter, r *http.Request, v any) (err error) {
 	case interface{ String() string }:
 		_, err = w.Write([]byte(b.String()))
 	case io.Reader:
-		bs, err := io.ReadAll(b)
+		var bs []byte
+		bs, err = io.ReadAll(b)
 		if err != nil {
 			return err
 		}
@@ -126,7 +128,8 @@ func HTML(w http.ResponseWriter, r *http.Request, v any) (err error) {
 	case interface{ HTML() string }:
 		_, err = w.Write([]byte(h.HTML()))
 	case io.Reader:
-		b, err := io.ReadAll(h)
+		var b []byte
+		b, err = io.ReadAll(h)
 		if err != nil {
 			return err
 		}

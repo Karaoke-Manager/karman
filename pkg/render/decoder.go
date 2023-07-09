@@ -22,7 +22,7 @@ var Decode = DefaultDecoder
 // DefaultDecoder detects the correct decoder for use on an HTTP request and
 // marshals into a given interface.
 //
-// If the request does not contain a body (as de
+// If the request does not contain a body, no decoding takes place.
 func DefaultDecoder(r *http.Request, v any) (err error) {
 	// Do nothing if request body is empty
 	rd := bufio.NewReader(r.Body)

@@ -1,17 +1,17 @@
 package upload
 
 import (
+	"github.com/Karaoke-Manager/karman/pkg/rwfs"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
-	"io/fs"
 )
 
 type Server struct {
 	db *gorm.DB
-	fs fs.FS
+	fs rwfs.FS
 }
 
-func NewServer(db *gorm.DB, filesystem fs.FS) *Server {
+func NewServer(db *gorm.DB, filesystem rwfs.FS) *Server {
 	s := &Server{db, filesystem}
 	return s
 }
@@ -22,8 +22,9 @@ func (s *Server) Router(r chi.Router) {
 	r.Get("/{uuid}", s.Get)
 	r.Delete("/{uuid}", s.Delete)
 
-	// GET /{uuid}/files/{*path/to/file/or/folder}
-	// POST {uuid}/files/{*path/to/file.mp3}
+	r.Get("/{uuid}/files/*", s.GetFile)
+	// PUT /{uuid}/files/{*path/to/file.mp3}
+	// DELETE /{uuid}/files/{*path/to/file.mp3}
 
 	// GET /{uuid}/songs
 

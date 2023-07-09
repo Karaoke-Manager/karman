@@ -7,13 +7,29 @@ import (
 
 // Renderer interface for managing response payloads.
 type Renderer interface {
+	// TODO: Doc
 	Render(w http.ResponseWriter, r *http.Request) error
 }
 
+// NopRenderer implements the Renderer interface.
+// The implementation does nothing.
+type NopRenderer struct{}
+
+// Render is an empty implementation of the Renderer interface.
+func (NopRenderer) Render(http.ResponseWriter, *http.Request) error { return nil }
+
 // Binder interface for managing request payloads.
 type Binder interface {
+	// TODO: Doc
 	Bind(r *http.Request) error
 }
+
+// NopBinder implements the Binder interface.
+// The implementation does nothing.
+type NopBinder struct{}
+
+// Bind is an empty implementation of the Binder interface.
+func (NopBinder) Bind(*http.Request) error { return nil }
 
 // Bind decodes a request body and executes the Binder method of the
 // payload structure.

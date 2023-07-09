@@ -28,10 +28,17 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer func() {
+		sqlDB, err := db.DB()
+		if err == nil {
+			_ = sqlDB.Close()
+		}
+	}()
 
 	uploadFS := os.DirFS("tmp/uploads")
+	songFS := os.DirFS("tmp/data")
 
-	apiServer := api.NewServer(db, uploadFS)
+	apiServer := api.NewServer(db, songFS, uploadFS)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiServer.Router)

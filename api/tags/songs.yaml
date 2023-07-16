@@ -1,0 +1,539 @@
+openapi: 3.0.3
+info:
+  title: Songs Resources
+  description: Some Description
+  version: v1
+tags:
+  - name: song
+    x-displayName: Managing Songs
+    description: ""
+  - name: media
+    x-displayName: Managing Song Media
+    description: ""
+paths:
+  /v1/songs:
+    get:
+      operationId: getSongs
+      summary: List Songs
+      tags: [song]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    post:
+      operationId: createSong
+      summary: createSong
+      tags: [ song ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              format: ultraStar
+      responses:
+        201:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}:
+    get:
+      operationId: getSong
+      summary: Get Song by uuid
+      tags: [ song ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    patch:
+      operationId: updateSong
+      summary: update a song
+      tags: [ song ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Song'
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteSong
+      summary: delete a song
+      tags: [ song ]
+      description: ""
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/cover:
+    get:
+      operationId: getCover
+      summary: Get the Cover of a Song
+      tags: [ media ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            "image/*":
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: replaceCover
+      summary: replace a cover
+      tags: [ media ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "image/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteCover
+      summary: delete a cover
+      tags: [ media ]
+      description: ""
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/background:
+    get:
+      operationId: getBackground
+      summary: Get the Background of a Song
+      tags: [ media ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            "image/*":
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: replaceBackground
+      summary: replace a background
+      tags: [ media ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "image/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteBackground
+      summary: delete a background
+      tags: [ media ]
+      description: ""
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/video:
+    get:
+      operationId: getVideo
+      summary: Get the Video of a Song
+      tags: [ media ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            "video/*":
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: replaceVideo
+      summary: replace a video
+      tags: [ media ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "video/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteVideo
+      summary: delete a video
+      tags: [ media ]
+      description: ""
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/audio:
+    get:
+      operationId: getAudio
+      summary: Get the Audio of a Song
+      tags: [ media ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            "audio/*":
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: replaceAudio
+      summary: replace a audio
+      tags: [ media ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "audio/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteAudio
+      summary: delete a audio
+      tags: [ media ]
+      description: ""
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/txt:
+    get:
+      operationId: getTxt
+      summary: Get the UltraStar txt of a Song
+      tags: [ song ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            "text/plain":
+              schema:
+                type: string
+                format: ultrastar
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: replaceTxt
+      summary: replace txt
+      tags: [ song ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "text/plain":
+            schema:
+              type: string
+              format: ultrastar
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/songs/{uuid}/archive:
+    get:
+      operationId: getArchive
+      summary: Get the a Song and all its Files
+      tags: [ song ]
+      description: ""
+      parameters:
+        - in: header
+          name: Accept
+          schema:
+            type: string
+            enum:
+              - application/zip
+          required: false
+          description: if missing -> zip
+      responses:
+        200:
+          description: Success
+          content:
+            "application/zip":
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+components:
+  schemas:
+    Song:
+      type: object
+      required: [title, uuid]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+        artist:
+          type: string
+        genre:
+          type: string
+        edition:
+          type: string
+        creator:
+          type: string
+        language:
+          type: string
+        year:
+          type: integer
+        comment:
+          type: string
+        gap:
+          type: integer
+          description: millisecond
+        videoGap:
+          type: integer
+          description: millisecond
+        notesGap:
+          type: integer
+          description: beats
+        start:
+          type: integer
+          description: millisecond
+        end:
+          type: integer
+          description: millisecond
+        previewStart:
+          type: integer
+          description: millisecond
+        medley:
+          type: object
+          anyOf:
+            - type: object
+              title: Automatic or Off
+              properties:
+                mode:
+                  type: string
+                  enum:
+                    - auto
+                    - off
+            - type: object
+              title: Manual
+              properties:
+                mode:
+                  type: string
+                  enum:
+                    - manual
+                medleyStartBeat:
+                  type: integer
+                  description: beat, available, when medley = manual
+                medleyEndBeat:
+                  type: integer
+                  description: beat, available, when medley = manual
+        extra:
+          type: object
+          additionalProperties: {type: string}
+        duet:
+          type: boolean
+          readOnly: true
+        audio:
+          type: object
+          readOnly: true
+          nullable: true
+          properties:
+            bitrate:
+              type: integer
+              description: bits per second
+            duration:
+              type: integer
+              description: millisecond
+            type:
+              type: string
+              description: mime type
+        video:
+          type: object
+          readOnly: true
+          nullable: true
+          properties:
+            bitrate:
+              type: integer
+              description: bits per second
+            duration:
+              type: integer
+              description: millisecond
+            type:
+              type: string
+              description: mime type
+        cover:
+          type: object
+          readOnly: true
+          nullable: true
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+            type:
+              type: string
+              description: mime type
+        background:
+          type: object
+          readOnly: true
+          nullable: true
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+            type:
+              type: string
+              description: mime type
+
+
+
+

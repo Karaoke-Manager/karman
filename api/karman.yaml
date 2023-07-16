@@ -22,4 +22,5 @@ x-tagGroups:
   - name: Library Management
     tags:
       - song
+      - media
       - upload

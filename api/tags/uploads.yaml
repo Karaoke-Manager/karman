@@ -33,6 +33,43 @@ paths:
             application/json:
               schema:
                 $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    post:
+      operationId: createUpload
+      summary: create
+      tags: [ upload ]
+      description: ""
+      responses:
+        201:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/uploads/{uuid}:
+    get:
+      operationId: getUpload
+      summary: get upload
+      tags: [ upload ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
     delete:
       operationId: deleteUpload
       summary: Delete Upload by UUID
@@ -41,21 +78,189 @@ paths:
       responses:
         204:
           description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/uploads/{uuid}/files/{path}:
+    get:
+      operationId: getFiles
+      summary: get files
+      tags: [ upload ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    put:
+      operationId: uploadFile
+      summary: upload File
+      tags: [ upload ]
+      description: ""
+      requestBody:
+        description: ""
+        required: true
+        content:
+          "*/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteUploadFile
+      summary: Delete File from Upload
+      tags: [ upload ]
+      description: The request body is ignored.
+      responses:
+        204:
+          description: Success
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/uploads/{uuid}/makeForProcessing:
+    post:
+      operationId: makeForProcessing
+      summary: mark an upload for processing
+      tags: [ upload ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/uploads/{uuid}/startProcessing:
+    post:
+      operationId: startProcessing
+      summary: start a upload process
+      tags: [ upload ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+  /v1/uploads/{uuid}/songs:
+    get:
+      operationId: getUploadSongs
+      summary: List all songs in an upload
+      tags: [ upload ]
+      description: ""
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "./songs.yaml#/components/schemas/Song"
+  /v1/uploads/{uuid}/batch:
+    post:
+      operationId: importSongs
+      summary: Import songs
+      tags: [ upload ]
+      description: ""
+      requestBody:
+        required: true
+        description: ""
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                import:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                delete:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses: {} # TODO
+
 components:
   schemas:
+    File:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          description: in byte
+        children:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/File'
     Upload:
       type: object
       required:
         - status
+      oneOf:
+        - type: object
+          title: Upload Created
+          properties:
+            status:
+              type: string
+              enum:
+                - "created"
+                - "pending"
+        - type: object
+          title: Upload
+          properties:
+            status:
+              type: string
+              enum:
+                - "processing"
+                - "ready"
+            songsTotal:
+              type: integer
+            songsProcessed:
+              type: integer
       properties:
-        status:
+        uuid:
           type: string
-          enum:
-            - "created"
-            - "pending"
-            - "processing"
-            - "ready"
-        songsTotal:
-          type: integer
-        songsProcessed:
-          type: integer
+          format: uuid

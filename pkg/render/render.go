@@ -20,7 +20,6 @@ func (NopRenderer) Render(http.ResponseWriter, *http.Request) error { return nil
 
 // Binder interface for managing request payloads.
 type Binder interface {
-	// TODO: Doc
 	Bind(r *http.Request) error
 }
 

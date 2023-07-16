@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Karman API
+  version: v1.0-alpha1
+  description: |-
+    This is the API specification for [Karman](https://github.com/Karaoke-Manager/karman), the Karaoke Manager.
+    
+    # State of this Specification
+    
+    This document is currently a work in progress that aims to describes the state of the implementation.
+  contact:
+    name: Karman on GitHub
+    url: https://github.com/Karaoke-Manager/karman
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+servers:
+  - url: https://example.com/karman/api
+    description: Example Server
+paths: {}
+x-tagGroups:
+  - name: Library Management
+    tags:
+      - song
+      - upload

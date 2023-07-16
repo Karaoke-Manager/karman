@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: Uploads Resources
+  description: Some Description
+  version: v1
+tags:
+  - name: upload
+    x-displayName: Importing Songs
+    description: |-
+      Songs can be imported into the library in batches by using the `/v1/uploads` endpoint(s).
+      An upload is an import session that can import many songs at a time.
+    # TODO: More doc
+paths:
+  /v1/uploads:
+    get:
+      operationId: getUploads
+      summary: List Uploads
+      tags: [upload]
+      description: |-
+        Retrieves all uploads that the signed in user has access to.
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Upload'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteUpload
+      summary: Delete Upload by UUID
+      tags: [upload]
+      description: The request body is ignored.
+      responses:
+        204:
+          description: Success
+components:
+  schemas:
+    Upload:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - "created"
+            - "pending"
+            - "processing"
+            - "ready"
+        songsTotal:
+          type: integer
+        songsProcessed:
+          type: integer

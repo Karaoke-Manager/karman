@@ -1,6 +1,7 @@
 package apierror
 
 import (
+	"encoding/json"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"mime"
 	"net/http"
@@ -13,8 +14,35 @@ type ProblemDetails struct {
 	Detail   string `json:"detail,omitempty" xml:"detail,omitempty"`
 	Instance string `json:"instance,omitempty" xml:"instance,omitempty"`
 
-	Headers http.Header `json:"-"`
+	// TODO: Maybe find a better name. UserData? Fields? Extra? ExtraFields?
+	Fields  map[string]any `json:"-"`
+	Headers http.Header    `json:"-"`
 }
+
+func (p *ProblemDetails) MarshalJSON() ([]byte, error) {
+	data := make(map[string]any, 5+len(p.Fields))
+	for key, value := range p.Fields {
+		data[key] = value
+	}
+	if p.Type != "" {
+		data["type"] = p.Type
+	}
+	if p.Title != "" {
+		data["title"] = p.Title
+	}
+	if p.Status != 0 {
+		data["status"] = p.Status
+	}
+	if p.Detail != "" {
+		data["detail"] = p.Detail
+	}
+	if p.Instance != "" {
+		data["instance"] = p.Instance
+	}
+	return json.Marshal(data)
+}
+
+// TODO: Unmarshal
 
 func (p *ProblemDetails) Error() string {
 	return p.Title

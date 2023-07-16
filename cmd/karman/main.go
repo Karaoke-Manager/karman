@@ -38,10 +38,10 @@ func main() {
 	uploadFS := os.DirFS("tmp/uploads")
 	songFS := os.DirFS("tmp/data")
 
-	apiServer := api.NewServer(db, songFS, uploadFS)
+	apiController := api.NewController(db, songFS, uploadFS)
 
 	r := chi.NewRouter()
-	r.Route(defaultConfig.Prefix+"/", apiServer.Router)
+	r.Route(defaultConfig.Prefix+"/", apiController.Router)
 	fmt.Printf("Running on %s\n", defaultConfig.Address)
 	log.Fatalln(http.ListenAndServe(defaultConfig.Address, r))
 }

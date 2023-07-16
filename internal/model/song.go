@@ -1,6 +1,10 @@
-package models
+package model
 
 import (
+	"bytes"
+	"database/sql/driver"
+	"encoding/gob"
+	"errors"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"time"
 )
@@ -39,8 +43,36 @@ type Song struct {
 	DuetSinger1 string
 	DuetSinger2 string
 
-	MusicP1 ultrastar.Music
-	MusicP2 ultrastar.Music
+	MusicP1 Music
+	MusicP2 Music
 
 	// FIXME: Custom tags?
+}
+
+type Music ultrastar.Music
+
+func (*Music) GormDataType() string {
+	return "blob"
+}
+
+func (m *Music) Scan(value any) error {
+	bs, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal Music bytes")
+	}
+
+	d := gob.NewDecoder(bytes.NewReader(bs))
+	if err := d.Decode(m); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Music) Value() (driver.Value, error) {
+	bs := &bytes.Buffer{}
+	e := gob.NewEncoder(bs)
+	if err := e.Encode(m); err != nil {
+		return nil, err
+	}
+	return bs.Bytes(), nil
 }

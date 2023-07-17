@@ -6,5 +6,9 @@ import (
 
 type List[T render.Renderer] struct {
 	render.NopRenderer
-	Items []T
+	Count  int `json:"count"`
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
+	Total  int `json:"total"`
+	Items  []T `json:"items"`
 }

@@ -26,7 +26,7 @@ func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, resp)
 }
 
-func (c *Controller) List(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	// TODO: Do limit-offset pagination
 	uploads, err := c.Service.GetUploads(r.Context(), 1, 0)
 	if err != nil {

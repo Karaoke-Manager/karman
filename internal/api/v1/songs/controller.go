@@ -1,23 +1,27 @@
 package songs
 
 import (
-	"github.com/Karaoke-Manager/karman/pkg/rwfs"
+	"github.com/Karaoke-Manager/karman/internal/service/song"
 	"github.com/go-chi/chi/v5"
-	"gorm.io/gorm"
 )
 
 type Controller struct {
-	db *gorm.DB
-	fs rwfs.FS
+	song.Service
 }
 
-func NewController(db *gorm.DB, filesystem rwfs.FS) *Controller {
-	s := &Controller{db, filesystem}
+func NewController(svc song.Service) *Controller {
+	s := &Controller{svc}
 	return s
 }
 
 func (c *Controller) Router(r chi.Router) {
 	// GET / (list)
+
+	r.Group(func(r chi.Router) {
+		r.Use(c.fetchUpload)
+
+		r.Get("/{uuid}", c.Get)
+	})
 	// GET /{uuid}
 	// POST /{uuid}
 	// PATCH /{uuid}

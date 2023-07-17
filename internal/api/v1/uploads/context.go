@@ -14,20 +14,20 @@ type contextKey int
 
 const (
 	contextKeyFilePath contextKey = iota
-	contextKeyUploadInstance
+	contextKeyInstance
 )
 
 func SetUpload(ctx context.Context, upload model.Upload) context.Context {
-	return context.WithValue(ctx, contextKeyUploadInstance, upload)
+	return context.WithValue(ctx, contextKeyInstance, upload)
 }
 
 func GetUpload(ctx context.Context) (model.Upload, bool) {
-	u, ok := ctx.Value(contextKeyUploadInstance).(model.Upload)
+	u, ok := ctx.Value(contextKeyInstance).(model.Upload)
 	return u, ok
 }
 
 func MustGetUpload(ctx context.Context) model.Upload {
-	return ctx.Value(contextKeyUploadInstance).(model.Upload)
+	return ctx.Value(contextKeyInstance).(model.Upload)
 }
 
 func (c *Controller) fetchUpload(next http.Handler) http.Handler {
@@ -63,7 +63,7 @@ func (c *Controller) validateFilePath(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		path := chi.URLParam(r, "*")
 		if !fs.ValidPath(path) {
-			_ = apierror.InvalidUploadPath(w, r, path)
+			_ = render.Render(w, r, apierror.InvalidUploadPath(path))
 			return
 		}
 		ctx := SetFilePath(r.Context(), path)

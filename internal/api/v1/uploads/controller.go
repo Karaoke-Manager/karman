@@ -16,7 +16,7 @@ func NewController(svc upload.Service) *Controller {
 }
 
 func (c *Controller) Router(r chi.Router) {
-	r.Get("/", c.List)
+	r.Get("/", c.Find)
 	r.Post("/", c.Create)
 	r.Delete("/{uuid}", c.Delete)
 

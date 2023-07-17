@@ -32,8 +32,7 @@ type Resource struct {
 	DuetSinger2 string `json:"duetSinger2"`
 
 	// Calculated fields
-	Duet     bool          `json:"duet"`
-	Duration time.Duration `json:"duration"`
+	Duet bool `json:"duet"`
 
 	HasAudio      bool `json:"hasAudio"`
 	HasVideo      bool `json:"hasVideo"`

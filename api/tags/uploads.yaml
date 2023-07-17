@@ -27,12 +27,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Upload'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
     post:
       operationId: createUpload
       summary: create
@@ -45,12 +41,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Upload'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
   /v1/uploads/{uuid}:
     get:
       operationId: getUpload
@@ -64,12 +56,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Upload'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
     delete:
       operationId: deleteUpload
       summary: Delete Upload by UUID
@@ -78,12 +66,8 @@ paths:
       responses:
         204:
           description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
   /v1/uploads/{uuid}/files/{path}:
     get:
       operationId: getFiles
@@ -97,12 +81,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/File'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
     put:
       operationId: uploadFile
       summary: upload File
@@ -119,12 +99,8 @@ paths:
       responses:
         204:
           description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
     delete:
       operationId: deleteUploadFile
       summary: Delete File from Upload
@@ -133,12 +109,8 @@ paths:
       responses:
         204:
           description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
   /v1/uploads/{uuid}/makeForProcessing:
     post:
       operationId: makeForProcessing
@@ -152,12 +124,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Upload'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
   /v1/uploads/{uuid}/startProcessing:
     post:
       operationId: startProcessing
@@ -171,12 +139,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Upload'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX:
+          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
   /v1/uploads/{uuid}/songs:
     get:
       operationId: getUploadSongs
@@ -237,6 +201,7 @@ components:
             $ref: '#/components/schemas/File'
     Upload:
       type: object
+      x-tags: [ upload ]
       required:
         - status
       oneOf:

@@ -1,368 +1,203 @@
 openapi: 3.0.3
 info:
   title: Songs Resources
-  description: Some Description
   version: v1
 tags:
   - name: song
     x-displayName: Managing Songs
-    description: ""
-  - name: media
-    x-displayName: Managing Song Media
-    description: ""
+    description: |-
+      Songs are a core resource of the Karman API.
+      The following endpoints allow querying information about songs as well as manipulating the song database.
 paths:
   /v1/songs:
     get:
       operationId: getSongs
-      summary: List Songs
-      tags: [song]
-      description: ""
+      summary: Find Songs
+      tags: [ song ]
+      description: |-
+        List all songs in the database.
+      # TODO: Add filter and sort options
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            A successful request returns a paginated collection of songs.
+            If the selected filters produce an empty list, the `results` will be empty.
+            A `404` status code will not be returned.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Song'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+                allOf:
+                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        description: |-
+                          An array of `Song` resources.
+                        items:
+                          $ref: '#/components/schemas/Song'
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     post:
       operationId: createSong
-      summary: createSong
+      summary: Create a Song
       tags: [ song ]
-      description: ""
+      description: |-
+        Create a new song from an UltraStar TXT file.
+        The contents of the TXT file must be submitted as the request body.
+        
+        All known metadata specified in the TXT file will be used for the new song resource,
+        however all file references will be ignored.
+        The song will be created without audio, video, cover, and background.
+        These can be supplied later via other endpoints like `v1/songs/{uuid}/audio` or `v1/songs/{uuid}/cover`.
+        
+        If this request completes successfully it will return the newly created `Song` resource.
       requestBody:
-        description: ""
         required: true
+        description: |-
+          The raw contents of a UltraStar TXT file.
+          Anything after the end tag `"E"` will be ignored.
         content:
           text/plain:
             schema:
               type: string
-              format: ultraStar
+              format: ultrastar
       responses:
         201:
-          description: Success
+          x-summary: Success
+          description: |-
+            When the request completes successfully the response contains the newly created song resource.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Song'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+              schema: { $ref: '#/components/schemas/Song' }
+        400: { $ref: "#/components/responses/InvalidTXT" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}:
+    parameters:
+      - $ref: "#/components/parameters/songUUID"
     get:
       operationId: getSong
-      summary: Get Song by uuid
+      summary: Get Song by UUID
       tags: [ song ]
-      description: ""
+      description: |-
+        Fetches a song by the specified `uuid`.
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            When the request completes successfully the response contains the requested song resource.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Song'
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+              schema: { $ref: '#/components/schemas/Song' }
+        400: { $ref: "#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     patch:
       operationId: updateSong
-      summary: update a song
+      summary: |-
+        Update Song by UUID
       tags: [ song ]
-      description: ""
+      description: |-
+        Perform a partial update of the song with the specified `uuid`.
+        Only the fields specified in the request will be affected.
       requestBody:
-        description: ""
+        description: |-
+          In the request body specify the fields that you want to update and omit the fields that should stay the same.
+          If you set fields to the default/null value (e.g. the empty string for the field `genre` or 0 for the `gap`),
+          those fields will be omitted in subsequent `GET /v1/songs/{uuid}` responses.
+          
+          Setting fields to `null` is only supported where it is explicitly mentioned.
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/Song'
+            schema: { $ref: '#/components/schemas/Song' }
       responses:
         204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+          x-summary: Success
+          description: |-
+            The song was updated successfully.
+            Future `GET /v1/songs/{uuid}` requests will reflect the changes.
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        404: { $ref: "#/components/responses/SongNotFound" }
+        409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteSong
-      summary: delete a song
+      summary: Delete Song by UUID
       tags: [ song ]
-      description: ""
+      description: |-
+        Deletes the song with the specified `uuid`.
       responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-  /v1/songs/{uuid}/cover:
-    get:
-      operationId: getCover
-      summary: Get the Cover of a Song
-      tags: [ media ]
-      description: ""
-      responses:
-        200:
-          description: Success
-          content:
-            "image/*":
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    put:
-      operationId: replaceCover
-      summary: replace a cover
-      tags: [ media ]
-      description: ""
-      requestBody:
-        description: ""
-        required: true
-        content:
-          "image/*":
-            schema:
-              type: string
-              format: binary
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    delete:
-      operationId: deleteCover
-      summary: delete a cover
-      tags: [ media ]
-      description: ""
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-  /v1/songs/{uuid}/background:
-    get:
-      operationId: getBackground
-      summary: Get the Background of a Song
-      tags: [ media ]
-      description: ""
-      responses:
-        200:
-          description: Success
-          content:
-            "image/*":
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    put:
-      operationId: replaceBackground
-      summary: replace a background
-      tags: [ media ]
-      description: ""
-      requestBody:
-        description: ""
-        required: true
-        content:
-          "image/*":
-            schema:
-              type: string
-              format: binary
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    delete:
-      operationId: deleteBackground
-      summary: delete a background
-      tags: [ media ]
-      description: ""
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-  /v1/songs/{uuid}/video:
-    get:
-      operationId: getVideo
-      summary: Get the Video of a Song
-      tags: [ media ]
-      description: ""
-      responses:
-        200:
-          description: Success
-          content:
-            "video/*":
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    put:
-      operationId: replaceVideo
-      summary: replace a video
-      tags: [ media ]
-      description: ""
-      requestBody:
-        description: ""
-        required: true
-        content:
-          "video/*":
-            schema:
-              type: string
-              format: binary
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    delete:
-      operationId: deleteVideo
-      summary: delete a video
-      tags: [ media ]
-      description: ""
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-  /v1/songs/{uuid}/audio:
-    get:
-      operationId: getAudio
-      summary: Get the Audio of a Song
-      tags: [ media ]
-      description: ""
-      responses:
-        200:
-          description: Success
-          content:
-            "audio/*":
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    put:
-      operationId: replaceAudio
-      summary: replace a audio
-      tags: [ media ]
-      description: ""
-      requestBody:
-        description: ""
-        required: true
-        content:
-          "audio/*":
-            schema:
-              type: string
-              format: binary
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
-    delete:
-      operationId: deleteAudio
-      summary: delete a audio
-      tags: [ media ]
-      description: ""
-      responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        204: { description: Success }
+        404: { $ref: "#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/txt:
+    parameters:
+      - $ref: "#/components/parameters/songUUID"
     get:
-      operationId: getTxt
-      summary: Get the UltraStar txt of a Song
+      operationId: getSongTxt
+      summary: Generate a TXT file
       tags: [ song ]
-      description: ""
+      description: |-
+        Generate a representation of the song identified by `uuid` in the UltraStar TXT format.
+        The resulting TXT will include metadata tags as well as the karaoke data.
+        
+        The file references (`#MP3`, `#COVER`, and so on) will be set if a file exists and will be absent if no file exists.
+        The value of these fields will be set to the same filename
+        returned in the `Content-Disposition` for the respective `/v1/songs/{uuid}/mp3`, `/v1/songs/{uuid}/cover`, ... endpoints.
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            A successful response will contain the generated UltraStar TXT file as its body.
+          headers:
+            Content-Disposition:
+              required: true
+              description: |-
+                Encoded in this header is a possible file name for the TXT file.
+                You should not rely on a specific filename schema as it may change depending on server settings.
+              schema:
+                type: string
+                example: 'attachment; filename="Rick Astley - Never Gonna Give You Up.txt"'
           content:
             "text/plain":
               schema:
                 type: string
                 format: ultrastar
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+              example: |
+                #ARTIST:Rick Astley
+                #TITLE:Never Gonna Give You Up
+                #MP3:Rick Astley - Never Gonna Give You Up.mp3
+                #BPM:227.22
+                #GAP:18880
+                ...
+                : 0 3 10 We’re 
+                : 4 3 12 no
+                : 8 3 13 stran
+                : 12 3 13 gers
+                : 16 3 15 to
+                ...
+                E
+        404: { $ref: "#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
-      operationId: replaceTxt
-      summary: replace txt
+      operationId: replaceSongTxt
+      summary: Replace Song with TXT
       tags: [ song ]
-      description: ""
+      description: |-
+        Replaces the song identified by `uuid` with the TXT file in the request body.
+        
+        If the request completes successfully the song will keep its UUID but all metadata as well as the karaoke data
+        will be replaced with the data from the request body.
+        If the request fails, no modification will be done.
+        
+        The song will keep its media files.
+        Any `#MP3`, `#VIDEO`, `#COVER`, or `#BACKGROUND` tags are ignored.
+        If you want to replace or remove a song's media files, use the respective endpoints below.
       requestBody:
-        description: ""
+        description: |-
+          The raw contents of a UltraStar TXT file.
+          Anything after the end tag `"E"` will be ignored.
         required: true
         content:
           "text/plain":
@@ -370,20 +205,22 @@ paths:
               type: string
               format: ultrastar
       responses:
-        204:
-          description: Success
-        default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+        204: { description: Success }
+        400: { $ref: "#/components/responses/InvalidTXT" }
+        404: { $ref: "#/components/responses/SongNotFound" }
+        409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/archive:
+    parameters:
+      - $ref: "#/components/parameters/songUUID"
     get:
-      operationId: getArchive
-      summary: Get the a Song and all its Files
+      operationId: getSongArchive
+      summary: |-
+        Download Song as Archive
       tags: [ song ]
-      description: ""
+      description: |-
+        Download the song and all of its media files packaged in an archive.
+        The song is packaged in a way that the archive may be extracted into a folder of UltraStar songs to be immediately singable.
       parameters:
         - in: header
           name: Accept
@@ -391,8 +228,10 @@ paths:
             type: string
             enum:
               - application/zip
+            default: "application/zip"
           required: false
-          description: if missing -> zip
+          description: |-
+            The `Accept` header defines the desired format of the archive.
       responses:
         200:
           description: Success
@@ -401,139 +240,379 @@ paths:
               schema:
                 type: string
                 format: binary
-        default:
-          description: Unexpected Error
+        404: { $ref: "#/components/responses/SongNotFound" }
+        406:
+          x-summary: Not Acceptable
+          description: |-
+            This error indicates that the requested archive format (via the `Accept` header) is not available.
           content:
             application/json:
               schema:
-                $ref: "../schemas/problem-details.yaml#/components/schemas/ProblemDetails"
+                example:
+                  title: "Not Acceptable"
+                  status: 406
+                  instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+                allOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 components:
+  parameters:
+    songUUID:
+      in: path
+      name: uuid
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: |-
+        The UUID of the song to operate on.
   schemas:
     Song:
       type: object
-      required: [title, uuid]
+      x-tags: [ song ]
+      description: |-
+        A `Song` resource represents a single UltraStar song.
+      required: [ uuid ]
       properties:
         uuid:
           type: string
           format: uuid
           readOnly: true
+          description: |-
+            The UUID is the unique identifier of a song.
+            The UUID of a song is persistent and may be stored long term to identify a song at a later point in time.
+            
+            You should not make any assumptions on the version or contents of the UUID.
         title:
           type: string
+          description: |-
+            The title of the song.
+          example: "Never Gonna Give You Up"
         artist:
           type: string
+          description: |-
+            The artist of the song.
+          example: "Rick Astley"
         genre:
           type: string
+          description: |-
+            The genre of the song.
+          example: "Pop"
         edition:
           type: string
+          description: |-
+            The edition of the song.
+            This is an arbitrary classifier that is often used to group songs together.
+          example: "Meme Songs"
         creator:
           type: string
+          description: |-
+            The name of the creator of the song.
+          example: "rickastleyfan"
         language:
           type: string
+          description: |-
+            The language of the song.
+            Currently no validation is performed on this value.
+          example: "English"
         year:
           type: integer
+          description: |-
+            The release year of the song.
+          example: 1987
+        duetSinger1:
+          type: string
+          example: "Rick Astley"
+          description: |-
+            Name of the singer of the first voice.
+            Usually combined with `duet=true`.
+        duetSinger2:
+          type: string
+          example: "Ast Rickley"
+          description: |-
+            Name of the singer of the second voice.
+            Usually combined with `duet=true`.
         comment:
           type: string
-        gap:
-          type: integer
-          description: millisecond
-        videoGap:
-          type: integer
-          description: millisecond
-        notesGap:
-          type: integer
-          description: beats
-        start:
-          type: integer
-          description: millisecond
-        end:
-          type: integer
-          description: millisecond
-        previewStart:
-          type: integer
-          description: millisecond
-        medley:
-          type: object
-          anyOf:
-            - type: object
-              title: Automatic or Off
-              properties:
-                mode:
-                  type: string
-                  enum:
-                    - auto
-                    - off
-            - type: object
-              title: Manual
-              properties:
-                mode:
-                  type: string
-                  enum:
-                    - manual
-                medleyStartBeat:
-                  type: integer
-                  description: beat, available, when medley = manual
-                medleyEndBeat:
-                  type: integer
-                  description: beat, available, when medley = manual
+          description: |-
+            An arbitrary comment.
+            This field is ignored by most programs.
+          example: "An all-time favorite"
         extra:
           type: object
-          additionalProperties: {type: string}
+          additionalProperties: { type: string }
+          description: |-
+            Additional custom metadata fields for the song.
+            These are currently ignored by Karman but are stored for future use.
+          example:
+            subGenre: "Meme"
+        gap:
+          type: integer
+          default: 0
+          example: 5300
+          description: |-
+            The number of **milliseconds** that the start of the karaoke notes is delayed from the start of the audio file.
+            The value can be negative.
+            
+            This corresponds to the UltraStar `#GAP` tag.
+        videoGap:
+          type: integer
+          default: 0
+          example: 110
+          description: |-
+            The number of **milliseconds** that the video file will be delayed relative to the start of the audio file.
+            The value can be negative.
+            
+            This corresponds to the UltraStar `#VIDEOGAP` tag.
+        notesGap:
+          type: integer
+          default: 0
+          description: |-
+            The number of additional **beats** that the notes will be delayed before the karaoke notes start.
+            
+            This corresponds to the UltraStar `#NOTESGAP` tag.
+        start:
+          type: integer
+          default: 0
+          description: |-
+            The number of **milliseconds** that will be skipped at the beginning of the song.
+            This can be used to skip long intros.
+            
+            This corresponds to the UltraStar `#START` tag.
+        end:
+          type: integer
+          default: 0
+          description: |-
+            The number of **milliseconds** after which the song will end, regardless of the length of the audio file.
+            This can be used to skip long outros. A zero-value is equivalent to no explicit end tag.
+            
+            This corresponds to the UltraStar `#END` tag.
+        previewStart:
+          type: integer
+          description: |-
+            The number of **milliseconds** into the song where the preview starts.
+            
+            This corresponds to the UltraStar `#PREVIEWSTART` tag.
+        medley:
+          type: object
+          default: { mode: "auto" }
+          discriminator:
+            propertyName: mode
+            mapping:
+              auto: "#/components/schemas/AutoMedley"
+              manual: "#/components/schemas/ManualMedley"
+              off: "#/components/schemas/OffMedley"
+          oneOf:
+            - $ref: "#/components/schemas/AutoMedley"
+            - $ref: "#/components/schemas/ManualMedley"
+            - $ref: "#/components/schemas/OffMedley"
+          description: |-
+            Configure the medley calculation of a song.
+            Depending on the `mode` additional fields are required.
         duet:
           type: boolean
           readOnly: true
+          example: true
+          description: |-
+            Indicates whether this song is a duet.
         audio:
           type: object
           readOnly: true
           nullable: true
+          description: |-
+            Information about the audio file of the song or `null` if the song has no audio.
           properties:
-            bitrate:
-              type: integer
-              description: bits per second
-            duration:
-              type: integer
-              description: millisecond
             type:
               type: string
-              description: mime type
+              format: mimetype
+              example: "audio/mpeg"
+              description: |-
+                The format of the audio data.
+            bitrate:
+              type: integer
+              example: 140000
+              description: |-
+                The bitrate of the audio file in **bits per second**.
+            duration:
+              type: integer
+              example: 212000
+              description: |-
+                The duration of the audio file in **milliseconds**.
+                If the duration is not known this may be 0.
         video:
           type: object
           readOnly: true
           nullable: true
+          description: |-
+            Information about the video file of the song or `null` if the song has no video.
           properties:
-            bitrate:
-              type: integer
-              description: bits per second
-            duration:
-              type: integer
-              description: millisecond
             type:
               type: string
-              description: mime type
+              format: mimetype
+              example: "video/mp4"
+              description: |-
+                The format of the video data.
+            bitrate:
+              type: integer
+              example: 7200000
+              description: |-
+                The bitrate of the video file in **bits per second**.
+            duration:
+              type: integer
+              example: 212000
+              description: |-
+                The duration of the audio file in **milliseconds**.
+                If the duration is not known this may be 0.
         cover:
           type: object
           readOnly: true
           nullable: true
+          description: |-
+            Information about the cover file of the song or `null` if the song has no cover.
           properties:
-            width:
-              type: integer
-            height:
-              type: integer
             type:
               type: string
-              description: mime type
+              format: mimetype
+              example: "image/jpeg"
+              description: |-
+                The format of the image data.
+            width:
+              type: integer
+              example: 1024
+              description: |-
+                The width of the image in **pixels**.
+            height:
+              type: integer
+              example: 1024
+              description: |-
+                The height of the image in **pixels**.
         background:
           type: object
           readOnly: true
           nullable: true
+          description: |-
+            Information about the background file of the song or `null` if the song has no background.
           properties:
-            width:
-              type: integer
-            height:
-              type: integer
             type:
               type: string
-              description: mime type
+              format: mimetype
+              example: "image/png"
+              description: |-
+                The format of the image data.
+            width:
+              type: integer
+              example: 1920
+              description: |-
+                The width of the image in **pixels**.
+            height:
+              type: integer
+              example: 1080
+              description: |-
+                The height of the image in **pixels**.
+    AutoMedley:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [ auto ]
+          description: |-
+            `auto` medley mode enables automatic calculation of medleys by UltraStar. This is the default.
+    ManualMedley:
+      type: object
+      required: [ medleyStartBeat, medleyEndBeat ]
+      properties:
+        mode:
+          type: string
+          enum: [ manual ]
+          description: |-
+            `manual` medley mode enables you to specify the medley start and end manually.
+        medleyStartBeat:
+          type: integer
+          description: |-
+            The **beat** at which the medley should start.
 
+            This corresponds to the UltraStar `#MEDLEYSTARTBEAT` tag.
+        medleyEndBeat:
+          type: integer
+          description: |-
+            The **beat** at which the medley should end.
 
-
-
+            This corresponds to the UltraStar `#MEDLEYENDBEAT` tag.
+    OffMedley:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [ off ]
+          description: |-
+            `off` mode disables medley calculation completely. No medley will be available.
+    SongNotFoundError:
+      title: Song Not Found
+      example:
+        type: "codello.dev/karman/problems/song-not-found"
+        title: "Song Not Found"
+        status: 404
+        uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        - type: object
+          required: [ uuid ]
+          properties:
+            uuid:
+              type: string
+              format: uuid
+              description: |-
+                The requested UUID for which no song was found.
+    InvalidTXTError:
+      title: Invalid TXT
+      example:
+        type: "codello.dev/karman/problems/invalid-ultrastar-txt"
+        title: "Invalid UltraStar TXT"
+        status: 400
+        detail: "Invalid line break."
+        instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+        line: 73
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        - type: object
+          properties:
+            line:
+              type: integer
+              description: |-
+                The line of the input on which the error occurred.
+              example: 73
+  responses:
+    InvalidTXT:
+      x-summary: Bad Request
+      description: |-
+        This error indicates that the TXT data is not properly formatted and can not be parsed.
+        This is usually an indication that the supplied file is not in the UltraStar TXT format.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InvalidTXTError"
+    SongNotFound:
+      x-summary: Not Found
+      description: |-
+        A song with the specified `uuid` does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SongNotFoundError"
+    UploadSongCannotBeModified:
+      x-summary: "Conflict"
+      description: |-
+        The song with the specified `{uuid}` cannot be modified.
+        This error is returned if you try to modify a song that has not been imported into the library yet.
+      content:
+        application/json:
+          schema:
+            title: Upload Cannot Be Modified
+            example:
+              type: "codello.dev/karman/problems/upload-song-readonly"
+              title: "A Song in an Upload Cannot Be Modified"
+              status: 409
+              detail: "The song must be imported before it can be modified."
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"

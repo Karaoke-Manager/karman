@@ -9,8 +9,9 @@ import (
 
 type File struct {
 	Model
-	Size uint64
-	Type string // Mime type of the file. Must not contain parameters
+	Size     uint64
+	Checksum []byte
+	Type     string // Mime type of the file. Must not contain parameters
 
 	// Audio & Video
 	Bitrate  int

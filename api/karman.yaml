@@ -8,6 +8,31 @@ info:
     # State of this Specification
     
     This document is currently a work in progress that aims to describes the state of the implementation.
+    
+    # General Rules
+    
+    This section outlines some general rules and conventions that you will find in the Karman API.
+    For reasons of simplicity these are given once here and not repeated on every endpoint or resource.
+    If an endpoint or a resource deviates from these rules it will be noted.
+    
+    ## Content-Types
+    
+    When working with the Karman API you need to include the `Content-Type` in all non-empty requests.
+    If this documentation does not explicitly specify the allowed values, you should use `application/json`.
+    If the `Content-Type` header is missing or unsupported, a `415 Unsupported Media Type` error will be returned.
+    This error is documented here and not explicitly included in every endpoint.
+    
+    ## Zero-Values
+    
+    In most cases the API tries to not use `null` values.
+    Instead a contextual zero-value will be considered equivalent to an unspecified value.
+    For example the `genre` of a `Song` resource is defined as a `string`.
+    Setting the `genre` to `null` will result in an error.
+    To set the genre to _unspecified_ you instead set it to the empty string `""`.
+    
+    In most cases zero-values will not be included in API responses.
+    Continuing the above example the field `genre` will only be included in API responses if it has a value other than the empty string.
+    If a field can be `null` it will be explicitly mentioned.
   contact:
     name: Karman on GitHub
     url: https://github.com/Karaoke-Manager/karman
@@ -24,3 +49,4 @@ x-tagGroups:
       - song
       - media
       - upload
+# TODO: ETag support (and If-None-Match, If-Modified-Since)

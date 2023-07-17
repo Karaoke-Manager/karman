@@ -1,0 +1,111 @@
+openapi: 3.0.3
+info:
+  title: Error Schemas
+  version: v1
+paths: {}
+components:
+  schemas:
+    ProblemDetails:
+      type: object
+      additionalProperties:
+        description: |-
+          Any error object may contain additional properties specific to the error or error instance.
+          Unless documented these additional fields should not be relied upon.
+      description: |-
+        A problem details object as specified in [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807).
+      properties:
+        type:
+          type: string
+          format: uri
+          description: |-
+            URI identifying the problem type.
+            May be dereferenced to a help link. 
+            If `type` is absent it should be interpreted as `about:blank`.
+          example: "about:blank"
+        title:
+          type: string
+          description: >-
+            A short, human-readable summary of the problem type.
+            This value does not change from occurrence to occurrence of the same problem.
+          example: "Not Found"
+        status:
+          type: integer
+          description: >-
+            The status code of the error. Equal to the HTTP response status code of the response.
+          example: 400
+        detail:
+          type: string
+          description: >-
+            A human readable explanation specific to this occurrence of the problem.
+          example: "Item 095be615-a8ad-4c33-8e9c-c7612fbf6c9f not found."
+        instance:
+          type: string
+          format: uri
+          description: >-
+            A URI reference that identifies the specific occurrence of the problem.
+            It may or may not yield further information if dereferenced.
+            This field is usually absent but may be used for tracing information.
+          example: "/traces/481CF77B-3099-445C-A789-58F997233681"
+  responses:
+    BadRequest:
+      x-summary: Bad Request
+      description: |-
+        This error indicates that the request data was not properly formatted.
+        
+        This error can also indicate that a constraint on the request data was violated (e.g. a missing field or an invalid data type).
+        In some of these cases a `422` response may be returned instead.
+      content:
+        application/json:
+          schema:
+            example:
+              title: "Bad Request"
+              status: 400
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"
+    UnprocessableEntity:
+      x-summary: Unprocessable Entity
+      description: |-
+        This error indicates that the request data was formatted correctly and could be parsed but a semantic constraint was violated.
+        
+        This error usually indicates missing fields, invalid values or invalid types.
+        It is not guaranteed that all valid JSON requests will produce either a `2XX` or `422` status code.
+        Any of the above cases may also cause a more general `400` status code.
+        
+        If a `422` status code is used, the `fields` property may contain detailed information about the cause of the issue.
+      content:
+        application/json:
+          schema:
+            example:
+              type: "codello.dev/karman/problems/validation-error"
+              title: "Unprocessable Entity"
+              status: 422
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"
+              - type: object
+                properties:
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: string
+                      x-additionalPropertiesName: field path
+                      description: An human-readable error message for the field at the specified path.
+                    description: |-
+                      A `Unprocessable Entity` response may or may not contain information about the JSON fields that caused the error.
+                      
+                      The `fields` object contains an optional mapping from field paths to error messages.
+    UnexpectedError:
+      x-summary: Unexpected Error
+      description: |-
+        This response indicates an unexpected server-side error (such as a communications error with the database).
+        Depending on the server configuration the resulting error object may contain additional debug information.
+      content:
+        application/json:
+          schema:
+            example:
+              title: "Internal Server Error"
+              status: 500
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"

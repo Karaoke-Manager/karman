@@ -1,0 +1,334 @@
+openapi: 3.0.3
+info:
+  title: Song Media Resources
+  version: v1
+tags:
+  - name: media
+    x-displayName: Managing Song Media
+    description: |-
+      A single song consists of multiple files.
+      In addition to the metadata and karaoke data there are up to 4 associated media files:
+      
+      - A cover artwork.
+      - An audio file
+      - A background video file
+      - A background image
+      
+      UltraStar enforces the presence of an audio file for valid songs, but the Karman API does not.
+paths:
+  /v1/songs/{uuid}/cover:
+    parameters:
+      - $ref: "songs.yaml#/components/parameters/songUUID"
+    get:
+      operationId: getSongCover
+      summary: Get the Cover of a Song
+      tags: [ media ]
+      description: |-
+        Fetch the cover image of a song.
+        
+        The `Content-Type` of the response will be in the `image/*` space.
+      responses:
+        200: { $ref: "#/components/responses/Media" }
+        3XX: { $ref: "#/components/responses/Redirect" }
+        404: { $ref: "#/components/responses/NotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    put:
+      operationId: replaceSongCover
+      summary: Replace the Cover of a Song
+      tags: [ media ]
+      description: |-
+        Replace the cover file of a song with the image in the request body.
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          description: |-
+            The content type of the image.
+          schema:
+            type: string
+            pattern: ^image/
+          example: "image/png"
+      requestBody:
+        description: |-
+          The raw data of the image.
+        required: true
+        content:
+          "image/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    delete:
+      operationId: deleteSongCover
+      summary: Delete the Cover of a Song
+      tags: [ media ]
+      description: |-
+        Deletes the Cover of the specified song.
+        If the song does not have a cover this request will succeed with a `204` status code.
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/songs/{uuid}/background:
+    parameters:
+      - $ref: "songs.yaml#/components/parameters/songUUID"
+    get:
+      operationId: getSongBackground
+      summary: Get the Background Image of a Song
+      tags: [ media ]
+      description: |-
+        Fetch the background image of the song with the specified `uuid`.
+        
+        The `Content-Type` of the response will be in the `image/*` space.
+      responses:
+        200: { $ref: "#/components/responses/Media" }
+        3XX: { $ref: "#/components/responses/Redirect" }
+        404: { $ref: "#/components/responses/NotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    put:
+      operationId: replaceSongBackground
+      summary: Replace the Background Image of a Song
+      tags: [ media ]
+      description: |-
+        Replace the cover file of a song with the image in the request body.
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          description: |-
+            The content type of the image.
+          schema:
+            type: string
+            pattern: ^image/
+          example: "image/png"
+      requestBody:
+        description: |-
+          The raw data of the image.
+        required: true
+        content:
+          "image/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    delete:
+      operationId: deleteSongBackground
+      summary: Delete the Background Image of a Song
+      tags: [ media ]
+      description: |-
+        Deletes the background image of the specified song.
+        If the song does not have a background this request will succeed with a `204` status code.
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/songs/{uuid}/video:
+    parameters:
+      - $ref: "songs.yaml#/components/parameters/songUUID"
+    get:
+      operationId: getSongVideo
+      summary: Get the Video of a Song
+      tags: [ media ]
+      description: |-
+        Fetch the video file of the song with the specified `uuid`.
+        
+        The `Content-Type` of the response will be in the `video/*` space.
+      responses:
+        200: { $ref: "#/components/responses/Media" }
+        3XX: { $ref: "#/components/responses/Redirect" }
+        404: { $ref: "#/components/responses/NotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    put:
+      operationId: replaceSongVideo
+      summary: Replace the Video of a Song
+      tags: [ media ]
+      description: |-
+        Replace the video file of a song with the video in the request body.
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          description: |-
+            The content type of the video.
+          schema:
+            type: string
+            pattern: ^video/
+          example: "video/mp4"
+      requestBody:
+        description: |-
+          The raw data of the video.
+        required: true
+        content:
+          "video/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    delete:
+      operationId: deleteSongVideo
+      summary: Delete the Video of a Song
+      tags: [ media ]
+      description: |-
+        Deletes the video of the specified song.
+        If the song does not have a video this request will succeed with a `204` status code.
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/songs/{uuid}/audio:
+    parameters:
+      - $ref: "songs.yaml#/components/parameters/songUUID"
+    get:
+      operationId: getSongAudio
+      summary: Get the Audio of a Song
+      tags: [ media ]
+      description: |-
+        Fetch the audio file of the song with the specified `uuid`.
+        
+        The `Content-Type` of the response will be in the `audio/*` space.
+      responses:
+        200: { $ref: "#/components/responses/Media" }
+        3XX: { $ref: "#/components/responses/Redirect" }
+        404: { $ref: "#/components/responses/NotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    put:
+      operationId: replaceSongAudio
+      summary: Replace the Audio of a Song
+      tags: [ media ]
+      description: |-
+        Replace the audio file of a song with the audio in the request body.
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          description: |-
+            The content type of the audio.
+          schema:
+            type: string
+            pattern: ^audio/
+          example: "audio/mpeg"
+      requestBody:
+        description: |-
+          The raw data of the audio.
+        required: true
+        content:
+          "audio/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    delete:
+      operationId: deleteSongAudio
+      summary: Delete the Audio of a Song
+      tags: [ media ]
+      description:
+        Deletes the audio of the specified song.
+        If the song does not have an audio file this request will succeed with a `204` status code.
+      responses:
+        204: { description: Success }
+        404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+components:
+  schemas:
+    FileNotFoundError:
+      title: Media File Not Found
+      example:
+        type: "codello.dev/karman/problems/song-media-not-found"
+        title: "Media File Not Found"
+        status: 404
+        detail: "The song has no cover."
+        uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+        media: "cover"
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        - type: object
+          required: [ uuid, media ]
+          properties:
+            uuid:
+              type: string
+              format: uuid
+              description: |-
+                The UUID of the song for which the media file was not found.
+            media:
+              type: string
+              enum: [ cover, background, audio, video ]
+              description: |-
+                The kind of media that was not found.
+  responses:
+    NotFound:
+      x-summary: Not Found
+      description: |-
+        Either the song with the specified `uuid` does not exist or it does not have the requested media file.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "songs.yaml#/components/schemas/SongNotFoundError"
+              - $ref: "#/components/schemas/FileNotFoundError"
+    Media:
+      description: Success
+      headers:
+        Content-Type:
+          required: true
+          description: |-
+            The `Content-Type` header indicates the format of the media data.
+          schema:
+            type: string
+            example: "image/png"
+        Content-Disposition:
+          required: true
+          description: |-
+            Encoded in this header is a possible file name for the file.
+            You should not rely on a specific filename schema as it may change depending on server settings.
+            The file extension is chosen based on the `Content-Type` of the media file.
+          schema:
+            type: string
+            example: 'attachment; filename="Rick Astley - Never Gonna Give You Up.png"'
+      content:
+        "image/*":
+          schema:
+            description: "The binary data of the image."
+            type: string
+            format: binary
+    Redirect:
+      x-summary: Redirect
+      description: |-
+        The server may respond with a redirect response.
+        This indicates that the requested media file is present and may be found at the URL specified in the `Location` header.
+      headers:
+        Location:
+          description: |-
+            The `Location` header indicates where the resource can be found.
+          schema:
+            type: string
+            format: uri
+            example: "https://bucket.example.com/some-file?X-AMZ-Algorithm=..."
+    UnsupportedMediaType:
+      x-summary: Unsupported Media Type
+      description: |-
+        This error indicates that the specified `Content-Type` is not supported for this media field.
+      content:
+        application/json:
+          schema:
+            example:
+              title: "Unsupported Media Type"
+              status: 415
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"

@@ -11,7 +11,7 @@ tags:
 paths:
   /v1/songs:
     get:
-      operationId: getSongs
+      operationId: findSongs
       summary: Find Songs
       tags: [ song ]
       description: |-
@@ -31,7 +31,7 @@ paths:
                   - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
                   - type: object
                     properties:
-                      results:
+                      items:
                         type: array
                         description: |-
                           An array of `Song` resources.
@@ -89,7 +89,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Song' }
-        400: { $ref: "#/components/responses/SongNotFound" }
+        404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     patch:
       operationId: updateSong
@@ -109,6 +109,21 @@ paths:
         required: true
         content:
           application/json:
+            examples:
+              updateTitle:
+                summary: Update Title
+                description: |-
+                  Update just the title of the song.
+                value:
+                  title: "Another title"
+              updateMedley:
+                summary: Disable Medley and Preview
+                description: |-
+                  Disable the medley and the preview for this song.
+                value:
+                  previewStart: 0
+                  medley:
+                    mode: off
             schema: { $ref: '#/components/schemas/Song' }
       responses:
         204:
@@ -127,9 +142,9 @@ paths:
       tags: [ song ]
       description: |-
         Deletes the song with the specified `uuid`.
+        If no song with this UUID exists, the response will have code `204`.
       responses:
         204: { description: Success }
-        404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/txt:
     parameters:

@@ -7,89 +7,167 @@ tags:
   - name: upload
     x-displayName: Importing Songs
     description: |-
-      Songs can be imported into the library in batches by using the `/v1/uploads` endpoint(s).
-      An upload is an import session that can import many songs at a time.
-    # TODO: More doc
+      Adding a single song to the library can be accomplished using the `/v1/songs` endpoint.
+      However this is not scalable for importing many songs at a time.
+      
+      Batch importing songs can be done via the `/v1/uploads` endpoints.
+      An upload acts as an import session that can import many songs at a time.
+      
+      The basic import process consists of the following steps:
+      
+      1. Creation of an import session via `POST /v1/uploads`.
+      2. Adding files to the upload via `PUT /v1/uploads/{uuid}/files`
+      3. Analyzing the import for new songs via `POST /v1/uploads/{uuid}/markForProcessing`
+      4. Importing discovered songs via `POST /v1/uploads/{uuid}/import`.
+      
+      Songs that were not imported will be deleted when the upload gets deleted.
 paths:
   /v1/uploads:
     get:
-      operationId: getUploads
-      summary: List Uploads
-      tags: [upload]
+      operationId: findUploads
+      summary: Find Uploads
+      tags: [ upload ]
       description: |-
-        Retrieves all uploads that the signed in user has access to.
+        Lists all uploads in the database.
+      # TODO: Add filter and sort options
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            A successful request returns a paginated collection of uploads.
+            If the selected filters produce an empty list, the `results` will be empty.
+            A `404` status code will not be returned.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Upload'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+                allOf:
+                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        description: |-
+                          An array of `Song` resources.
+                        items:
+                          $ref: '#/components/schemas/Upload'
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     post:
       operationId: createUpload
-      summary: create
+      summary: Create Upload
       tags: [ upload ]
-      description: ""
+      description: |-
+        Create a new, empty upload that is ready to accept file uploads.
+        
+        This endpoint does not expect a request body.
       responses:
         201:
-          description: Success
+          x-summary: Success
+          description: |-
+            Upon creation the new upload instance is returned.
+            The upload resource will have a `status` of `created`, indicating that it is ready to accept files.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Upload'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+              example:
+                status: created
+              schema: { $ref: '#/components/schemas/Upload' }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
     get:
       operationId: getUpload
-      summary: get upload
+      summary: Get Upload by UUID
       tags: [ upload ]
-      description: ""
+      description: |-
+        Return the upload identified by `uuid`.
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            When the request completes successfully the response contains the requested song resource.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Upload'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+              schema: { $ref: '#/components/schemas/Upload' }
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteUpload
       summary: Delete Upload by UUID
-      tags: [upload]
-      description: The request body is ignored.
-      responses:
-        204:
-          description: Success
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
-  /v1/uploads/{uuid}/files/{path}:
-    get:
-      operationId: getFiles
-      summary: get files
       tags: [ upload ]
-      description: ""
+      description: |-
+        Deletes the upload with the specified `uuid`.
+        If no upload with this UUID exists, the response will have code `204`.
+      responses:
+        204: { description: Success }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/uploads/{uuid}/files/{path}:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
+      - in: path
+        name: path
+        description: |-
+          The `path` parameter identifies the file path within the upload.
+          The path is specified as a series of path segments that are separated by a forward slash.
+          The forward slash must not be percent-encoded,
+          so a file of `foo/bar` would be accessed as `/v1/uploads/{uuid}/files/foo/bar`.
+          
+          The path must not contain the path segment `..`.
+        required: false
+        schema:
+          type: string
+          format: path
+    get:
+      operationId: getUploadFile
+      summary: Get File Info in an Upload
+      tags: [ upload ]
+      description: |-
+        Fetches information about the file at `path` within the upload.
+        It is not currently possible to retrieve the file contents.
       responses:
         200:
           description: Success
           content:
             application/json:
+              examples:
+                file:
+                  summary: Regular File
+                  description: A regular file has no `children`.
+                  value:
+                    name: foo.txt
+                    size: 1337
+                folder:
+                  summary: Directory
+                  description: A directory contains its `children`
+                  value:
+                    name: mydir
+                    children:
+                      - name: file.txt
+                        size: 1346
+                      - name: another file.mp3
+                        size: 1755329
+                      - name: subfolder
+                        children: [ ]
               schema:
                 $ref: '#/components/schemas/File'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+        400: { $ref: "#/components/responses/InvalidPath" }
+        404: { $ref: "#/components/responses/FileOrUploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
-      operationId: uploadFile
-      summary: upload File
+      operationId: replaceUploadFile
+      summary: Upload a File into an Upload
       tags: [ upload ]
-      description: ""
+      description: |-
+        Add the file from the request body at the specified `path` into the upload.
+        This will replace any existing file at the same path.
+        Intermediate folders will be created automatically based on the request `path`.
+        
+        The file is not immediately processed or checked for validity.
+        This will only be done at the processing stage.
       requestBody:
-        description: ""
+        description: |-
+          The request body contains the raw contents of the file.
+          The name of the file is derived from the request `path`.
         required: true
         content:
           "*/*":
@@ -98,65 +176,108 @@ paths:
               format: binary
       responses:
         204:
-          description: Success
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+          x-summary: Success
+          description: The file was successfully uploaded.
+        400: { $ref: "#/components/responses/InvalidPath" }
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteUploadFile
-      summary: Delete File from Upload
+      summary: Delete a File from an Upload
       tags: [ upload ]
-      description: The request body is ignored.
+      description: |-
+        Deletes the file at `path` from the upload.
+        If `path` is a folder the folder is deleted recursively.
+        
+        After deleting the `file` at path the upload may also remove any empty folders.
+        
+        Deleting a file that is already absent will generate a `204` response.
       responses:
-        204:
-          description: Success
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
-  /v1/uploads/{uuid}/makeForProcessing:
+        204: { description: Success }
+        400: { $ref: "#/components/responses/InvalidPath" }
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/uploads/{uuid}/markForProcessing:
     post:
-      operationId: makeForProcessing
-      summary: mark an upload for processing
+      operationId: markForProcessing
+      summary: Mark an Upload for Processing
       tags: [ upload ]
-      description: ""
+      description: |-
+        Marking an upload for processing changes its state to `pending` or `processing`.
+        After marking an upload it is not possible to access its files directly anymore.
       responses:
         200:
-          description: Success
+          x-summary: Success
+          description: |-
+            The response contains the upload resource reflecting its new state.
           content:
             application/json:
+              example:
+                status: pending
               schema:
                 $ref: '#/components/schemas/Upload'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}/startProcessing:
     post:
       operationId: startProcessing
-      summary: start a upload process
+      summary: Begin Processing an Upload
       tags: [ upload ]
-      description: ""
+      description: |-
+        Immediately start processing an upload.
+        The upload must be in `pending` state and this endpoint will transition the upload into the `processing` state.
+        
+        The response indicates this transition.
+        Note however that the processing might take some time depending on the size of the upload.
       responses:
         200:
           description: Success
           content:
             application/json:
+              example:
+                state: processing
+                songsTotal: -1
+                songsProcessed: 0
               schema:
                 $ref: '#/components/schemas/Upload'
-        5XX:
-          $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError"
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}/songs:
     get:
       operationId: getUploadSongs
-      summary: List all songs in an upload
+      summary: List all Songs in an Upload
       tags: [ upload ]
-      description: ""
+      description: |-
+        When an upload is in state `ready` you can use this endpoint to get a paginated view of songs
+        that were discovered in the upload.
+        
+        You can query details for these songs using the `/v1/songs/{uuid}` endpoints.
+        
+        If no songs were found in an upload the resulting list is empty.
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "./songs.yaml#/components/schemas/Song"
-  /v1/uploads/{uuid}/batch:
+                allOf:
+                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        description: |-
+                          An array of `Song` resources.
+                        items:
+                          $ref: 'songs.yaml#/components/schemas/Song'
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/uploads/{uuid}/import:
     post:
       operationId: importSongs
       summary: Import songs
@@ -180,52 +301,240 @@ paths:
                   items:
                     type: string
                     format: uuid
-      responses: {} # TODO
+      responses: { } # TODO
 
 components:
+  parameters:
+    uploadUUID:
+      in: path
+      name: uuid
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: |-
+        The UUID of the upload to operate on.
   schemas:
-    File:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        size:
-          type: integer
-          description: in byte
-        children:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/File'
     Upload:
       type: object
       x-tags: [ upload ]
-      required:
-        - status
+      description: |-
+        An upload represents an import session for many songs.
+      required: [ status ]
+      discriminator:
+        propertyName: status
+        mapping:
+          created: "#/components/schemas/CreatedUpload"
+          pending: "#/components/schemas/PendingUpload"
+          processing: "#/components/schemas/ProcessingUpload"
+          ready: "#/components/schemas/ReadyUpload"
       oneOf:
-        - type: object
-          title: Upload Created
-          properties:
-            status:
-              type: string
-              enum:
-                - "created"
-                - "pending"
-        - type: object
-          title: Upload
-          properties:
-            status:
-              type: string
-              enum:
-                - "processing"
-                - "ready"
-            songsTotal:
-              type: integer
-            songsProcessed:
-              type: integer
+        - $ref: "#/components/schemas/CreatedUpload"
+        - $ref: "#/components/schemas/PendingUpload"
+        - $ref: "#/components/schemas/ProcessingUpload"
+        - $ref: "#/components/schemas/ReadyUpload"
       properties:
         uuid:
           type: string
           format: uuid
+    CreatedUpload:
+      type: object
+      required: [ status ]
+      properties:
+        status:
+          type: string
+          enum: [ "created" ]
+          description: |-
+            The `created` status indicates that the upload accepts file uploads and deletes.
+            An upload in this status will not be processed automatically.
+    PendingUpload:
+      type: object
+      required: [ status ]
+      properties:
+        status:
+          type: string
+          enum: [ "pending" ]
+          description: |-
+            The `pending` status indicates that the upload has been marked for processing but processing has not started yet.
+            An upload in this status will not accept file uploads.
+    ProcessingUpload:
+      type: object
+      required: [ status, songsTotal, songsProcessed ]
+      properties:
+        status:
+          type: string
+          enum: [ "processing" ]
+          description: |-
+            The `processing` status indicates that an upload is currently being processed.
+            The response contains additional fields indicating the progress of the processing.
+        songsTotal:
+          type: integer
+          example: 125
+          description: |-
+            The total amount of songs discovered in the uploaded files,
+            or `-1` if the discovery process has not finished yet.
+            
+            A `songsTotal` of 0 means that the upload has been scanned and no song files were found.
+        songsProcessed:
+          type: integer
+          example: 4
+          description: |-
+            The number of songs that have been processed for importing.
+            Together with `songsTotal` this can be used to display a progress of some sort.
+            
+            Usually the number of songs processed only increases.
+            It is however possible that due to unexpected server behavior a upload might need to be re-processed
+            causing the number of total and processed songs to reset.
+    ReadyUpload:
+      type: object
+      required: [ status ]
+      properties:
+        status:
+          type: string
+          enum: [ "ready" ]
+          description: |-
+            The `ready` status indicates that the upload has been analyzed and it is now possible to import songs.
+        songsTotal:
+          type: integer
+          example: 125
+          description: |-
+            The total number of song files discovered in the uploaded files.
+      # TODO: information about processing errors
+    File:
+      type: object
+      description: |-
+        This resource contains information about a file within an upload.
+      required: [ name ]
+      properties:
+        name:
+          type: string
+          description: |-
+            The name of the file including its extension.
+            This does not include the file path.
+        size:
+          type: integer
+          minimum: 0
+          description: |-
+            The size of the file in bytes.
+            
+            For directories this may not be accurate or not included in the response at all.
+        children:
+          type: array
+          description: |-
+            An array of `File`s contained within the folder.
+            
+            For regular files this field will be `null` or absent.
+            For folders this field will be non-`null`.
+            If a folder does not contain any children, this field will be an empty array.
+          nullable: true
+          items: { $ref: '#/components/schemas/File' }
+          # TODO: Pagination maybe?
+    UploadNotFoundError:
+      title: Upload Not Found
+      example:
+        type: "codello.dev/karman/problems/upload-not-found"
+        title: "Upload Not Found"
+        status: 404
+        uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        - type: object
+          required: [ uuid ]
+          properties:
+            uuid:
+              type: string
+              format: uuid
+              description: |-
+                The requested UUID for which no upload was found.
+    UploadStateError:
+      title: Upload Closed
+      example:
+        type: "codello.dev/karman/problems/upload-state"
+        title: "Upload Closed"
+        status: 409
+        uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        - type: object
+          required: [ uuid ]
+          properties:
+            uuid:
+              type: string
+              format: uuid
+              description: |-
+                The UUID of the affected upload.
+  responses:
+    UploadNotFound:
+      x-summary: Not Found
+      description: |-
+        An upload with the specified `uuid` does not exist.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/UploadNotFoundError" }
+    FileOrUploadNotFound:
+      x-summary: Not Found
+      description: |-
+        Either the upload or a file at `path` does not exist.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/UploadNotFoundError"
+              - title: File Not Found
+                example:
+                  type: "codello.dev/karman/problems/file-not-found"
+                  title: "File Not Found"
+                  status: 404
+                  uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+                  path: "foo/bar.txt"
+                allOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+                  - type: object
+                    required: [ uuid, path ]
+                    properties:
+                      uuid:
+                        type: string
+                        format: uuid
+                        description: |-
+                          The UUID of the upload whose file was not found.
+                      path:
+                        type: string
+                        format: path
+                        description: |-
+                          The path that was requested but at which no file was found.
+    InvalidPath:
+      x-summary: Bad Request
+      description: |-
+        The requested `path` was badly formatted.
+      content:
+        application/json:
+          schema:
+            title: Invalid Path
+            example:
+              type: "codello.dev/karman/problems/invalid-upload-path"
+              title: "Invalid Path"
+              status: 400
+              uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+              path: "../invalid.txt"
+            allOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+              - type: object
+                required: [ uuid, path ]
+                properties:
+                  uuid:
+                    type: string
+                    format: uuid
+                    description: |-
+                      The UUID of the affected upload.
+                  path:
+                    type: string
+                    format: path
+                    description: |-
+                      The path that was requested but rejected.
+    UploadStateError:
+      x-summary: Conflict
+      description: |-
+        The upload is not in a `state` where this action is allowed.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/UploadStateError" }

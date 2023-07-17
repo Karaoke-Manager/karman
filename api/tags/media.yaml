@@ -60,6 +60,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
@@ -72,6 +73,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/background:
     parameters:
@@ -117,6 +119,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
@@ -129,6 +132,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/video:
     parameters:
@@ -174,6 +178,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
@@ -186,6 +191,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/audio:
     parameters:
@@ -231,6 +237,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
@@ -243,6 +250,7 @@ paths:
       responses:
         204: { description: Success }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
+        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 components:
   schemas:

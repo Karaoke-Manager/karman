@@ -7,9 +7,12 @@ import (
 )
 
 const (
+	// TypeInvalidTXT indicates that the UltraStar txt data could not be parsed.
+	// It is usually accompanied with a line number that caused the error.
 	TypeInvalidTXT = ProblemTypeDomain + "/invalid-ultrastar-txt"
 )
 
+// InvalidUltraStarTXT generates an error indicating that the UltraStar data in the request could not be parsed.
 func InvalidUltraStarTXT(err error) *ProblemDetails {
 	var parseErr txt.ParseError
 	var fields map[string]any

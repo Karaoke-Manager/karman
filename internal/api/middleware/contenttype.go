@@ -8,58 +8,50 @@ import (
 	"strings"
 )
 
-type contentTypeMap map[string][]string
-
-func (m contentTypeMap) Add(key, value string) {
-	key = strings.ToLower(key)
-	m[key] = append(m[key], strings.ToLower(value))
-}
-
-func (m contentTypeMap) Set(key, value string) {
-	m[strings.ToLower(key)] = []string{value}
-}
-
-func (m contentTypeMap) Get(key string) string {
-	if m == nil {
-		return ""
-	}
-	v := m[strings.ToLower(key)]
-	if len(v) == 0 {
-		return ""
-	}
-	return v[0]
-}
-
-func (m contentTypeMap) Values(key string) []string {
-	if m == nil {
-		return nil
-	}
-	return m[strings.ToLower(key)]
-}
-
-func (m contentTypeMap) Del(key string) {
-	delete(m, strings.ToLower(key))
-}
-
-func RequireContentType(contentTypes ...string) func(next http.Handler) http.Handler {
-	allowed := contentTypeMap{}
-	for i := range contentTypes {
-		t, _, err := mime.ParseMediaType(contentTypes[i])
+// RequireContentType is a middleware that enforces the use of the Content-Type header.
+// To create this middleware you need to pass the allowed media types.
+// You can pass parameters for media types, but those are ignored in this middleware.
+//
+// In addition to static media types like text/plain you can also use
+// wildcard media types like text/* or the special value */* to accept all media types.
+// Wildcard types like text/* are matched as a prefix of the request header (but parameters are ignored during matching).
+// The special value */* allows all media type but still requires a Content-Type header to be present.
+// In this case the syntax of the Content-Type header is not validated.
+//
+// Using this middleware forces the use of the Content-Type header.
+// A request without this header will result in an error, even if the request body is empty.
+func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handler {
+	allowed := map[string][]string{}
+	allowAll := false
+	for i := range mediaTypes {
+		t, _, err := mime.ParseMediaType(mediaTypes[i])
 		if err != nil {
-			panic("invalid media type: " + contentTypes[i])
+			panic("invalid media type: " + mediaTypes[i])
 		}
 		media, sub, ok := strings.Cut(t, "/")
 		if !ok {
-			panic("invalid media type: " + contentTypes[i])
+			panic("invalid media type: " + mediaTypes[i])
 		}
-		allowed.Add(media, sub)
+		if media == "*" && sub == "*" {
+			allowAll = true
+		}
+		if media == "*" && sub != "*" {
+			panic("media types other than */* cannot start with a wildcard.")
+		}
+		allowed[media] = append(allowed[media], sub)
 	}
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			s, _, err := mime.ParseMediaType(strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type"))))
 			if err != nil {
-				_ = render.Render(w, r, apierror.MissingContentType(contentTypes...))
+				_ = render.Render(w, r, apierror.MissingContentType(mediaTypes...))
+				return
+			}
+			if allowAll {
+				// Shortcut if all content types are accepted.
+				// In this case we do not validate the format of the content type request header.
+				next.ServeHTTP(w, r)
 				return
 			}
 			media, sub, ok := strings.Cut(s, "/")
@@ -73,7 +65,7 @@ func RequireContentType(contentTypes ...string) func(next http.Handler) http.Han
 				_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
 				return
 			}
-			allowedSubs := allowed.Values(media)
+			allowedSubs := allowed[media]
 			for _, allowedSub := range allowedSubs {
 				if allowedSub == "*" || allowedSub == sub {
 					next.ServeHTTP(w, r)

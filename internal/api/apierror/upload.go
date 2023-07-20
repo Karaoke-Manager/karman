@@ -6,12 +6,17 @@ import (
 	"net/http"
 )
 
+// These constants identify known problem types related to uploads.
 const (
-	TypeUploadClosed       = ProblemTypeDomain + "/upload-closed"
+	// TypeUploadClosed indicates that a file action to an upload was rejected because the upload has already been marked for processing.
+	TypeUploadClosed = ProblemTypeDomain + "/upload-closed"
+	// TypeUploadFileNotFound indicates that a file was requested from an upload but the file was not found.
 	TypeUploadFileNotFound = ProblemTypeDomain + "/upload-file-not-found"
-	TypeInvalidUploadPath  = ProblemTypeDomain + "/invalid-upload-path"
+	// TypeInvalidUploadPath indicates that the file path within an upload is not a valid path.
+	TypeInvalidUploadPath = ProblemTypeDomain + "/invalid-upload-path"
 )
 
+// UploadClosed generates an error indicating that the upload has been marked for processing and cannot be modified.
 func UploadClosed(upload model.Upload) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadClosed,
@@ -24,6 +29,7 @@ func UploadClosed(upload model.Upload) *ProblemDetails {
 	}
 }
 
+// UploadFileNotFound generates an error indicating that a requested file within an upload was not found.
 func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadFileNotFound,
@@ -37,6 +43,7 @@ func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
 	}
 }
 
+// InvalidUploadPath generates an error indicating that the requested upload path within an upload is not a valid path.
 func InvalidUploadPath(path string) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeInvalidUploadPath,

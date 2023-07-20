@@ -27,23 +27,21 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	uploads, total, err := c.svc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
+	songs, total, err := c.svc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
-		// FIXME: Differentiate other errors?
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 
-	uploadSchemas := make([]*schema.Song, len(uploads))
-	for i, upload := range uploads {
-		s := schema.NewSongFromModel(upload)
-		uploadSchemas[i] = &s
-	}
 	resp := schema.List[*schema.Song]{
-		Items:  uploadSchemas,
+		Items:  make([]*schema.Song, len(songs)),
 		Offset: pagination.Offset,
 		Limit:  pagination.RequestLimit,
 		Total:  total,
+	}
+	for i, upload := range songs {
+		s := schema.NewSongFromModel(upload)
+		resp.Items[i] = &s
 	}
 	_ = render.Render(w, r, &resp)
 }

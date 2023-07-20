@@ -33,8 +33,8 @@ func (c *Controller) fetchUpload(next http.Handler) http.Handler {
 		id := chi.URLParam(r, "uuid")
 		song, err := c.svc.GetSong(r.Context(), id)
 		if err != nil {
-			// TODO: Differentiate errors (404, maybe 409)
-			_ = render.Render(w, r, apierror.ErrInternalServerError)
+			// TODO: Maybe support 409 for soft deleted?
+			_ = render.Render(w, r, apierror.DBError(err))
 			return
 		}
 		ctx := SetSong(r.Context(), song)

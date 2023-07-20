@@ -2,6 +2,7 @@ package uploads
 
 import (
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/go-chi/chi/v5"
@@ -27,20 +28,24 @@ func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
+	pagination := middleware.MustGetPagination(r.Context())
 	// TODO: Do limit-offset pagination
-	uploads, err := c.Service.GetUploads(r.Context(), 1, 0)
+	uploads, total, err := c.Service.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
 		// FIXME: Differentiate other errors?
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 
-	uploadSchemas := make([]schema.Upload, len(uploads))
+	uploadSchemas := make([]*schema.Upload, len(uploads))
 	for i, upload := range uploads {
 		uploadSchemas[i] = schema.NewUploadFromModel(upload)
 	}
-	resp := schema.List[schema.Upload]{
-		Items: uploadSchemas,
+	resp := &schema.List[*schema.Upload]{
+		Items:  uploadSchemas,
+		Offset: pagination.Offset,
+		Limit:  pagination.Limit,
+		Total:  total,
 	}
 	_ = render.Render(w, r, resp)
 }

@@ -478,6 +478,16 @@ components:
               description: |-
                 The duration of the audio file in **milliseconds**.
                 If the duration is not known this may be 0.
+            width:
+              type: integer
+              example: 1920
+              description: |-
+                The width of the video in **pixels**.
+            height:
+              type: integer
+              example: 1080
+              description: |-
+                The height of the video in **pixels**.
         cover:
           type: object
           readOnly: true

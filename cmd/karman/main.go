@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/Karaoke-Manager/karman/internal/api"
+	"github.com/Karaoke-Manager/karman/internal/service/song"
+	"github.com/Karaoke-Manager/karman/internal/service/upload"
+	"github.com/Karaoke-Manager/karman/pkg/rwfs"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
-	"os"
 )
 
 type Config struct {
@@ -35,10 +37,12 @@ func main() {
 		}
 	}()
 
-	uploadFS := os.DirFS("tmp/uploads")
-	songFS := os.DirFS("tmp/data")
+	uploadFS := rwfs.DirFS("tmp/uploads")
+	uploadSvc := upload.NewService(db, uploadFS)
 
-	apiController := api.NewController(db, songFS, uploadFS)
+	// songFS := rwfs.DirFS("tmp/data")
+	songSvc := song.NewService(db)
+	apiController := api.NewController(songSvc, uploadSvc)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)

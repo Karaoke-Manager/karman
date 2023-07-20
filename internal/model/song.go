@@ -1,10 +1,6 @@
 package model
 
 import (
-	"bytes"
-	"database/sql/driver"
-	"encoding/gob"
-	"errors"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"time"
 )
@@ -42,37 +38,48 @@ type Song struct {
 
 	DuetSinger1 string
 	DuetSinger2 string
+	Extra       map[string]string `gorm:"type:json;serializer:json"`
 
-	MusicP1 Music
-	MusicP2 Music
-
-	// FIXME: Custom tags?
+	// FIXME: Maybe foreign keys for performance?
+	MusicP1 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
+	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 }
 
-type Music ultrastar.Music
-
-func (*Music) GormDataType() string {
-	return "blob"
+func (s Song) IsDuet() bool {
+	return s.MusicP2 != nil
 }
 
-func (m *Music) Scan(value any) error {
-	bs, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to unmarshal Music bytes")
+func NewSong() Song {
+	return Song{
+		CalcMedley: true,
+		Extra:      map[string]string{},
+		MusicP1:    ultrastar.NewMusic(),
 	}
-
-	d := gob.NewDecoder(bytes.NewReader(bs))
-	if err := d.Decode(m); err != nil {
-		return err
-	}
-	return nil
 }
 
-func (m *Music) Value() (driver.Value, error) {
-	bs := &bytes.Buffer{}
-	e := gob.NewEncoder(bs)
-	if err := e.Encode(m); err != nil {
-		return nil, err
+func NewSongWithData(data *ultrastar.Song) Song {
+	return Song{
+		Gap:             data.Gap,
+		VideoGap:        data.VideoGap,
+		NotesGap:        data.NotesGap,
+		Start:           data.Start,
+		End:             data.End,
+		PreviewStart:    data.PreviewStart,
+		MedleyStartBeat: data.MedleyStartBeat,
+		MedleyEndBeat:   data.MedleyEndBeat,
+		CalcMedley:      data.CalcMedley,
+		Title:           data.Title,
+		Artist:          data.Artist,
+		Genre:           data.Genre,
+		Edition:         data.Edition,
+		Creator:         data.Creator,
+		Language:        data.Language,
+		Year:            data.Year,
+		Comment:         data.Comment,
+		DuetSinger1:     data.DuetSinger1,
+		DuetSinger2:     data.DuetSinger2,
+		Extra:           data.CustomTags,
+		MusicP1:         data.MusicP1.Clone(),
+		MusicP2:         data.MusicP2.Clone(),
 	}
-	return bs.Bytes(), nil
 }

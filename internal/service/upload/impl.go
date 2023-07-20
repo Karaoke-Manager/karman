@@ -44,16 +44,20 @@ func (s *service) GetUpload(ctx context.Context, uuid string) (upload model.Uplo
 	return
 }
 
-func (s *service) GetUploads(ctx context.Context, limit int, offset int) (uploads []model.Upload, err error) {
-	err = s.db.WithContext(ctx).Find(&uploads).Limit(limit).Offset(offset).Error
+func (s *service) FindUploads(ctx context.Context, limit int, offset int) (uploads []model.Upload, total int64, err error) {
+	if err = s.db.WithContext(ctx).Find(&uploads).Count(&total).Error; err != nil {
+		return
+	}
+	if err = s.db.WithContext(ctx).Find(&uploads).Limit(limit).Offset(offset).Error; err != nil {
+		return
+	}
 	return
 }
 
-func (s *service) DeleteUploadByUUID(ctx context.Context, uuid string) (err error) {
+func (s *service) DeleteUploadByUUID(ctx context.Context, uuid string) error {
 	// TODO: Potentially stop processing
-	err = s.db.WithContext(ctx).Where("uuid = ?", uuid).Delete(&model.Upload{}).Error
+	return s.db.WithContext(ctx).Where("uuid = ?", uuid).Delete(&model.Upload{}).Error
 	// TODO: Delete files? Probably not on soft delete
-	return
 }
 
 // TODO: Maybe use a chroot-style FS to prevent breakout.

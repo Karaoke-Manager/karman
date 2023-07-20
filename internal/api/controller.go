@@ -25,7 +25,6 @@ func NewController(songService song.Service, uploadService upload.Service) *Cont
 
 func (c *Controller) Router(r chi.Router) {
 	// Restrict requests to JSON for now
-	r.Use(middleware.AllowContentType("application/json"))
 	r.Use(middleware.CleanPath)
 	// TODO: Some CORS stuff
 	// r.Use(middleware.Compress())

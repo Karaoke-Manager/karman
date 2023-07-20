@@ -20,7 +20,7 @@ type Upload struct {
 	Status UploadStatus `json:"status"`
 }
 
-func NewUploadFromModel(m model.Upload) Upload {
+func NewUploadFromModel(m model.Upload) *Upload {
 	var status UploadStatus
 	if m.Open {
 		status = UploadStatusCreated
@@ -31,7 +31,7 @@ func NewUploadFromModel(m model.Upload) Upload {
 	} else {
 		status = UploadStatusReady
 	}
-	return Upload{
+	return &Upload{
 		UUID:   m.UUID.String(),
 		Status: status,
 	}

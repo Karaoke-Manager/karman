@@ -1,12 +1,13 @@
 package songs
 
 import (
+	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
 	"github.com/go-chi/chi/v5"
 )
 
 type Controller struct {
-	song.Service
+	svc song.Service
 }
 
 func NewController(svc song.Service) *Controller {
@@ -15,11 +16,11 @@ func NewController(svc song.Service) *Controller {
 }
 
 func (c *Controller) Router(r chi.Router) {
-	// GET / (list)
+	r.With(middleware.RequireContentType("text/plain")).Post("/", c.Create)
+	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)
 
 	r.Group(func(r chi.Router) {
 		r.Use(c.fetchUpload)
-
 		r.Get("/{uuid}", c.Get)
 	})
 	// GET /{uuid}

@@ -19,7 +19,8 @@ info:
     
     When working with the Karman API you need to include the `Content-Type` in all non-empty requests.
     If this documentation does not explicitly specify the allowed values, you should use `application/json`.
-    If the `Content-Type` header is missing or unsupported, a `415 Unsupported Media Type` error will be returned.
+    If the `Content-Type` header is missing, a `400 Bad Request` error will be generated.
+    If the `Content-Type` header is not supported, a `415 Unsupported Media Type` error will be returned.
     This error is documented here and not explicitly included in every endpoint.
     
     ## Zero-Values

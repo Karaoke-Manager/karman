@@ -31,7 +31,7 @@ func MustGetSong(ctx context.Context) model.Song {
 func (c *Controller) fetchUpload(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "uuid")
-		song, err := c.Service.GetSong(r.Context(), id)
+		song, err := c.svc.GetSong(r.Context(), id)
 		if err != nil {
 			// TODO: Differentiate errors (404, maybe 409)
 			_ = render.Render(w, r, apierror.ErrInternalServerError)

@@ -85,14 +85,11 @@ components:
               - $ref: "#/components/schemas/ProblemDetails"
               - type: object
                 properties:
-                  fields:
-                    type: object
-                    additionalProperties:
-                      type: string
-                      x-additionalPropertiesName: field path
-                      description: An human-readable error message for the field at the specified path.
+                  field:
+                    type: string
                     description: |-
-                      A `Unprocessable Entity` response may or may not contain information about the JSON fields that caused the error.
+                      A `Unprocessable Entity` response may or may not contain information about the JSON field that caused the error.
+                      The value of this property is the path to the field causing the error.
                       
                       The `fields` object contains an optional mapping from field paths to error messages.
     UnexpectedError:

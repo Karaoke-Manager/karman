@@ -1,13 +1,16 @@
 package render
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 )
 
 // Renderer interface for managing response payloads.
 type Renderer interface {
-	// TODO: Doc
+	// The Render method is invoked when an object is about to be rendered (aka serialized).
+	// Implementing this method gives you the opportunity to perform data sanitization and normalization
+	// before an object is marshalled.
 	Render(w http.ResponseWriter, r *http.Request) error
 }
 
@@ -18,8 +21,46 @@ type NopRenderer struct{}
 // Render is an empty implementation of the Renderer interface.
 func (NopRenderer) Render(http.ResponseWriter, *http.Request) error { return nil }
 
+// A RenderError indicates that an error occurred during the rendering process of the response.
+// This kind of error is often an indication of a programming error or can be
+// an indication of malformed data.
+type RenderError struct {
+	// The underlying error.
+	err error
+}
+
+// Error implements the error interface.
+func (r RenderError) Error() string {
+	return fmt.Sprintf("render error: %s", r.err.Error())
+}
+
+// Unwrap implements the error interface.
+func (r RenderError) Unwrap() error {
+	return r.err
+}
+
+// A RespondError indicates that an error occurred during sending the rendered response.
+// This is often an indication of a network problem or some kind of system failure outside the control of the program.
+type RespondError struct {
+	// The underlying error.
+	err error
+}
+
+// Error implements the error interface.
+func (r RespondError) Error() string {
+	return fmt.Sprintf("respond error: %s", r.err.Error())
+}
+
+// Unwrap implements the error interface.
+func (r RespondError) Unwrap() error {
+	return r.err
+}
+
 // Binder interface for managing request payloads.
 type Binder interface {
+	// The Bind method is invoked when an object is bound to request data.
+	// Implementing this method gives you the opportunity to perform data
+	// validation and sanitization of input data.
 	Bind(r *http.Request) error
 }
 
@@ -30,31 +71,75 @@ type NopBinder struct{}
 // Bind is an empty implementation of the Binder interface.
 func (NopBinder) Bind(*http.Request) error { return nil }
 
+// A DecodeError indicates that the request data could not be properly decoded into the desired data format.
+// This could be because of a syntax error or a schema validation error.
+// You may inspect the underlying error for more details.
+type DecodeError struct {
+	// The underlying error.
+	err error
+}
+
+// Error implements the error interface.
+func (d DecodeError) Error() string {
+	return fmt.Sprintf("decode error: %s", d.err.Error())
+}
+
+// Unwrap implements the error interface.
+func (d DecodeError) Unwrap() error {
+	return d.err
+}
+
+// A BindError indicates that the request could be successfully parsed but could not be bound to the model instance.
+// This is usually an indication that some kind of constraint imposed by the model's Bind method was violated.
+type BindError struct {
+	// The underlying error.
+	err error
+}
+
+// Error implements the error interface.
+func (b BindError) Error() string {
+	return fmt.Sprintf("bind error: %s", b.err.Error())
+}
+
+// Unwrap implements the error interface.
+func (b BindError) Unwrap() error {
+	return b.err
+}
+
 // Bind decodes a request body and executes the Binder method of the
 // payload structure.
 func Bind(r *http.Request, v Binder) error {
 	if err := Decode(r, v); err != nil {
-		return err
+		return DecodeError{err}
 	}
-	return binder(r, v)
+	if err := binder(r, v); err != nil {
+		return BindError{err}
+	}
+	return nil
 }
 
 // Render renders a single payload and respond to the client request.
 func Render(w http.ResponseWriter, r *http.Request, v Renderer) error {
 	if err := renderer(w, r, v); err != nil {
-		return err
+		return RenderError{err}
 	}
-	return Respond(w, r, v)
+	if err := Respond(w, r, v); err != nil {
+		return RespondError{err}
+	}
+	return nil
 }
 
 // RenderList renders a slice of payloads and responds to the client request.
 func RenderList(w http.ResponseWriter, r *http.Request, l []Renderer) error {
 	for _, v := range l {
 		if err := renderer(w, r, v); err != nil {
-			return err
+			return RenderError{err}
 		}
 	}
-	return Respond(w, r, l)
+	if err := Respond(w, r, l); err != nil {
+		return RespondError{err}
+	}
+	return nil
 }
 
 // isNil is a helper function that tests if f is the nil value.

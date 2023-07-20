@@ -6,9 +6,15 @@ import (
 	"net/http"
 )
 
+const (
+	TypeUploadClosed       = ProblemTypeDomain + "/upload-closed"
+	TypeUploadFileNotFound = ProblemTypeDomain + "/upload-file-not-found"
+	TypeInvalidUploadPath  = ProblemTypeDomain + "/invalid-upload-path"
+)
+
 func UploadClosed(upload model.Upload) *ProblemDetails {
 	return &ProblemDetails{
-		Type:   ProblemTypeDomain + "/upload-closed",
+		Type:   TypeUploadClosed,
 		Title:  "Upload Closed",
 		Status: http.StatusConflict,
 		Detail: "You cannot access the files of the upload, because the upload is already closed.",
@@ -20,7 +26,7 @@ func UploadClosed(upload model.Upload) *ProblemDetails {
 
 func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
 	return &ProblemDetails{
-		Type:   ProblemTypeDomain + "/upload-file-not-found",
+		Type:   TypeUploadFileNotFound,
 		Title:  "File not Found",
 		Status: http.StatusNotFound,
 		Detail: fmt.Sprintf("The file at %q cannot be found in upload %s", path, upload.UUID.String()),
@@ -33,7 +39,7 @@ func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
 
 func InvalidUploadPath(path string) *ProblemDetails {
 	return &ProblemDetails{
-		Type:   ProblemTypeDomain + "/invalid-upload-path",
+		Type:   TypeInvalidUploadPath,
 		Title:  "Invalid Upload Path",
 		Status: http.StatusBadRequest,
 		Detail: fmt.Sprintf("The path \"%s\" is not a valid path for an upload.", path),

@@ -14,7 +14,6 @@ type ProblemDetails struct {
 	Detail   string `json:"detail,omitempty" xml:"detail,omitempty"`
 	Instance string `json:"instance,omitempty" xml:"instance,omitempty"`
 
-	// TODO: Maybe find a better name. UserData? Fields? Extra? ExtraFields?
 	Fields  map[string]any `json:"-"`
 	Headers http.Header    `json:"-"`
 }
@@ -42,7 +41,21 @@ func (p *ProblemDetails) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
-// TODO: Unmarshal
+func (p *ProblemDetails) UnmarshalJSON(data []byte) error {
+	type problemDetails ProblemDetails
+	if err := json.Unmarshal(data, (*problemDetails)(p)); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &p.Fields); err != nil {
+		return err
+	}
+	delete(p.Fields, "type")
+	delete(p.Fields, "title")
+	delete(p.Fields, "status")
+	delete(p.Fields, "detail")
+	delete(p.Fields, "instance")
+	return nil
+}
 
 func (p *ProblemDetails) Error() string {
 	return p.Title
@@ -54,7 +67,7 @@ func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
 			w.Header().Add(key, value)
 		}
 	}
-	if p.Type == "" || p.Type == "about:blank" {
+	if p.Type == "" || p.Type == "about:blank" || p.Title == "" {
 		p.Title = http.StatusText(p.Status)
 	}
 	render.Status(r, p.Status)

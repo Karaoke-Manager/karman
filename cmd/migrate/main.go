@@ -26,8 +26,11 @@ func main() {
 
 	gormdb.Set(db)
 
-	command := "up"
-	if err := goose.Run(command, sqlDB, ""); err != nil {
-		log.Fatalf("goose %v: %v", command, err)
+	if err := goose.SetDialect(db.Dialector.Name()); err != nil {
+		log.Fatalf("goose: failed to set dialect")
+	}
+	if err := goose.Up(sqlDB, "migrations"); err != nil {
+		log.Printf("%#v", err)
+		log.Fatalf("goose up: %v", err)
 	}
 }

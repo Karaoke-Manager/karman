@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// This migration adds the Song model.
 func init() {
 	type Model struct {
 		gorm.Model

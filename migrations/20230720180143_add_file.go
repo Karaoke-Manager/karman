@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// This migration adds the File model.
 func init() {
 	type Model struct {
 		gorm.Model

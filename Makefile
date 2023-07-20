@@ -1,6 +1,10 @@
 .PHONY: all
 all: build openapi
 
+.PHONY: image
+image: build
+	docker build -t ghcr.io/Karaoke-Manager/server .
+
 .PHONY: build
 build: build/karman
 

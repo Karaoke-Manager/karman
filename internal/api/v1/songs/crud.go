@@ -10,6 +10,21 @@ import (
 	"net/http"
 )
 
+func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
+	song, err := txt.ReadSong(r.Body)
+	if err != nil {
+		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
+		return
+	}
+	resp, err := c.svc.CreateSong(r.Context(), song)
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	s := schema.NewSongFromModel(resp)
+	_ = render.Render(w, r, &s)
+}
+
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	uploads, total, err := c.svc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
@@ -27,25 +42,10 @@ func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	resp := schema.List[*schema.Song]{
 		Items:  uploadSchemas,
 		Offset: pagination.Offset,
-		Limit:  pagination.Limit,
+		Limit:  pagination.RequestLimit,
 		Total:  total,
 	}
 	_ = render.Render(w, r, &resp)
-}
-
-func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	song, err := txt.ReadSong(r.Body)
-	if err != nil {
-		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
-		return
-	}
-	resp, err := c.svc.CreateSong(r.Context(), song)
-	if err != nil {
-		_ = render.Render(w, r, apierror.ErrInternalServerError)
-		return
-	}
-	s := schema.NewSongFromModel(resp)
-	_ = render.Render(w, r, &s)
 }
 
 func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {

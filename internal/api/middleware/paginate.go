@@ -14,8 +14,9 @@ const (
 )
 
 type Pagination struct {
-	Limit  int
-	Offset int
+	RequestLimit int
+	Limit        int
+	Offset       int
 }
 
 func Paginate(defaultLimit int, maxLimit int) func(next http.Handler) http.Handler {
@@ -32,7 +33,10 @@ func Paginate(defaultLimit int, maxLimit int) func(next http.Handler) http.Handl
 					return
 				}
 			}
-			if limit > maxLimit {
+			requestLimit := limit
+			if limit < 0 {
+				limit = 0
+			} else if limit > maxLimit {
 				limit = maxLimit
 			}
 			rawOffset := query.Get(PaginationOffsetKey)
@@ -43,9 +47,13 @@ func Paginate(defaultLimit int, maxLimit int) func(next http.Handler) http.Handl
 					return
 				}
 			}
+			if offset < 0 {
+				offset = 0
+			}
 			ctx := SetPagination(r.Context(), Pagination{
-				Limit:  limit,
-				Offset: offset,
+				RequestLimit: requestLimit,
+				Limit:        limit,
+				Offset:       offset,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}

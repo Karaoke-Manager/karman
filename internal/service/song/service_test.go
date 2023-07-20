@@ -59,29 +59,6 @@ func TestService_CreateSong(t *testing.T) {
 	})
 }
 
-func TestService_GetSong(t *testing.T) {
-	ctx := context.Background()
-	svc := setupService(t)
-
-	t.Run("empty", func(t *testing.T) {
-		_, err := svc.GetSong(ctx, "non existing")
-		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
-	})
-	t.Run("create and read", func(t *testing.T) {
-		song := model.NewSong()
-		song.Title = "Hello World"
-		song.Edition = "Testing"
-		err := svc.SaveSong(ctx, &song)
-		require.NoError(t, err)
-
-		song2, err := svc.GetSong(ctx, song.UUID.String())
-		assert.NoError(t, err)
-		assert.Equal(t, song.UUID, song2.UUID)
-		assert.Equal(t, song.Title, song2.Title)
-		assert.Equal(t, song.Edition, song2.Edition)
-	})
-}
-
 func TestService_FindSongs(t *testing.T) {
 	ctx := context.Background()
 	svc := setupService(t)
@@ -109,6 +86,29 @@ func TestService_FindSongs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, int64(2), total)
 		assert.Len(t, songs, 0)
+	})
+}
+
+func TestService_GetSong(t *testing.T) {
+	ctx := context.Background()
+	svc := setupService(t)
+
+	t.Run("empty", func(t *testing.T) {
+		_, err := svc.GetSong(ctx, "non existing")
+		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
+	t.Run("create and read", func(t *testing.T) {
+		song := model.NewSong()
+		song.Title = "Hello World"
+		song.Edition = "Testing"
+		err := svc.SaveSong(ctx, &song)
+		require.NoError(t, err)
+
+		song2, err := svc.GetSong(ctx, song.UUID.String())
+		assert.NoError(t, err)
+		assert.Equal(t, song.UUID, song2.UUID)
+		assert.Equal(t, song.Title, song2.Title)
+		assert.Equal(t, song.Edition, song2.Edition)
 	})
 }
 

@@ -11,6 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -28,11 +29,9 @@ func TestController_Create(t *testing.T) {
 		}
 		for name, c := range cases {
 			t.Run(name, func(t *testing.T) {
-				svc, assertServiceCalls := getMockService(t)
 				req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 				req.Header.Set("Content-Type", c.mediaType)
-				resp := doRequest(t, svc, req)
-				assertServiceCalls()
+				resp := doRequest(t, req, nil)
 
 				var err apierror.ProblemDetails
 				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
@@ -49,33 +48,38 @@ func TestController_Create(t *testing.T) {
 		expected := ultrastar.NewSongWithBPM(12 * 4)
 		expected.Title = "Hello World"
 		expected.Artist = "Foo"
-		expectedModel := model.NewSongWithData(expected)
-		expectedSchema := schema.NewSongFromModel(expectedModel)
-		expectedSchema.Extra = nil
-
-		svc, assertServiceCalls := getMockService(t)
-		svc.EXPECT().CreateSong(gomock.Any(), expected).Return(expectedModel, nil)
+		expectedModel := model.Song{
+			Title:      "Hello World",
+			Artist:     "Foo",
+			CalcMedley: true,
+		}
+		expectedSchema := schema.Song{
+			SongRW: schema.SongRW{
+				Title:  "Hello World",
+				Artist: "Foo",
+			},
+		}
+		expectedSchema.Medley.Mode = schema.MedleyModeAuto
 
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
 		req.Header.Set("Content-Type", "text/plain")
-		resp := doRequest(t, svc, req)
-		assertServiceCalls()
+		resp := doRequest(t, req, func(svc *MockSongService) {
+			svc.EXPECT().CreateSong(gomock.Any(), expected).Return(expectedModel, nil)
+		})
 
 		var song schema.Song
 		err := json.NewDecoder(resp.Body).Decode(&song)
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusCreated, resp.StatusCode)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, expectedSchema, song)
 	})
 
 	t.Run("syntax error", func(t *testing.T) {
 		data := `#TITLE:Foo
 unknown line`
-		svc, assertServiceCalls := getMockService(t)
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
 		req.Header.Set("Content-Type", "text/plain")
-		resp := doRequest(t, svc, req)
-		assertServiceCalls()
+		resp := doRequest(t, req, nil)
 
 		var err apierror.ProblemDetails
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
@@ -84,4 +88,75 @@ unknown line`
 		assert.Equal(t, apierror.TypeInvalidTXT, err.Type)
 		assert.Equal(t, float64(2), err.Fields["line"])
 	})
+}
+
+func TestController_Find(t *testing.T) {
+	songs := make([]model.Song, 150)
+	for i := range songs {
+		songs[i] = model.Song{
+			Title:  "Song " + strconv.Itoa(i),
+			Artist: "Testing",
+		}
+	}
+	cases := []struct {
+		Name               string
+		Default            bool
+		Limit              string
+		Offset             string
+		ExpectRequestLimit int
+		ExpectLimit        int
+		ExpectOffset       int
+		ExpectedCount      int
+		ExpectErr          bool
+	}{
+		{"default", true, "0", "0", 25, 25, 0, 25, false},
+		{"explicit limit", false, "10", "5", 10, 10, 5, 10, false},
+		{"high limit", false, "130", "20", 130, 100, 20, 100, false},
+		{"length past end", false, "50", "120", 50, 50, 120, 30, false},
+		{"offset past end", false, "30", "170", 30, 30, 170, 0, false},
+		{"negative values", false, "-25", "-3", -25, 0, 0, 0, false},
+		{"invalid values", false, "foo", "bar", 0, 0, 0, 0, true},
+	}
+
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			if !c.Default {
+				q := req.URL.Query()
+				q.Add("limit", c.Limit)
+				q.Add("offset", c.Offset)
+				req.URL.RawQuery = q.Encode()
+			}
+			resp := doRequest(t, req, func(svc *MockSongService) {
+				if c.ExpectErr {
+					return
+				}
+				low := c.ExpectOffset
+				if low > len(songs) {
+					low = len(songs)
+				}
+				high := low + c.ExpectLimit
+				if high > len(songs) {
+					high = len(songs)
+				}
+				svc.EXPECT().FindSongs(gomock.Any(), c.ExpectLimit, c.ExpectOffset).Return(songs[low:high], int64(len(songs)), nil)
+			})
+
+			if c.ExpectErr {
+				var err apierror.ProblemDetails
+				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
+				assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+				assert.Equal(t, http.StatusBadRequest, err.Status)
+			} else {
+				var page schema.List[*schema.Song]
+				require.NoError(t, json.NewDecoder(resp.Body).Decode(&page))
+				assert.Equal(t, http.StatusOK, resp.StatusCode)
+				assert.Len(t, page.Items, c.ExpectedCount)
+				assert.Equal(t, c.ExpectRequestLimit, page.Limit)
+				assert.Equal(t, c.ExpectedCount, page.Count)
+				assert.Equal(t, int64(len(songs)), page.Total)
+				assert.Equal(t, c.ExpectOffset, page.Offset)
+			}
+		})
+	}
 }

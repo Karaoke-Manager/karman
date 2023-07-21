@@ -24,8 +24,16 @@ func init() {
 		// Minimal model is enough for foreign keys
 	}
 
+	type Upload struct {
+		Model
+		// Minimal model is enough for foreign keys
+	}
+
 	type Song struct {
 		Model
+
+		UploadID *uint
+		Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
 
 		AudioFileID      *uint
 		AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`

@@ -18,8 +18,18 @@ func init() {
 		UUID uuid.UUID `gorm:"type:uuid,uniqueIndex"`
 	}
 
+	type Upload struct {
+		Model
+		// Minimal model is enough for foreign keys.
+	}
+
 	type File struct {
 		Model
+
+		UploadID *uint
+		Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+		Path     string
+
 		Size     uint64
 		Checksum []byte
 		Type     string // Mime type of the file. Must not contain parameters

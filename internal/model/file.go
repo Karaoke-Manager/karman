@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"mime"
+	"strings"
 	"time"
 )
 
 type File struct {
 	Model
+
+	UploadID *uint
+	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+	Path     string
+
 	Size     uint64
 	Checksum []byte
 	Type     string // Mime type of the file. Must not contain parameters
@@ -27,7 +33,10 @@ type File struct {
 func (f *File) BeforeSave(*gorm.DB) error {
 	t, _, err := mime.ParseMediaType(f.Type)
 	if err != nil {
-		return fmt.Errorf("file: invalid type: %e", err)
+		return fmt.Errorf("file: invalid media type: %s", f.Type)
+	}
+	if !strings.Contains(t, "/") {
+		return fmt.Errorf("file: invalid media type: %s", f.Type)
 	}
 	f.Type = t
 	return nil

@@ -8,6 +8,9 @@ import (
 type Song struct {
 	Model
 
+	UploadID *uint
+	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+
 	AudioFileID      *uint
 	AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`
 	VideoFileID      *uint

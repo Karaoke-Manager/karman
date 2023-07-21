@@ -43,7 +43,7 @@ func (c *Controller) fetchUpload(next http.Handler) http.Handler {
 		id := chi.URLParam(r, "uuid")
 		song, err := c.svc.GetSong(r.Context(), id)
 		if err != nil {
-			// TODO: Maybe support 409 for soft deleted?
+			// TODO: Maybe support 410 for soft deleted?
 			_ = render.Render(w, r, apierror.DBError(err))
 			return
 		}

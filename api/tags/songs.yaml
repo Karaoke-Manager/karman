@@ -10,34 +10,6 @@ tags:
       The following endpoints allow querying information about songs as well as manipulating the song database.
 paths:
   /v1/songs:
-    get:
-      operationId: findSongs
-      summary: Find Songs
-      tags: [ song ]
-      description: |-
-        List all songs in the database.
-      # TODO: Add filter and sort options
-      responses:
-        200:
-          x-summary: Success
-          description: |-
-            A successful request returns a paginated collection of songs.
-            If the selected filters produce an empty list, the `results` will be empty.
-            A `404` status code will not be returned.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        description: |-
-                          An array of `Song` resources.
-                        items:
-                          $ref: '#/components/schemas/Song'
-        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     post:
       operationId: createSong
       summary: Create a Song
@@ -71,6 +43,34 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Song' }
         400: { $ref: "#/components/responses/InvalidTXT" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    get:
+      operationId: findSongs
+      summary: Find Songs
+      tags: [ song ]
+      description: |-
+        List all songs in the database.
+      # TODO: Add filter and sort options
+      responses:
+        200:
+          x-summary: Success
+          description: |-
+            A successful request returns a paginated collection of songs.
+            If the selected filters produce an empty list, the `results` will be empty.
+            A `404` status code will not be returned.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        description: |-
+                          An array of `Song` resources.
+                        items:
+                          $ref: '#/components/schemas/Song'
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}:
     parameters:
@@ -639,5 +639,13 @@ components:
               status: 409
               detail: "The song must be imported before it can be modified."
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+              uuid: "FF345AC2-9350-49B5-BD51-8BA47E5DD336"
             allOf:
               - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+              - type: object
+                properties:
+                  uuid:
+                    type: string
+                    format: uuid
+                    description: |-
+                      The UUID of the song that could not be modified.

@@ -21,7 +21,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
-	s := schema.NewSongFromModel(resp)
+	s := schema.FromSong(resp)
 	_ = render.Render(w, r, &s)
 }
 
@@ -40,7 +40,7 @@ func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 		Total:  total,
 	}
 	for i, upload := range songs {
-		s := schema.NewSongFromModel(upload)
+		s := schema.FromSong(upload)
 		resp.Items[i] = &s
 	}
 	_ = render.Render(w, r, &resp)
@@ -48,13 +48,17 @@ func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
-	resp := schema.NewSongFromModel(song)
+	resp := schema.FromSong(song)
 	_ = render.Render(w, r, &resp)
 }
 
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
-	update := schema.NewSongFromModel(song)
+	if song.UploadID != nil {
+		_ = render.Render(w, r, apierror.UploadSongReadonly(song))
+		return
+	}
+	update := schema.FromSong(song)
 	if err := render.Bind(r, &update); err != nil {
 		_ = render.Render(w, r, apierror.BindError(err))
 		return

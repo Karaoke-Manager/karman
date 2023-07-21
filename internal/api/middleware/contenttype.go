@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// ContentTypeJSON is an instance of the RequireContentType middleware for the common application of JSON requests.
+var ContentTypeJSON = RequireContentType("application/json")
+
 // RequireContentType is a middleware that enforces the use of the Content-Type header.
 // To create this middleware you need to pass the allowed media types.
 // You can pass parameters for media types, but those are ignored in this middleware.

@@ -1,6 +1,7 @@
 package songs
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
@@ -196,5 +197,68 @@ func TestController_Get(t *testing.T) {
 				assert.Equal(t, http.StatusNotFound, err.Status)
 			}
 		})
+	}
+}
+
+func TestController_Update(t *testing.T) {
+	id := uuid.New()
+	uploadID := uint(123)
+	song := model.NewSong()
+	song.UUID = id
+	songWithUpload := model.NewSong()
+	songWithUpload.UUID = id
+	songWithUpload.UploadID = &uploadID
+
+	t.Run("simple", func(t *testing.T) {
+		body := strings.NewReader(`{"title": "Hello World"}`)
+		req := httptest.NewRequest(http.MethodPost, "/"+id.String(), body)
+		req.Header.Set("Content-Type", "application/json")
+		resp := doRequest(t, req, func(svc *MockSongService) {
+			svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
+			svc.EXPECT().SaveSong(gomock.Any(), gomock.AssignableToTypeOf(&model.Song{})).DoAndReturn(func(ctx context.Context, song *model.Song) error {
+				assert.Equal(t, id, song.UUID)
+				assert.Equal(t, "Hello World", song.Title)
+				return nil
+			})
+		})
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+
+	cases := []struct {
+		name        string
+		body        string
+		song        model.Song
+		notFound    bool
+		code        int
+		problemType string
+	}{
+		{"not found", `{"title": "Hello `, song, true, http.StatusNotFound, ""},
+		{"bad JSON", `{"title": "Hello `, song, false, http.StatusBadRequest, ""},
+		{"schema validation", `{"title": "Hello World", "medley": {"mode": "manual"}}`, song, false, http.StatusUnprocessableEntity, ""},
+		{"conflict", `{"title": "Hello World"}`, songWithUpload, false, http.StatusConflict, apierror.TypeUploadSongReadonly},
+	}
+
+	for _, c := range cases {
+		body := strings.NewReader(c.body)
+		req := httptest.NewRequest(http.MethodPost, "/"+c.song.UUID.String(), body)
+		req.Header.Set("Content-Type", "application/json")
+		resp := doRequest(t, req, func(svc *MockSongService) {
+			if c.notFound {
+				svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, gorm.ErrRecordNotFound)
+			} else {
+				svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, nil)
+			}
+		})
+
+		var err apierror.ProblemDetails
+		assert.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
+		assert.Equal(t, c.code, resp.StatusCode)
+		assert.Equal(t, c.code, err.Status)
+		if c.problemType == "" {
+			assert.True(t, err.IsDefaultType())
+		} else {
+			assert.Equal(t, c.problemType, err.Type)
+		}
 	}
 }

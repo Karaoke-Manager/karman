@@ -66,6 +66,12 @@ func (p *ProblemDetails) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
+// IsDefaultType indicates whether p.Type is the default problem type for plain status codes.
+// If this method returns true p.Type should be considered equal to "about:blank".
+func (p *ProblemDetails) IsDefaultType() bool {
+	return p.Type == "" || p.Type == "about:blank"
+}
+
 // UnmarshalJSON decodes data into p.
 // This counterpart to ProblemDetails.MarshalJSON puts all unknown fields into p.Fields.
 func (p *ProblemDetails) UnmarshalJSON(data []byte) error {

@@ -22,6 +22,7 @@ func (c *Controller) Router(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(c.fetchUpload)
 		r.Get("/{uuid}", c.Get)
+		r.With(middleware.ContentTypeJSON).Post("/{uuid}", c.Update)
 	})
 	// GET /{uuid}
 	// POST /{uuid}

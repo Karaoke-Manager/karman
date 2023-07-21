@@ -75,7 +75,7 @@ type Song struct {
 	Background *ImageFile `json:"background"`
 }
 
-func NewSongFromModel(m model.Song) Song {
+func FromSong(m model.Song) Song {
 	song := Song{
 		SongRW: SongRW{
 			Title:    m.Title,

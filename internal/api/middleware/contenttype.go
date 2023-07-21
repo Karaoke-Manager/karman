@@ -24,6 +24,9 @@ var ContentTypeJSON = RequireContentType("application/json")
 // Using this middleware forces the use of the Content-Type header.
 // A request without this header will result in an error, even if the request body is empty.
 func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handler {
+	if len(mediaTypes) == 0 {
+		panic("no media types specified")
+	}
 	allowed := map[string][]string{}
 	allowAll := false
 	for i := range mediaTypes {
@@ -33,6 +36,9 @@ func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handl
 		}
 		media, sub, ok := strings.Cut(t, "/")
 		if !ok {
+			panic("invalid media type: " + mediaTypes[i])
+		}
+		if media == "" || sub == "" {
 			panic("invalid media type: " + mediaTypes[i])
 		}
 		if media == "*" && sub == "*" {
@@ -46,9 +52,14 @@ func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handl
 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			s, _, err := mime.ParseMediaType(strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type"))))
-			if err != nil {
+			contentType := strings.ToLower(strings.TrimSpace(r.Header.Get("Content-Type")))
+			if contentType == "" {
 				_ = render.Render(w, r, apierror.MissingContentType(mediaTypes...))
+				return
+			}
+			s, _, err := mime.ParseMediaType(contentType)
+			if err != nil {
+				_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
 				return
 			}
 			if allowAll {

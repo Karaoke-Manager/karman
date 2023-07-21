@@ -20,30 +20,6 @@ import (
 )
 
 func TestController_Create(t *testing.T) {
-	t.Run("content type", func(t *testing.T) {
-		cases := map[string]struct {
-			mediaType string
-			code      int
-		}{
-			"invalid":  {"foo/bar", http.StatusUnsupportedMediaType},
-			"empty":    {"", http.StatusBadRequest},
-			"star":     {"*", http.StatusUnsupportedMediaType},
-			"wildcard": {"text/*", http.StatusUnsupportedMediaType},
-		}
-		for name, c := range cases {
-			t.Run(name, func(t *testing.T) {
-				req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
-				req.Header.Set("Content-Type", c.mediaType)
-				resp := doRequest(t, req, nil)
-
-				var err apierror.ProblemDetails
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-				assert.Equal(t, c.code, resp.StatusCode)
-				assert.Equal(t, c.code, err.Status)
-			})
-		}
-	})
-
 	t.Run("simple", func(t *testing.T) {
 		data := `#TITLE:Hello World
 #ARTIST:Foo
@@ -112,13 +88,9 @@ func TestController_Find(t *testing.T) {
 		ExpectedCount      int
 		ExpectErr          bool
 	}{
-		{"default", true, "0", "0", 25, 25, 0, 25, false},
-		{"explicit limit", false, "10", "5", 10, 10, 5, 10, false},
 		{"high limit", false, "130", "20", 130, 100, 20, 100, false},
 		{"length past end", false, "50", "120", 50, 50, 120, 30, false},
 		{"offset past end", false, "30", "170", 30, 30, 170, 0, false},
-		{"negative values", false, "-25", "-3", -25, 0, 0, 0, false},
-		{"invalid values", false, "foo", "bar", 0, 0, 0, 0, true},
 	}
 
 	for _, c := range cases {

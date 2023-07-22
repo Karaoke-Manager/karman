@@ -2,18 +2,29 @@ package main
 
 import (
 	"github.com/pressly/goose/v3"
+	"github.com/psanford/memfs"
+	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
-	_ "modernc.org/sqlite"
-	// TODO: Add other drivers.
 
 	_ "github.com/Karaoke-Manager/karman/migrations"
 	gormdb "github.com/Karaoke-Manager/karman/migrations/db"
 )
 
-func main() {
-	// TODO: Build proper CLI
+func init() {
+	rootCmd.AddCommand(migrateCmd)
+}
+
+var migrateCmd = &cobra.Command{
+	Use:   "migrate",
+	Short: "Run migrations",
+	Long:  "Run Karman schema migrations against your database.",
+	Run:   runMigrate,
+}
+
+func runMigrate(cmd *cobra.Command, args []string) {
+	// TODO: build proper CLI
 	db, err := gorm.Open(sqlite.Open("test.db"))
 	if err != nil {
 		log.Fatalf("goose: failed to open DB: %v\n", err)
@@ -24,12 +35,14 @@ func main() {
 	}
 	defer sqlDB.Close()
 
+	emptyFS := memfs.New()
+	goose.SetBaseFS(emptyFS)
 	gormdb.Set(db)
 
 	if err := goose.SetDialect(db.Dialector.Name()); err != nil {
 		log.Fatalf("goose: failed to set dialect")
 	}
-	if err := goose.Up(sqlDB, "migrations"); err != nil {
+	if err := goose.Up(sqlDB, "."); err != nil {
 		log.Printf("%#v", err)
 		log.Fatalf("goose up: %v", err)
 	}

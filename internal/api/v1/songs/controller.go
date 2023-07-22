@@ -18,16 +18,13 @@ func NewController(svc song.Service) *Controller {
 func (c *Controller) Router(r chi.Router) {
 	r.With(middleware.RequireContentType("text/plain")).Post("/", c.Create)
 	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)
+	r.Delete("/{uuid}", c.Delete)
 
 	r.Group(func(r chi.Router) {
 		r.Use(c.fetchUpload)
 		r.Get("/{uuid}", c.Get)
-		r.With(middleware.ContentTypeJSON).Post("/{uuid}", c.Update)
+		r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
 	})
-	// GET /{uuid}
-	// POST /{uuid}
-	// PATCH /{uuid}
-	// DELETE /{uuid}
 
 	// GET /{uuid}/artwork
 	// POST /{uuid}/artwork (JSON, image types)

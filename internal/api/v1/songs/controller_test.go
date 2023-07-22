@@ -10,6 +10,8 @@ import (
 
 //go:generate mockgen -package songs -typed -mock_names Service=MockSongService -destination ./mock_service_test.go github.com/Karaoke-Manager/karman/internal/service/song Service
 
+// doRequest executes the specified request against a songs.Controller backed by a MockSongService.
+// Before the request is executed the expect function is invoked giving you the opportunity to register expected calls on the service.
 func doRequest(t *testing.T, req *http.Request, expect func(svc *MockSongService)) *http.Response {
 	ctrl := gomock.NewController(t)
 	svc := NewMockSongService(ctrl)

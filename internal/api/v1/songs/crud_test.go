@@ -183,7 +183,7 @@ func TestController_Update(t *testing.T) {
 
 	t.Run("simple", func(t *testing.T) {
 		body := strings.NewReader(`{"title": "Hello World"}`)
-		req := httptest.NewRequest(http.MethodPost, "/"+id.String(), body)
+		req := httptest.NewRequest(http.MethodPatch, "/"+id.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
 			svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
@@ -213,7 +213,7 @@ func TestController_Update(t *testing.T) {
 
 	for _, c := range cases {
 		body := strings.NewReader(c.body)
-		req := httptest.NewRequest(http.MethodPost, "/"+c.song.UUID.String(), body)
+		req := httptest.NewRequest(http.MethodPatch, "/"+c.song.UUID.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
 			if c.notFound {
@@ -233,4 +233,26 @@ func TestController_Update(t *testing.T) {
 			assert.Equal(t, c.problemType, err.Type)
 		}
 	}
+}
+
+func TestController_Delete(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		id := uuid.New()
+		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
+		resp := doRequest(t, req, func(svc *MockSongService) {
+			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id.String()).Return(nil)
+		})
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
+
+	t.Run("already deleted", func(t *testing.T) {
+		id := uuid.New()
+		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
+		resp := doRequest(t, req, func(svc *MockSongService) {
+			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id.String()).Return(gorm.ErrRecordNotFound)
+		})
+
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	})
 }

@@ -1,12 +1,14 @@
 package songs
 
 import (
+	"errors"
 	"github.com/Karaoke-Manager/go-ultrastar/txt"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
 	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -75,8 +77,10 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	uuid := chi.URLParam(r, "uuid")
 	if err := c.svc.DeleteSongByUUID(r.Context(), uuid); err != nil {
-		_ = render.Render(w, r, apierror.DBError(err))
-		return
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			_ = render.Render(w, r, apierror.DBError(err))
+			return
+		}
 	}
 	_ = render.NoContent(w, r)
 }

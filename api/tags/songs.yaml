@@ -234,7 +234,13 @@ paths:
               type: string
               format: ultrastar
       responses:
-        204: { description: Success }
+        200:
+          x-summary: Success
+          description: |-
+            When the request completes successfully the response contains the updated song resource.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Song' }
         400:
           x-summary: Bad Request
           description: |-

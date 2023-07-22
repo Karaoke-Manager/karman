@@ -10,18 +10,17 @@ import (
 
 type Controller struct {
 	uploadController *uploads.Controller
-	songController   *songs.Controller
+	songController   songs.Controller
 }
 
-func NewController(songService song.Service, uploadService upload.Service) *Controller {
-	s := &Controller{
+func NewController(songService song.Service, uploadService upload.Service) Controller {
+	return Controller{
 		uploadController: uploads.NewController(uploadService),
 		songController:   songs.NewController(songService),
 	}
-	return s
 }
 
-func (c *Controller) Router(r chi.Router) {
+func (c Controller) Router(r chi.Router) {
 	r.Route("/songs", c.songController.Router)
 	r.Route("/uploads", c.uploadController.Router)
 }

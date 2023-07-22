@@ -13,6 +13,32 @@ func (s service) CreateSong(ctx context.Context, data *ultrastar.Song) (model.So
 	return song, err
 }
 
+func (s service) ReplaceSong(ctx context.Context, song *model.Song, data *ultrastar.Song) error {
+	song.Gap = data.Gap
+	song.VideoGap = data.VideoGap
+	song.NotesGap = data.NotesGap
+	song.Start = data.Start
+	song.End = data.End
+	song.PreviewStart = data.PreviewStart
+	song.MedleyStartBeat = data.MedleyStartBeat
+	song.MedleyEndBeat = data.MedleyEndBeat
+	song.CalcMedley = data.CalcMedley
+	song.Title = data.Title
+	song.Artist = data.Artist
+	song.Genre = data.Genre
+	song.Edition = data.Edition
+	song.Creator = data.Creator
+	song.Language = data.Language
+	song.Year = data.Year
+	song.Comment = data.Comment
+	song.DuetSinger1 = data.DuetSinger1
+	song.DuetSinger2 = data.DuetSinger2
+	song.Extra = data.CustomTags
+	song.MusicP1 = data.MusicP1.Clone()
+	song.MusicP2 = data.MusicP2.Clone()
+	return s.db.WithContext(ctx).Save(&song).Error
+}
+
 func (s service) FindSongs(ctx context.Context, limit, offset int) (songs []model.Song, total int64, err error) {
 	if err = s.db.WithContext(ctx).Model(&model.Song{}).Count(&total).Error; err != nil {
 		return

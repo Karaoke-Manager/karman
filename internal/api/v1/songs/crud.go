@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
+func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 	song, err := txt.ReadSong(r.Body)
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
@@ -27,7 +27,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, &s)
 }
 
-func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
+func (c Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	songs, total, err := c.svc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
@@ -48,18 +48,14 @@ func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, &resp)
 }
 
-func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
+func (c Controller) Get(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	resp := schema.FromSong(song)
 	_ = render.Render(w, r, &resp)
 }
 
-func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
+func (c Controller) Update(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
-	if song.UploadID != nil {
-		_ = render.Render(w, r, apierror.UploadSongReadonly(song))
-		return
-	}
 	update := schema.FromSong(song)
 	if err := render.Bind(r, &update); err != nil {
 		_ = render.Render(w, r, apierror.BindError(err))
@@ -74,7 +70,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
-func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
+func (c Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	uuid := chi.URLParam(r, "uuid")
 	if err := c.svc.DeleteSongByUUID(r.Context(), uuid); err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

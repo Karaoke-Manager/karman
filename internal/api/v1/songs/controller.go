@@ -10,12 +10,11 @@ type Controller struct {
 	svc song.Service
 }
 
-func NewController(svc song.Service) *Controller {
-	s := &Controller{svc}
-	return s
+func NewController(svc song.Service) Controller {
+	return Controller{svc}
 }
 
-func (c *Controller) Router(r chi.Router) {
+func (c Controller) Router(r chi.Router) {
 	r.With(middleware.RequireContentType("text/plain")).Post("/", c.Create)
 	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)
 	r.With(middleware.UUID("uuid")).Delete("/{uuid}", c.Delete)
@@ -25,13 +24,14 @@ func (c *Controller) Router(r chi.Router) {
 
 		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(false))
-			r.Get("/{uuid}", c.Get)
-			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
+			r.With(c.CheckModify).With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(true))
+			r.Get("/{uuid}", c.Get)
 			r.Get("/{uuid}/txt", c.GetTxt)
+			r.With(c.CheckModify).With(middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
 		})
 	})
 

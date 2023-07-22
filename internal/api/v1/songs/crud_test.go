@@ -143,7 +143,7 @@ func TestController_Get(t *testing.T) {
 	song.Title = "Foo"
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
 	resp := doRequest(t, req, func(svc *MockSongService) {
-		svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
+		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
 	})
 	var respSong schema.Song
 	assert.NoError(t, json.NewDecoder(resp.Body).Decode(&respSong))
@@ -190,7 +190,6 @@ func TestController_Update(t *testing.T) {
 	}{
 		{"bad JSON", `{"title": "Hello `, song, http.StatusBadRequest, ""},
 		{"schema validation", `{"title": "Hello World", "medley": {"mode": "manual"}}`, song, http.StatusUnprocessableEntity, ""},
-		{"conflict", `{"title": "Hello World"}`, songWithUpload, http.StatusConflict, apierror.TypeUploadSongReadonly},
 	}
 
 	for _, c := range cases {

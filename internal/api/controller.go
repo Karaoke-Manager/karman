@@ -16,16 +16,15 @@ import (
 // This is basically the root entrypoint of the Karman API.
 // All other API endpoints are created as sub-controllers of this controller.
 type Controller struct {
-	v1Controller *v1.Controller
+	v1Controller v1.Controller
 }
 
 // NewController creates a new Controller instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-controllers.
 func NewController(songService song.Service, uploadService upload.Service) Controller {
-	c := Controller{
+	return Controller{
 		v1Controller: v1.NewController(songService, uploadService),
 	}
-	return c
 }
 
 // Router sets up the router of this controller.

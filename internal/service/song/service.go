@@ -16,6 +16,7 @@ type Service interface {
 	SaveSong(ctx context.Context, song *model.Song) error
 	DeleteSongByUUID(ctx context.Context, uuid string) error
 	UltraStarSong(ctx context.Context, song model.Song) *ultrastar.Song
+	ReplaceSong(ctx context.Context, song *model.Song, data *ultrastar.Song) error
 }
 
 func NewService(db *gorm.DB) Service {

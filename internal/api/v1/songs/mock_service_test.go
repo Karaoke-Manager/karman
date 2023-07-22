@@ -232,6 +232,44 @@ func (c *ServiceGetSongWithFilesCall) DoAndReturn(f func(context.Context, uuid.U
 	return c
 }
 
+// ReplaceSong mocks base method.
+func (m *MockSongService) ReplaceSong(arg0 context.Context, arg1 *model.Song, arg2 *ultrastar.Song) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceSong", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceSong indicates an expected call of ReplaceSong.
+func (mr *MockSongServiceMockRecorder) ReplaceSong(arg0, arg1, arg2 interface{}) *ServiceReplaceSongCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceSong", reflect.TypeOf((*MockSongService)(nil).ReplaceSong), arg0, arg1, arg2)
+	return &ServiceReplaceSongCall{Call: call}
+}
+
+// ServiceReplaceSongCall wrap *gomock.Call
+type ServiceReplaceSongCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *ServiceReplaceSongCall) Return(arg0 error) *ServiceReplaceSongCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *ServiceReplaceSongCall) Do(f func(context.Context, *model.Song, *ultrastar.Song) error) *ServiceReplaceSongCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *ServiceReplaceSongCall) DoAndReturn(f func(context.Context, *model.Song, *ultrastar.Song) error) *ServiceReplaceSongCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // SaveSong mocks base method.
 func (m *MockSongService) SaveSong(arg0 context.Context, arg1 *model.Song) error {
 	m.ctrl.T.Helper()

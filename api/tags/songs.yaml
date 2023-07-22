@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Songs Resources
   version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
 tags:
   - name: song
     x-displayName: Managing Songs
@@ -42,7 +45,15 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Song' }
-        400: { $ref: "#/components/responses/InvalidTXT" }
+        400:
+          x-summary: Bad Request
+          description: |-
+            This error indicates that the TXT data is not properly formatted and can not be parsed.
+            This is usually an indication that the supplied file is not in the UltraStar TXT format.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/InvalidTXTError"
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     get:
       operationId: findSongs
@@ -89,6 +100,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Song' }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     patch:
@@ -131,7 +143,7 @@ paths:
           description: |-
             The song was updated successfully.
             Future `GET /v1/songs/{uuid}` requests will reflect the changes.
-        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequestOrInvalidUUID" }
         404: { $ref: "#/components/responses/SongNotFound" }
         409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
@@ -145,6 +157,7 @@ paths:
         If no song with this UUID exists, the response will have code `204`.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/txt:
     parameters:
@@ -193,6 +206,7 @@ paths:
                 : 16 3 15 to
                 ...
                 E
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
@@ -221,7 +235,20 @@ paths:
               format: ultrastar
       responses:
         204: { description: Success }
-        400: { $ref: "#/components/responses/InvalidTXT" }
+        400:
+          x-summary: Bad Request
+          description: |-
+            This error can indicate one of two things:
+
+            - The `uuid` in the request path was not correctly formatted
+            - The TXT data is not properly formatted and can not be parsed.
+              This is usually an indication that the supplied file is not in the UltraStar TXT format.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/InvalidUUIDError"
+                  - $ref: "#/components/schemas/InvalidTXTError"
         404: { $ref: "#/components/responses/SongNotFound" }
         409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -240,7 +267,6 @@ paths:
         - in: header
           name: Accept
           schema:
-            type: string
             enum:
               - application/zip
             default: "application/zip"
@@ -255,13 +281,14 @@ paths:
               schema:
                 type: string
                 format: binary
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/SongNotFound" }
         406:
           x-summary: Not Acceptable
           description: |-
             This error indicates that the requested archive format (via the `Accept` header) is not available.
           content:
-            application/json:
+            application/problem+json:
               schema:
                 example:
                   title: "Not Acceptable"
@@ -279,6 +306,9 @@ components:
       schema:
         type: string
         format: uuid
+        minLength: 36
+        maxLength: 36
+      example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
       description: |-
         The UUID of the song to operate on.
   schemas:
@@ -287,11 +317,13 @@ components:
       x-tags: [ song ]
       description: |-
         A `Song` resource represents a single UltraStar song.
-      required: [ uuid ]
       properties:
         uuid:
           type: string
           format: uuid
+          minLength: 36
+          maxLength: 36
+          example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
           readOnly: true
           description: |-
             The UUID is the unique identifier of a song.
@@ -382,6 +414,7 @@ components:
         notesGap:
           type: integer
           default: 0
+          example: 1337
           description: |-
             The number of additional **beats** that the notes will be delayed before the karaoke notes start.
             
@@ -389,6 +422,7 @@ components:
         start:
           type: integer
           default: 0
+          example: 1000
           description: |-
             The number of **milliseconds** that will be skipped at the beginning of the song.
             This can be used to skip long intros.
@@ -397,6 +431,7 @@ components:
         end:
           type: integer
           default: 0
+          example: 300021
           description: |-
             The number of **milliseconds** after which the song will end, regardless of the length of the audio file.
             This can be used to skip long outros. A zero-value is equivalent to no explicit end tag.
@@ -404,6 +439,7 @@ components:
             This corresponds to the UltraStar `#END` tag.
         previewStart:
           type: integer
+          example: 45000
           description: |-
             The number of **milliseconds** into the song where the preview starts.
             
@@ -538,7 +574,6 @@ components:
       type: object
       properties:
         mode:
-          type: string
           enum: [ auto ]
           description: |-
             `auto` medley mode enables automatic calculation of medleys by UltraStar. This is the default.
@@ -547,18 +582,19 @@ components:
       required: [ medleyStartBeat, medleyEndBeat ]
       properties:
         mode:
-          type: string
           enum: [ manual ]
           description: |-
             `manual` medley mode enables you to specify the medley start and end manually.
         medleyStartBeat:
           type: integer
+          example: 2736
           description: |-
             The **beat** at which the medley should start.
 
             This corresponds to the UltraStar `#MEDLEYSTARTBEAT` tag.
         medleyEndBeat:
           type: integer
+          example: 3058
           description: |-
             The **beat** at which the medley should end.
 
@@ -567,7 +603,6 @@ components:
       type: object
       properties:
         mode:
-          type: string
           enum: [ off ]
           description: |-
             `off` mode disables medley calculation completely. No medley will be available.
@@ -586,6 +621,9 @@ components:
             uuid:
               type: string
               format: uuid
+              minLength: 36
+              maxLength: 36
+              example: "F0481266-E081-4E28-BB20-4D6221C90C2F"
               description: |-
                 The requested UUID for which no song was found.
     InvalidTXTError:
@@ -607,21 +645,12 @@ components:
                 The line of the input on which the error occurred.
               example: 73
   responses:
-    InvalidTXT:
-      x-summary: Bad Request
-      description: |-
-        This error indicates that the TXT data is not properly formatted and can not be parsed.
-        This is usually an indication that the supplied file is not in the UltraStar TXT format.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/InvalidTXTError"
     SongNotFound:
       x-summary: Not Found
       description: |-
         A song with the specified `uuid` does not exist.
       content:
-        application/json:
+        application/problem+json:
           schema:
             $ref: "#/components/schemas/SongNotFoundError"
     UploadSongCannotBeModified:
@@ -630,7 +659,7 @@ components:
         The song with the specified `{uuid}` cannot be modified.
         This error is returned if you try to modify a song that has not been imported into the library yet.
       content:
-        application/json:
+        application/problem+json:
           schema:
             title: Upload Cannot Be Modified
             example:
@@ -647,5 +676,8 @@ components:
                   uuid:
                     type: string
                     format: uuid
+                    minLength: 36
+                    maxLength: 36
+                    example: "FF345AC2-9350-49B5-BD51-8BA47E5DD336"
                     description: |-
                       The UUID of the song that could not be modified.

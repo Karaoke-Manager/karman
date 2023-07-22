@@ -139,14 +139,16 @@ func TestController_Find(t *testing.T) {
 func TestController_Get(t *testing.T) {
 	id := uuid.New()
 	song := model.NewSong()
+	song.UUID = uuid.New()
 	song.Title = "Foo"
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
 	resp := doRequest(t, req, func(svc *MockSongService) {
-		svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
+		svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
 	})
 	var respSong schema.Song
 	assert.NoError(t, json.NewDecoder(resp.Body).Decode(&respSong))
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, song.UUID, respSong.UUID)
 	assert.Equal(t, song.Title, respSong.Title)
 }
 
@@ -166,7 +168,7 @@ func TestController_Update(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPatch, "/"+id.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
-			svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
+			svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
 			svc.EXPECT().SaveSong(gomock.Any(), gomock.AssignableToTypeOf(&model.Song{})).DoAndReturn(func(ctx context.Context, song *model.Song) error {
 				assert.Equal(t, id, song.UUID)
 				assert.Equal(t, "Foobar", song.Artist)
@@ -196,7 +198,7 @@ func TestController_Update(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPatch, "/"+c.song.UUID.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
-			svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, nil)
+			svc.EXPECT().GetSong(gomock.Any(), c.song.UUID).Return(c.song, nil)
 		})
 
 		var err apierror.ProblemDetails

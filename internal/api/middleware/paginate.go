@@ -88,7 +88,7 @@ func SetPagination(ctx context.Context, p Pagination) context.Context {
 }
 
 // GetPagination returns the pagination value from the request, if any.
-// If the request does not contain a pagination value, the return value will be false.
+// If the request does not contain a pagination value, the second return value will be false.
 func GetPagination(ctx context.Context) (p Pagination, ok bool) {
 	p, ok = ctx.Value(contextKeyPagination).(Pagination)
 	return

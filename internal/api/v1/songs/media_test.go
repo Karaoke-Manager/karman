@@ -23,7 +23,7 @@ func TestController_GetTxt(t *testing.T) {
 	usSong.Title = "Foo"
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String()+"/txt", nil)
 	resp := doRequest(t, req, func(svc *MockSongService) {
-		svc.EXPECT().GetSongWithFiles(gomock.Any(), id.String()).Return(song, nil)
+		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
 		svc.EXPECT().UltraStarSong(gomock.Any(), song).Return(usSong)
 	})
 

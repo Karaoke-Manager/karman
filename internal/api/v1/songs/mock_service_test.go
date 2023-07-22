@@ -10,6 +10,7 @@ import (
 
 	ultrastar "github.com/Karaoke-Manager/go-ultrastar"
 	model "github.com/Karaoke-Manager/karman/internal/model"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -154,7 +155,7 @@ func (c *ServiceFindSongsCall) DoAndReturn(f func(context.Context, int, int) ([]
 }
 
 // GetSong mocks base method.
-func (m *MockSongService) GetSong(arg0 context.Context, arg1 string) (model.Song, error) {
+func (m *MockSongService) GetSong(arg0 context.Context, arg1 uuid.UUID) (model.Song, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSong", arg0, arg1)
 	ret0, _ := ret[0].(model.Song)
@@ -181,19 +182,19 @@ func (c *ServiceGetSongCall) Return(arg0 model.Song, arg1 error) *ServiceGetSong
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *ServiceGetSongCall) Do(f func(context.Context, string) (model.Song, error)) *ServiceGetSongCall {
+func (c *ServiceGetSongCall) Do(f func(context.Context, uuid.UUID) (model.Song, error)) *ServiceGetSongCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceGetSongCall) DoAndReturn(f func(context.Context, string) (model.Song, error)) *ServiceGetSongCall {
+func (c *ServiceGetSongCall) DoAndReturn(f func(context.Context, uuid.UUID) (model.Song, error)) *ServiceGetSongCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
 
 // GetSongWithFiles mocks base method.
-func (m *MockSongService) GetSongWithFiles(arg0 context.Context, arg1 string) (model.Song, error) {
+func (m *MockSongService) GetSongWithFiles(arg0 context.Context, arg1 uuid.UUID) (model.Song, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSongWithFiles", arg0, arg1)
 	ret0, _ := ret[0].(model.Song)
@@ -220,13 +221,13 @@ func (c *ServiceGetSongWithFilesCall) Return(arg0 model.Song, arg1 error) *Servi
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *ServiceGetSongWithFilesCall) Do(f func(context.Context, string) (model.Song, error)) *ServiceGetSongWithFilesCall {
+func (c *ServiceGetSongWithFilesCall) Do(f func(context.Context, uuid.UUID) (model.Song, error)) *ServiceGetSongWithFilesCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceGetSongWithFilesCall) DoAndReturn(f func(context.Context, string) (model.Song, error)) *ServiceGetSongWithFilesCall {
+func (c *ServiceGetSongWithFilesCall) DoAndReturn(f func(context.Context, uuid.UUID) (model.Song, error)) *ServiceGetSongWithFilesCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

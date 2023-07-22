@@ -3,9 +3,9 @@ package songs
 import (
 	"context"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
@@ -41,7 +41,7 @@ func MustGetSong(ctx context.Context) model.Song {
 func (c *Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			id := chi.URLParam(r, "uuid")
+			id := middleware.MustGetUUID(r.Context())
 			var song model.Song
 			var err error
 			if includeFiles {

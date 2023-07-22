@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 // ProblemTypeDomain is the base domain for all custom problem types.
@@ -16,6 +17,17 @@ const (
 	// TypeValidationError indicates a that the request data did not conform to the required schema.
 	// This error should be associated with HTTP status code 422.
 	TypeValidationError = ProblemTypeDomain + "/validation-error"
+	// TypeInvalidUUID indicates that a UUID parameter was not a valid UUID.
+	// This error should be associated with HTTP status code 400.
+	TypeInvalidUUID = ProblemTypeDomain + "/invalid-uuid"
+)
+
+var (
+	ErrInvalidUUID = &ProblemDetails{
+		Type:   TypeInvalidUUID,
+		Title:  "Invalid UUID",
+		Status: http.StatusBadRequest,
+	}
 )
 
 // BindError generates an error indicating that the request data was invalid in some way.
@@ -32,7 +44,7 @@ func BindError(err error) *ProblemDetails {
 		// Probably a syntax error
 		return ErrBadRequest
 	case errors.As(err, &render.BindError{}):
-		return ErrUnprocessableEntity
+		return UnprocessableEntity(errors.Unwrap(err).Error())
 	default:
 		// Should not happen
 		return ErrUnprocessableEntity

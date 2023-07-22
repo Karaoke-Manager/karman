@@ -3,6 +3,9 @@ info:
   title: Uploads Resources
   description: Some Description
   version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
 tags:
   - name: upload
     x-displayName: Importing Songs
@@ -88,6 +91,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Upload' }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
@@ -99,6 +103,7 @@ paths:
         If no upload with this UUID exists, the response will have code `204`.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}/files/{path}:
     parameters:
@@ -149,7 +154,7 @@ paths:
                         children: [ ]
               schema:
                 $ref: '#/components/schemas/File'
-        400: { $ref: "#/components/responses/InvalidPath" }
+        400: { $ref: "#/components/responses/InvalidPathOrUUID" }
         404: { $ref: "#/components/responses/FileOrUploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -178,7 +183,7 @@ paths:
         204:
           x-summary: Success
           description: The file was successfully uploaded.
-        400: { $ref: "#/components/responses/InvalidPath" }
+        400: { $ref: "#/components/responses/InvalidPathOrUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -195,11 +200,13 @@ paths:
         Deleting a file that is already absent will generate a `204` response.
       responses:
         204: { description: Success }
-        400: { $ref: "#/components/responses/InvalidPath" }
+        400: { $ref: "#/components/responses/InvalidPathOrUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
-  /v1/uploads/{uuid}/markForProcessing:
+  /v1/uploads/{uuid}/mark-for-processing:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
     post:
       operationId: markForProcessing
       summary: Mark an Upload for Processing
@@ -218,10 +225,13 @@ paths:
                 status: pending
               schema:
                 $ref: '#/components/schemas/Upload'
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
-  /v1/uploads/{uuid}/startProcessing:
+  /v1/uploads/{uuid}/start-processing:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
     post:
       operationId: startProcessing
       summary: Begin Processing an Upload
@@ -238,15 +248,18 @@ paths:
           content:
             application/json:
               example:
-                state: processing
+                status: processing
                 songsTotal: -1
                 songsProcessed: 0
               schema:
                 $ref: '#/components/schemas/Upload'
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}/songs:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
     get:
       operationId: getUploadSongs
       summary: List all Songs in an Upload
@@ -274,15 +287,18 @@ paths:
                           An array of `Song` resources.
                         items:
                           $ref: 'songs.yaml#/components/schemas/Song'
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}/import:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
     post:
       operationId: importSongs
       summary: Import songs
       tags: [ upload ]
-      description: ""
+      description: "A Desc"
       requestBody:
         required: true
         description: ""
@@ -312,6 +328,7 @@ components:
       schema:
         type: string
         format: uuid
+      example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
       description: |-
         The UUID of the upload to operate on.
   schemas:
@@ -337,12 +354,12 @@ components:
         uuid:
           type: string
           format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
     CreatedUpload:
       type: object
       required: [ status ]
       properties:
         status:
-          type: string
           enum: [ "created" ]
           description: |-
             The `created` status indicates that the upload accepts file uploads and deletes.
@@ -352,7 +369,6 @@ components:
       required: [ status ]
       properties:
         status:
-          type: string
           enum: [ "pending" ]
           description: |-
             The `pending` status indicates that the upload has been marked for processing but processing has not started yet.
@@ -362,7 +378,6 @@ components:
       required: [ status, songsTotal, songsProcessed ]
       properties:
         status:
-          type: string
           enum: [ "processing" ]
           description: |-
             The `processing` status indicates that an upload is currently being processed.
@@ -390,7 +405,6 @@ components:
       required: [ status ]
       properties:
         status:
-          type: string
           enum: [ "ready" ]
           description: |-
             The `ready` status indicates that the upload has been analyzed and it is now possible to import songs.
@@ -408,12 +422,15 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
+          example: "Foobar - Hello World.txt"
           description: |-
             The name of the file including its extension.
             This does not include the file path.
         size:
           type: integer
           minimum: 0
+          example: 8012
           description: |-
             The size of the file in bytes.
             
@@ -444,6 +461,9 @@ components:
             uuid:
               type: string
               format: uuid
+              minLength: 36
+              maxLength: 36
+              example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
               description: |-
                 The requested UUID for which no upload was found.
     UploadStateError:
@@ -461,6 +481,9 @@ components:
             uuid:
               type: string
               format: uuid
+              minLength: 36
+              maxLength: 36
+              example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
               description: |-
                 The UUID of the affected upload.
   responses:
@@ -469,14 +492,14 @@ components:
       description: |-
         An upload with the specified `uuid` does not exist.
       content:
-        application/json:
+        application/problem+json:
           schema: { $ref: "#/components/schemas/UploadNotFoundError" }
     FileOrUploadNotFound:
       x-summary: Not Found
       description: |-
         Either the upload or a file at `path` does not exist.
       content:
-        application/json:
+        application/problem+json:
           schema:
             oneOf:
               - $ref: "#/components/schemas/UploadNotFoundError"
@@ -495,42 +518,57 @@ components:
                       uuid:
                         type: string
                         format: uuid
+                        minLength: 36
+                        maxLength: 36
+                        example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
                         description: |-
                           The UUID of the upload whose file was not found.
                       path:
                         type: string
                         format: path
+                        minLength: 1
+                        example: "some/path"
                         description: |-
                           The path that was requested but at which no file was found.
-    InvalidPath:
+    InvalidPathOrUUID:
       x-summary: Bad Request
       description: |-
-        The requested `path` was badly formatted.
+        This error can indicate one of two things:
+        
+        - The requested `uuid` was badly formatted.
+        - The requested `path` was badly formatted.
       content:
-        application/json:
+        application/problem+json:
           schema:
-            title: Invalid Path
-            example:
-              type: "codello.dev/karman/problems/invalid-upload-path"
-              title: "Invalid Path"
-              status: 400
-              uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
-              path: "../invalid.txt"
-            allOf:
-              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
-              - type: object
-                required: [ uuid, path ]
-                properties:
-                  uuid:
-                    type: string
-                    format: uuid
-                    description: |-
-                      The UUID of the affected upload.
-                  path:
-                    type: string
-                    format: path
-                    description: |-
-                      The path that was requested but rejected.
+            oneOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/InvalidUUIDError"
+              - title: Invalid Path
+                example:
+                  type: "codello.dev/karman/problems/invalid-upload-path"
+                  title: "Invalid Path"
+                  status: 400
+                  uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+                  path: "../invalid.txt"
+                allOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+                  - type: object
+                    required: [ uuid, path ]
+                    properties:
+                      uuid:
+                        type: string
+                        format: uuid
+                        minLength: 36
+                        maxLength: 36
+                        example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+                        description: |-
+                          The UUID of the affected upload.
+                      path:
+                        type: string
+                        format: path
+                        minLength: 1
+                        example: "some:invalid/path"
+                        description: |-
+                          The path that was requested but rejected.
     UploadStateError:
       x-summary: Conflict
       description: |-

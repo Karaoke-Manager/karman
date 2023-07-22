@@ -6,6 +6,8 @@ package middleware
 type contextKey int
 
 const (
-	// contextKeyPagination is a context for that stores a Pagination value.
+	// contextKeyPagination is a context key for that stores a Pagination value.
 	contextKeyPagination contextKey = iota
+	// contextKeyUUID is a context key that stores a UUID value.
+	contextKeyUUID
 )

@@ -36,3 +36,9 @@ func MissingContentType(allowed ...string) *ProblemDetails {
 		},
 	}
 }
+
+func UnprocessableEntity(message string) *ProblemDetails {
+	p := HttpStatus(http.StatusUnprocessableEntity)
+	p.Detail = message
+	return p
+}

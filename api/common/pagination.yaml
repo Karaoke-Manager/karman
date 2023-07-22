@@ -26,6 +26,7 @@ components:
           description: |-
             The result size limit specified in the request.
           default: 25
+          example: 35
         total:
           type: integer
           description: |-

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/google/uuid"
 	"net/http"
 	"time"
 )
@@ -82,7 +83,7 @@ type SongRW struct {
 // The Song schema should not be used as request schema.
 type Song struct {
 	SongRW
-	UUID string `json:"uuid"`
+	UUID uuid.UUID `json:"uuid"`
 
 	Duet       bool       `json:"duet"`
 	Audio      *AudioFile `json:"audio"`
@@ -94,6 +95,7 @@ type Song struct {
 // FromSong converts m into a schema instance representing the current state of m.
 func FromSong(m model.Song) Song {
 	song := Song{
+		UUID: m.UUID,
 		SongRW: SongRW{
 			Title:    m.Title,
 			Artist:   m.Artist,

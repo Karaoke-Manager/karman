@@ -52,7 +52,7 @@ func TestService_CreateSong(t *testing.T) {
 		assert.NotNil(t, s.MusicP1)
 		assert.Equal(t, song.MusicP1, s.MusicP1)
 
-		s, err = svc.GetSong(ctx, s.UUID.String())
+		s, err = svc.GetSong(ctx, s.UUID)
 		require.NoError(t, err)
 		assert.Nil(t, s.MusicP2)
 		assert.NotNil(t, s.MusicP1)
@@ -95,7 +95,7 @@ func TestService_GetSong(t *testing.T) {
 	svc := setupService(t)
 
 	t.Run("empty", func(t *testing.T) {
-		_, err := svc.GetSong(ctx, "non existing")
+		_, err := svc.GetSong(ctx, uuid.New())
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})
 
@@ -114,7 +114,7 @@ func TestService_GetSong(t *testing.T) {
 	err := svc.SaveSong(ctx, &expected)
 	require.NoError(t, err)
 	t.Run("read", func(t *testing.T) {
-		song, err := svc.GetSong(ctx, expected.UUID.String())
+		song, err := svc.GetSong(ctx, expected.UUID)
 		assert.NoError(t, err)
 		assert.Equal(t, expected.UUID, song.UUID)
 		assert.Equal(t, expected.Title, song.Title)
@@ -124,7 +124,7 @@ func TestService_GetSong(t *testing.T) {
 		assert.Nil(t, song.AudioFile)
 	})
 	t.Run("include files", func(t *testing.T) {
-		song, err := svc.GetSongWithFiles(ctx, expected.UUID.String())
+		song, err := svc.GetSongWithFiles(ctx, expected.UUID)
 		assert.NoError(t, err)
 		assert.Equal(t, expected.UUID, song.UUID)
 		assert.Equal(t, expected.Title, song.Title)

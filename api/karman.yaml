@@ -40,9 +40,6 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
-servers:
-  - url: https://example.com/karman/api
-    description: Example Server
 paths: {}
 x-tagGroups:
   - name: Library Management

@@ -46,6 +46,22 @@ components:
             It may or may not yield further information if dereferenced.
             This field is usually absent but may be used for tracing information.
           example: "/traces/481CF77B-3099-445C-A789-58F997233681"
+    InvalidUUIDError:
+      title: Invalid UUID
+      example:
+        type: "codello.dev/karman/problems/invalid-uuid"
+        title: "Invalid UUID"
+        status: 400
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
+    BadRequestError:
+      title: Bad Request Body
+      example:
+        title: "Bad Request"
+        status: 400
+        instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
   responses:
     BadRequest:
       x-summary: Bad Request
@@ -55,14 +71,32 @@ components:
         This error can also indicate that a constraint on the request data was violated (e.g. a missing field or an invalid data type).
         In some of these cases a `422` response may be returned instead.
       content:
-        application/json:
+        application/problem+json:
           schema:
-            example:
-              title: "Bad Request"
-              status: 400
-              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
-            allOf:
-              - $ref: "#/components/schemas/ProblemDetails"
+            $ref: "#/components/schemas/BadRequestError"
+    InvalidUUID:
+      x-summary: Invalid UUID
+      description: |-
+        This error indicates that a UUID parameter was not correctly formatted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/InvalidUUIDError"
+    BadRequestOrInvalidUUID:
+      x-summary: Bad Request
+      description: |-
+        This error indicates that the request data was not properly formatted.
+        
+        This may be caused either by an invalid UUID in the request or because the request body was not correctly formatted.
+
+        This error can also indicate that a constraint on the request data was violated (e.g. a missing field or an invalid data type).
+        In some of these cases a `422` response may be returned instead.
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/BadRequestError"
+              - $ref: "#/components/schemas/InvalidUUIDError"
     UnprocessableEntity:
       x-summary: Unprocessable Entity
       description: |-
@@ -74,7 +108,7 @@ components:
         
         If a `422` status code is used, the `fields` property may contain detailed information about the cause of the issue.
       content:
-        application/json:
+        application/problem+json:
           schema:
             example:
               type: "codello.dev/karman/problems/validation-error"
@@ -87,18 +121,19 @@ components:
                 properties:
                   field:
                     type: string
+                    example: "medley.medleyStartBeat"
                     description: |-
                       A `Unprocessable Entity` response may or may not contain information about the JSON field that caused the error.
                       The value of this property is the path to the field causing the error.
                       
-                      The `fields` object contains an optional mapping from field paths to error messages.
+                      The `fields` object might contain a mapping from field paths to error messages.
     UnexpectedError:
       x-summary: Unexpected Error
       description: |-
         This response indicates an unexpected server-side error (such as a communications error with the database).
         Depending on the server configuration the resulting error object may contain additional debug information.
       content:
-        application/json:
+        application/problem+json:
           schema:
             example:
               title: "Internal Server Error"

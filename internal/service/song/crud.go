@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/google/uuid"
 )
 
 func (s service) CreateSong(ctx context.Context, data *ultrastar.Song) (model.Song, error) {
@@ -22,19 +23,19 @@ func (s service) FindSongs(ctx context.Context, limit, offset int) (songs []mode
 	return
 }
 
-func (s service) GetSong(ctx context.Context, uuid string) (song model.Song, err error) {
+func (s service) GetSong(ctx context.Context, id uuid.UUID) (song model.Song, err error) {
 	err = s.db.WithContext(ctx).
-		First(&song, "uuid = ?", uuid).Error
+		First(&song, "uuid = ?", id).Error
 	return
 }
 
-func (s service) GetSongWithFiles(ctx context.Context, uuid string) (song model.Song, err error) {
+func (s service) GetSongWithFiles(ctx context.Context, id uuid.UUID) (song model.Song, err error) {
 	err = s.db.WithContext(ctx).
 		Joins("AudioFile").
 		Joins("VideoFile").
 		Joins("CoverFile").
 		Joins("BackgroundFile").
-		First(&song, "songs.uuid = ?", uuid).Error
+		First(&song, "songs.uuid = ?", id).Error
 	return
 }
 

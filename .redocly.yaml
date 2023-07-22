@@ -1,0 +1,42 @@
+extends:
+  - recommended
+theme:
+  openapi:
+    hideHostname: true
+    showAccessMode: true
+    requiredPropsFirst: true
+rules:
+  # We don't have a hosted instance
+  no-empty-servers: off
+
+  # Additional errors
+  info-license: error
+  info-license-url: error
+  no-ambiguous-paths: error
+  no-http-verbs-in-paths: error
+  no-unused-components: error
+  operation-description: error
+  operation-operationId: error
+  operation-singular-tag: error
+  operation-tag-defined: error
+  parameter-description: error
+  path-segment-plural:
+    severity: error
+    exceptions: [v1]
+    ignoreLastPathSegment: true
+
+  paths-kebab-case: error
+  required-string-property-missing-min-length: error
+  scalar-property-missing-example: error
+  spec-strict-refs: error
+  no-invalid-parameter-examples: error
+
+  # TODO: Implement security schemes
+  security-defined: off
+
+  # This can currently only be a warning because it does not work with oneOf.
+  no-invalid-media-type-examples: warn
+
+  # We currently can't make this an error because it does not understand allOf
+  # See https://github.com/Redocly/redocly-cli/issues/932
+  operation-4xx-problem-details-rfc7807: warn

@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Song Media Resources
   version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
 tags:
   - name: media
     x-displayName: Managing Song Media
@@ -30,6 +33,7 @@ paths:
       responses:
         200: { $ref: "#/components/responses/Media" }
         3XX: { $ref: "#/components/responses/Redirect" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/NotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
@@ -59,6 +63,7 @@ paths:
               format: binary
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
@@ -72,6 +77,7 @@ paths:
         If the song does not have a cover this request will succeed with a `204` status code.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -89,6 +95,7 @@ paths:
       responses:
         200: { $ref: "#/components/responses/Media" }
         3XX: { $ref: "#/components/responses/Redirect" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/NotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
@@ -118,6 +125,7 @@ paths:
               format: binary
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
@@ -131,6 +139,7 @@ paths:
         If the song does not have a background this request will succeed with a `204` status code.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -148,6 +157,7 @@ paths:
       responses:
         200: { $ref: "#/components/responses/Media" }
         3XX: { $ref: "#/components/responses/Redirect" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/NotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
@@ -177,6 +187,7 @@ paths:
               format: binary
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
@@ -190,6 +201,7 @@ paths:
         If the song does not have a video this request will succeed with a `204` status code.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -207,6 +219,7 @@ paths:
       responses:
         200: { $ref: "#/components/responses/Media" }
         3XX: { $ref: "#/components/responses/Redirect" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/NotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     put:
@@ -236,6 +249,7 @@ paths:
               format: binary
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         415: { $ref: "#/components/responses/UnsupportedMediaType" }
@@ -249,6 +263,7 @@ paths:
         If the song does not have an audio file this request will succeed with a `204` status code.
       responses:
         204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -271,10 +286,12 @@ components:
             uuid:
               type: string
               format: uuid
+              minLength: 36
+              maxLength: 36
+              example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
               description: |-
                 The UUID of the song for which the media file was not found.
             media:
-              type: string
               enum: [ cover, background, audio, video ]
               description: |-
                 The kind of media that was not found.
@@ -284,7 +301,7 @@ components:
       description: |-
         Either the song with the specified `uuid` does not exist or it does not have the requested media file.
       content:
-        application/json:
+        application/problem+json:
           schema:
             oneOf:
               - $ref: "songs.yaml#/components/schemas/SongNotFoundError"
@@ -332,7 +349,7 @@ components:
       description: |-
         This error indicates that the specified `Content-Type` is not supported for this media field.
       content:
-        application/json:
+        application/problem+json:
           schema:
             example:
               title: "Unsupported Media Type"

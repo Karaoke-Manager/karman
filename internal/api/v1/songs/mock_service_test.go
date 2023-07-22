@@ -37,45 +37,6 @@ func (m *MockSongService) EXPECT() *MockSongServiceMockRecorder {
 	return m.recorder
 }
 
-// CreateSong mocks base method.
-func (m *MockSongService) CreateSong(arg0 context.Context, arg1 *ultrastar.Song) (model.Song, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSong", arg0, arg1)
-	ret0, _ := ret[0].(model.Song)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSong indicates an expected call of CreateSong.
-func (mr *MockSongServiceMockRecorder) CreateSong(arg0, arg1 interface{}) *ServiceCreateSongCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSong", reflect.TypeOf((*MockSongService)(nil).CreateSong), arg0, arg1)
-	return &ServiceCreateSongCall{Call: call}
-}
-
-// ServiceCreateSongCall wrap *gomock.Call
-type ServiceCreateSongCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *ServiceCreateSongCall) Return(arg0 model.Song, arg1 error) *ServiceCreateSongCall {
-	c.Call = c.Call.Return(arg0, arg1)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *ServiceCreateSongCall) Do(f func(context.Context, *ultrastar.Song) (model.Song, error)) *ServiceCreateSongCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceCreateSongCall) DoAndReturn(f func(context.Context, *ultrastar.Song) (model.Song, error)) *ServiceCreateSongCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
 // DeleteSongByUUID mocks base method.
 func (m *MockSongService) DeleteSongByUUID(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -232,44 +193,6 @@ func (c *ServiceGetSongWithFilesCall) DoAndReturn(f func(context.Context, uuid.U
 	return c
 }
 
-// ReplaceSong mocks base method.
-func (m *MockSongService) ReplaceSong(arg0 context.Context, arg1 *model.Song, arg2 *ultrastar.Song) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceSong", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ReplaceSong indicates an expected call of ReplaceSong.
-func (mr *MockSongServiceMockRecorder) ReplaceSong(arg0, arg1, arg2 interface{}) *ServiceReplaceSongCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceSong", reflect.TypeOf((*MockSongService)(nil).ReplaceSong), arg0, arg1, arg2)
-	return &ServiceReplaceSongCall{Call: call}
-}
-
-// ServiceReplaceSongCall wrap *gomock.Call
-type ServiceReplaceSongCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *ServiceReplaceSongCall) Return(arg0 error) *ServiceReplaceSongCall {
-	c.Call = c.Call.Return(arg0)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *ServiceReplaceSongCall) Do(f func(context.Context, *model.Song, *ultrastar.Song) error) *ServiceReplaceSongCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceReplaceSongCall) DoAndReturn(f func(context.Context, *model.Song, *ultrastar.Song) error) *ServiceReplaceSongCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
 // SaveSong mocks base method.
 func (m *MockSongService) SaveSong(arg0 context.Context, arg1 *model.Song) error {
 	m.ctrl.T.Helper()
@@ -308,40 +231,76 @@ func (c *ServiceSaveSongCall) DoAndReturn(f func(context.Context, *model.Song) e
 	return c
 }
 
-// UltraStarSong mocks base method.
-func (m *MockSongService) UltraStarSong(arg0 context.Context, arg1 model.Song) *ultrastar.Song {
+// SongData mocks base method.
+func (m *MockSongService) SongData(arg0 model.Song) *ultrastar.Song {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UltraStarSong", arg0, arg1)
+	ret := m.ctrl.Call(m, "SongData", arg0)
 	ret0, _ := ret[0].(*ultrastar.Song)
 	return ret0
 }
 
-// UltraStarSong indicates an expected call of UltraStarSong.
-func (mr *MockSongServiceMockRecorder) UltraStarSong(arg0, arg1 interface{}) *ServiceUltraStarSongCall {
+// SongData indicates an expected call of SongData.
+func (mr *MockSongServiceMockRecorder) SongData(arg0 interface{}) *ServiceSongDataCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UltraStarSong", reflect.TypeOf((*MockSongService)(nil).UltraStarSong), arg0, arg1)
-	return &ServiceUltraStarSongCall{Call: call}
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SongData", reflect.TypeOf((*MockSongService)(nil).SongData), arg0)
+	return &ServiceSongDataCall{Call: call}
 }
 
-// ServiceUltraStarSongCall wrap *gomock.Call
-type ServiceUltraStarSongCall struct {
+// ServiceSongDataCall wrap *gomock.Call
+type ServiceSongDataCall struct {
 	*gomock.Call
 }
 
 // Return rewrite *gomock.Call.Return
-func (c *ServiceUltraStarSongCall) Return(arg0 *ultrastar.Song) *ServiceUltraStarSongCall {
+func (c *ServiceSongDataCall) Return(arg0 *ultrastar.Song) *ServiceSongDataCall {
 	c.Call = c.Call.Return(arg0)
 	return c
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *ServiceUltraStarSongCall) Do(f func(context.Context, model.Song) *ultrastar.Song) *ServiceUltraStarSongCall {
+func (c *ServiceSongDataCall) Do(f func(model.Song) *ultrastar.Song) *ServiceSongDataCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceUltraStarSongCall) DoAndReturn(f func(context.Context, model.Song) *ultrastar.Song) *ServiceUltraStarSongCall {
+func (c *ServiceSongDataCall) DoAndReturn(f func(model.Song) *ultrastar.Song) *ServiceSongDataCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// UpdateSongFromData mocks base method.
+func (m *MockSongService) UpdateSongFromData(arg0 *model.Song, arg1 *ultrastar.Song) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "UpdateSongFromData", arg0, arg1)
+}
+
+// UpdateSongFromData indicates an expected call of UpdateSongFromData.
+func (mr *MockSongServiceMockRecorder) UpdateSongFromData(arg0, arg1 interface{}) *ServiceUpdateSongFromDataCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSongFromData", reflect.TypeOf((*MockSongService)(nil).UpdateSongFromData), arg0, arg1)
+	return &ServiceUpdateSongFromDataCall{Call: call}
+}
+
+// ServiceUpdateSongFromDataCall wrap *gomock.Call
+type ServiceUpdateSongFromDataCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *ServiceUpdateSongFromDataCall) Return() *ServiceUpdateSongFromDataCall {
+	c.Call = c.Call.Return()
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *ServiceUpdateSongFromDataCall) Do(f func(*model.Song, *ultrastar.Song)) *ServiceUpdateSongFromDataCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *ServiceUpdateSongFromDataCall) DoAndReturn(f func(*model.Song, *ultrastar.Song)) *ServiceUpdateSongFromDataCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

@@ -43,7 +43,10 @@ func TestController_Create(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
 		req.Header.Set("Content-Type", "text/plain")
 		resp := doRequest(t, req, func(svc *MockSongService) {
-			svc.EXPECT().CreateSong(gomock.Any(), expected).Return(expectedModel, nil)
+			svc.EXPECT().UpdateSongFromData(gomock.Any(), expected).DoAndReturn(func(song *model.Song, data *ultrastar.Song) {
+				*song = expectedModel
+			})
+			svc.EXPECT().SaveSong(gomock.Any(), &expectedModel).Return(nil)
 		})
 
 		var song schema.Song

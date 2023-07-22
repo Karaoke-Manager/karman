@@ -2,7 +2,6 @@ package songs
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"github.com/Karaoke-Manager/go-ultrastar/txt"
@@ -28,7 +27,7 @@ func TestController_GetTxt(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String()+"/txt", nil)
 	resp := doRequest(t, req, func(svc *MockSongService) {
 		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
-		svc.EXPECT().UltraStarSong(gomock.Any(), song).Return(usSong)
+		svc.EXPECT().SongData(song).Return(usSong)
 	})
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -41,17 +40,17 @@ func TestController_GetTxt(t *testing.T) {
 
 func TestController_ReplaceTxt(t *testing.T) {
 	id := uuid.New()
-	song := model.NewSong()
-	song.UUID = id
 	req := httptest.NewRequest(http.MethodPut, "/"+id.String()+"/txt", strings.NewReader("#TITLE:Foo"))
 	req.Header.Set("Content-Type", "text/plain")
 	resp := doRequest(t, req, func(svc *MockSongService) {
-		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
-		svc.EXPECT().ReplaceSong(gomock.Any(), &song, gomock.Any()).DoAndReturn(func(ctx context.Context, song *model.Song, data *ultrastar.Song) error {
+		s := model.NewSong()
+		s.UUID = id
+		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(s, nil)
+		svc.EXPECT().UpdateSongFromData(&s, gomock.Any()).DoAndReturn(func(song *model.Song, data *ultrastar.Song) {
 			assert.Equal(t, "Foo", data.Title)
 			song.Title = "Bar"
-			return nil
 		})
+		svc.EXPECT().SaveSong(gomock.Any(), gomock.Any()).Return(nil)
 	})
 	var s schema.Song
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

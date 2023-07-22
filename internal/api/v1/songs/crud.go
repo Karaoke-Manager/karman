@@ -5,6 +5,7 @@ import (
 	"github.com/Karaoke-Manager/go-ultrastar/txt"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
 	"github.com/Karaoke-Manager/karman/internal/api/middleware"
+	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/go-chi/chi/v5"
@@ -13,17 +14,18 @@ import (
 )
 
 func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
-	song, err := txt.ReadSong(r.Body)
+	data, err := txt.ReadSong(r.Body)
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	resp, err := c.svc.CreateSong(r.Context(), song)
-	if err != nil {
+	song := model.NewSong()
+	c.svc.UpdateSongFromData(&song, data)
+	if err = c.svc.SaveSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
-	s := schema.FromSong(resp)
+	s := schema.FromSong(song)
 	_ = render.Render(w, r, &s)
 }
 

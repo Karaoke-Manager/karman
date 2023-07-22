@@ -10,7 +10,7 @@ import (
 
 func (c Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
-	usSong := c.svc.UltraStarSong(r.Context(), song)
+	usSong := c.svc.SongData(song)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -24,7 +24,8 @@ func (c Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	err = c.svc.ReplaceSong(r.Context(), &song, usSong)
+	c.svc.UpdateSongFromData(&song, usSong)
+	err = c.svc.SaveSong(r.Context(), &song)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return

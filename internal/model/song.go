@@ -5,12 +5,18 @@ import (
 	"time"
 )
 
+// Song is the model for songs.
 type Song struct {
 	Model
 
+	// UploadID will be set if this song belongs to an upload.
+	// Depending on the associations loaded Upload will also be set.
 	UploadID *uint
 	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 
+	// The File references of the Song are only set if the corresponding file exists.
+	// The *ID fields indicate whether a corresponding file exists.
+	// The *File fields may or may not be set, depending on whether they have been loaded.
 	AudioFileID      *uint
 	AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`
 	VideoFileID      *uint
@@ -20,6 +26,7 @@ type Song struct {
 	BackgroundFileID *uint
 	BackgroundFile   *File `gorm:"constraint:OnDelete:SET NULL"`
 
+	// Song Metadata
 	Gap             time.Duration
 	VideoGap        time.Duration
 	NotesGap        ultrastar.Beat
@@ -30,6 +37,7 @@ type Song struct {
 	MedleyEndBeat   ultrastar.Beat
 	CalcMedley      bool
 
+	// Song Metadata
 	Title    string
 	Artist   string
 	Genre    string
@@ -43,11 +51,13 @@ type Song struct {
 	DuetSinger2 string
 	Extra       map[string]string `gorm:"type:json;serializer:json"`
 
-	// FIXME: Maybe foreign keys for performance?
+	// FIXME: Should we use foreign keys here?
+	// Music of the Song
 	MusicP1 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 }
 
+// NewSong creates a new blank Song instance.
 func NewSong() Song {
 	return Song{
 		CalcMedley: true,
@@ -56,33 +66,7 @@ func NewSong() Song {
 	}
 }
 
-func NewSongWithData(data *ultrastar.Song) Song {
-	return Song{
-		Gap:             data.Gap,
-		VideoGap:        data.VideoGap,
-		NotesGap:        data.NotesGap,
-		Start:           data.Start,
-		End:             data.End,
-		PreviewStart:    data.PreviewStart,
-		MedleyStartBeat: data.MedleyStartBeat,
-		MedleyEndBeat:   data.MedleyEndBeat,
-		CalcMedley:      data.CalcMedley,
-		Title:           data.Title,
-		Artist:          data.Artist,
-		Genre:           data.Genre,
-		Edition:         data.Edition,
-		Creator:         data.Creator,
-		Language:        data.Language,
-		Year:            data.Year,
-		Comment:         data.Comment,
-		DuetSinger1:     data.DuetSinger1,
-		DuetSinger2:     data.DuetSinger2,
-		Extra:           data.CustomTags,
-		MusicP1:         data.MusicP1.Clone(),
-		MusicP2:         data.MusicP2.Clone(),
-	}
-}
-
-func (s Song) IsDuet() bool {
+// IsDuet indicates whether s is a duet.
+func (s *Song) IsDuet() bool {
 	return s.MusicP2 != nil
 }

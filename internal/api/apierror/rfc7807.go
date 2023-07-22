@@ -96,8 +96,7 @@ func (p *ProblemDetails) Error() string {
 }
 
 // Render prepares p to be written to w.
-// This method should not actually write p to w but may set headers and use the request context to prepare the response.
-// This method sets appropriate response headers in w and sets some default values.
+// This method prepares p with some default values.
 func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
 	for key, values := range p.Headers {
 		for _, value := range values {
@@ -107,6 +106,13 @@ func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
 	if p.Type == "" || p.Type == "about:blank" || p.Title == "" {
 		p.Title = http.StatusText(p.Status)
 	}
+
+	return nil
+}
+
+// Response prepares the render package to write p to w.
+// This method does not actually write anything to w but sets appropriate context keys for the render package.
+func (p *ProblemDetails) Response(w http.ResponseWriter, r *http.Request) any {
 	render.Status(r, p.Status)
 	switch render.GetResponseFormat(r) {
 	case render.FormatXML:
@@ -114,7 +120,7 @@ func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
 	default:
 		render.ContentType(r, mime.FormatMediaType("application/problem+json", map[string]string{"charset": "utf-8"}))
 	}
-	return nil
+	return p
 }
 
 // HttpStatus returns a ProblemDetails value representing the specified status.

@@ -10,32 +10,26 @@ import (
 // contextKey is a value for use with context.WithValue. It's used as
 // a pointer, so it fits in an interface{} without allocation. This technique
 // for defining context keys was copied from Go 1.7's new use of context in net/http.
-type contextKey struct {
-	name string
-}
+type contextKey int
 
-func (k *contextKey) String() string {
-	return "chi render context value " + k.name
-}
-
-var (
+const (
 	// ContextKeyRequestFormat is a context key to record the format of the
 	// request payload.
-	ContextKeyRequestFormat = &contextKey{"RequestFormat"}
+	ContextKeyRequestFormat contextKey = iota
 
 	// ContextKeyResponseFormat is a context key to record the future format of
 	// the response payload.
-	ContextKeyResponseFormat = &contextKey{"ResponseFormat"}
+	ContextKeyResponseFormat
 
 	// ContextKeyContentType is a context key to record a future content-type.
-	ContextKeyContentType = &contextKey{"ContentType"}
+	ContextKeyContentType
 
 	// ContextKeyStatus is a context key to record a future HTTP response status
 	// code.
-	ContextKeyStatus = &contextKey{"Status"}
+	ContextKeyStatus
 )
 
-// Status sets a HTTP response status code hint into request context at any point
+// Status sets an HTTP response status code hint into request context at any point
 // during the request lifecycle. Before the Responder sends its response header
 // it will check the ContextKeyStatus.
 func Status(r *http.Request, status int) {

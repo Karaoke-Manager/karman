@@ -25,38 +25,39 @@ func setupService(t *testing.T) Service {
 	return NewService(db)
 }
 
-func TestService_CreateSong(t *testing.T) {
+func TestService_SaveSong(t *testing.T) {
 	ctx := context.Background()
 	svc := setupService(t)
 
 	t.Run("uuid generation", func(t *testing.T) {
 		song := model.NewSong()
-		song.UUID = uuid.Nil
 		err := svc.SaveSong(ctx, &song)
 		require.NoError(t, err)
 		assert.NotEmpty(t, song.UUID)
 	})
 	t.Run("music encoding", func(t *testing.T) {
-		song := ultrastar.NewSongWithBPM(120)
-		song.MusicP1.AddNote(ultrastar.Note{
+		data := ultrastar.NewSongWithBPM(120)
+		data.MusicP1.AddNote(ultrastar.Note{
 			Type:     ultrastar.NoteTypeRegular,
 			Start:    0,
 			Duration: 15,
 			Pitch:    3,
 			Text:     "nothing",
 		})
-		song.MusicP2 = nil
-		s, err := svc.CreateSong(ctx, song)
-		require.NoError(t, err)
-		assert.Nil(t, s.MusicP2)
-		assert.NotNil(t, s.MusicP1)
-		assert.Equal(t, song.MusicP1, s.MusicP1)
+		data.MusicP2 = nil
+		song := model.NewSong()
+		svc.UpdateSongFromData(&song, data)
+		assert.Nil(t, song.MusicP2)
+		assert.NotNil(t, song.MusicP1)
+		assert.Equal(t, data.MusicP1, song.MusicP1)
 
-		s, err = svc.GetSong(ctx, s.UUID)
+		require.NoError(t, svc.SaveSong(ctx, &song))
+
+		song, err := svc.GetSong(ctx, song.UUID)
 		require.NoError(t, err)
-		assert.Nil(t, s.MusicP2)
-		assert.NotNil(t, s.MusicP1)
-		assert.Equal(t, song.MusicP1, s.MusicP1)
+		assert.Nil(t, song.MusicP2)
+		assert.NotNil(t, song.MusicP1)
+		assert.Equal(t, data.MusicP1, song.MusicP1)
 	})
 }
 

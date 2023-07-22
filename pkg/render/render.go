@@ -154,7 +154,7 @@ func isNil(f reflect.Value) bool {
 
 // renderer invokes the Renderer.Render function on v as well as all struct
 // fields of v. If v contains fields that implement the Renderer interface the
-// Renderer.Render function is invoked for those fields in a bottom-down fashion,
+// Renderer.Render function is invoked for those fields in a bottom-up fashion,
 // that is v.Render is invoked last.
 func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 	rv := reflect.ValueOf(v)
@@ -170,21 +170,38 @@ func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 	// For structs, we call Render on each field that implements Renderer
 	for i := 0; i < rv.NumField(); i++ {
 		f := rv.Field(i)
-		if f.Type().Implements(rendererType) {
-
-			if isNil(f) {
-				continue
+		if isNil(f) {
+			continue
+		}
+		switch f.Type().Kind() {
+		case reflect.Slice:
+			if f.Type().Elem().Implements(rendererType) {
+				for i := 0; i < f.Len(); i++ {
+					if err := renderer(w, r, f.Index(i).Interface().(Renderer)); err != nil {
+						return err
+					}
+				}
 			}
-
+		case reflect.Map:
+			if f.Type().Elem().Implements(rendererType) {
+				i := f.MapRange()
+				for i.Next() {
+					mv := i.Value()
+					if err := renderer(w, r, mv.Interface().(Renderer)); err != nil {
+						return err
+					}
+				}
+			}
+		}
+		if f.Type().Implements(rendererType) {
 			fv := f.Interface().(Renderer)
 			if err := renderer(w, r, fv); err != nil {
 				return err
 			}
-
 		}
 	}
 
-	// We call it bottom-down.
+	// We call it bottom-up.
 	if err := v.Render(w, r); err != nil {
 		return err
 	}
@@ -194,7 +211,7 @@ func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 
 // binder invokes the Binder.Bind function on v as well as all struct
 // fields of v. If v contains fields that implement the Binder interface the
-// Binder.Bind function is invoked for those fields in a bottom-down fashion,
+// Binder.Bind function is invoked for those fields in a bottom-up fashion,
 // that is v.Bind is invoked last.
 func binder(r *http.Request, v Binder) error {
 	rv := reflect.ValueOf(v)
@@ -210,12 +227,30 @@ func binder(r *http.Request, v Binder) error {
 	// For structs, we call Bind on each field that implements Binder
 	for i := 0; i < rv.NumField(); i++ {
 		f := rv.Field(i)
-		if f.Type().Implements(binderType) {
-
-			if isNil(f) {
-				continue
+		if isNil(f) {
+			continue
+		}
+		switch f.Type().Kind() {
+		case reflect.Slice:
+			if f.Type().Elem().Implements(binderType) {
+				for i := 0; i < f.Len(); i++ {
+					if err := binder(r, f.Index(i).Interface().(Binder)); err != nil {
+						return err
+					}
+				}
 			}
-
+		case reflect.Map:
+			if f.Type().Elem().Implements(binderType) {
+				i := f.MapRange()
+				for i.Next() {
+					mv := i.Value()
+					if err := binder(r, mv.Interface().(Binder)); err != nil {
+						return err
+					}
+				}
+			}
+		}
+		if f.Type().Implements(binderType) {
 			fv := f.Interface().(Binder)
 			if err := binder(r, fv); err != nil {
 				return err

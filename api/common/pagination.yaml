@@ -4,31 +4,34 @@ info:
   version: v1
 paths: {}
 components:
-  schemas:
-    PaginatedArray:
-      type: object
+  headers:
+    Pagination-Count:
       description: |-
-        An array of result elements.
-      properties:
-        count:
-          type: integer
-          description: |-
-            The number of elements in the returned result.
-            Less than or equal to limit.
-          example: 25
-        offset:
-          type: integer
-          description: |-
-            The index of the first returned element within the collection of all result elements.
-          example: 513
-        limit:
-          type: integer
-          description: |-
-            The result size limit specified in the request.
-          default: 25
-          example: 35
-        total:
-          type: integer
-          description: |-
-            The total number of elements in the result (not only the results contained in the items).
-          example: 1337
+        The number of elements in the returned result.
+        Less than or equal to Pagination-Limit.
+      schema:
+        type: integer
+        example: 25
+      required: true
+    Pagination-Offset:
+      description: |-
+        The index of the first returned element within the collection of all result elements.
+      schema:
+        type: integer
+        example: 513
+      required: true
+    Pagination-Limit:
+      description: |-
+        The result size limit specified in the request.
+      schema:
+        type: integer
+        default: 25
+        example: 35
+      required: true
+    Pagination-Total:
+      description: |-
+        The total number of elements in the result (not only the results contained in the items).
+      schema:
+        type: integer
+        example: 1337
+      required: true

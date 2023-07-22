@@ -15,9 +15,13 @@ var (
 	ErrRequestTimeout = errors.New("request context timed out")
 )
 
-// M is a convenience alias for quickly building a map structure that is going
-// out to a responder. Just a short-hand.
-// type M map[string]any
+// The Responder interface can be implemented to replace an object in a response with another object.
+// This might be useful if you don't want to encode the full object in the response but encode part of in headers.
+type Responder interface {
+	// Response generates a response object that takes the place of the original receiver.
+	// The response object is NOT rendered again but serialized as-is.
+	Response(w http.ResponseWriter, r *http.Request) any
+}
 
 // Respond is a package-level variable set to our default Responder. We do this
 // because it allows you to set render.Respond to another function with the
@@ -69,6 +73,9 @@ func NoContent(w http.ResponseWriter, r *http.Request) error {
 
 // PlainText writes a string to the response.
 func PlainText(w http.ResponseWriter, r *http.Request, v any) (err error) {
+	if res, ok := v.(Responder); ok {
+		v = res.Response(w, r)
+	}
 	writeHeader(w, r, FormatPlainText)
 	// TODO: Maybe find other ways of converting v to bytes
 	switch s := v.(type) {
@@ -93,6 +100,9 @@ func PlainText(w http.ResponseWriter, r *http.Request, v any) (err error) {
 
 // Data writes raw bytes to the response.
 func Data(w http.ResponseWriter, r *http.Request, v any) (err error) {
+	if res, ok := v.(Responder); ok {
+		v = res.Response(w, r)
+	}
 	writeHeader(w, r, FormatData)
 	// TODO: Maybe find other ways of converting v to bytes
 	switch b := v.(type) {
@@ -117,6 +127,9 @@ func Data(w http.ResponseWriter, r *http.Request, v any) (err error) {
 
 // HTML writes a string to the response, setting the Content-Type as text/html.
 func HTML(w http.ResponseWriter, r *http.Request, v any) (err error) {
+	if res, ok := v.(Responder); ok {
+		v = res.Response(w, r)
+	}
 	writeHeader(w, r, FormatHTML)
 	switch h := v.(type) {
 	case []byte:
@@ -142,29 +155,29 @@ func HTML(w http.ResponseWriter, r *http.Request, v any) (err error) {
 
 // JSON marshals 'v' to JSON, automatically escaping HTML.
 func JSON(w http.ResponseWriter, r *http.Request, v any) error {
-	buf := new(bytes.Buffer)
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(true)
-	if err := enc.Encode(v); err != nil {
-		panic(fmt.Errorf("cannot encode JSON: %e", err))
+	if res, ok := v.(Responder); ok {
+		v = res.Response(w, r)
 	}
-
 	writeHeader(w, r, FormatJSON)
-	_, err := w.Write(buf.Bytes())
-	return err
+	e := json.NewEncoder(w)
+	e.SetEscapeHTML(true)
+	return e.Encode(v)
 }
 
 // XML marshals 'v' to XML. It will automatically prepend a generic XML header
 // (see encoding/xml.Header) if one is not found in the first 100 bytes of 'v'.
 func XML(w http.ResponseWriter, r *http.Request, v any) (err error) {
+	if res, ok := v.(Responder); ok {
+		v = res.Response(w, r)
+	}
+
 	b, err := xml.Marshal(v)
 	if err != nil {
 		panic(fmt.Errorf("cannot encode XML: %e", err))
 	}
-
 	writeHeader(w, r, FormatXML)
 
-	// Try to find <?xml header in first 100 bytes (just in case there're some XML comments).
+	// Try to find <?xml header in first 100 bytes (just in case there are some XML comments).
 	findHeaderUntil := len(b)
 	if findHeaderUntil > 100 {
 		findHeaderUntil = 100
@@ -197,8 +210,8 @@ func writeHeader(w http.ResponseWriter, r *http.Request, format Format) {
 	}
 }
 
-// channelEventStream streams the data from v as response. v must be a channel
-// sending json-encodeable values.
+// channelEventStream streams the data from v as response.
+// v must be a channel sending json-encodable values.
 func channelEventStream(w http.ResponseWriter, r *http.Request, v any) error {
 	// FIXME: There are some magic strings here that we might want to investigate.
 	if reflect.TypeOf(v).Kind() != reflect.Chan {
@@ -243,6 +256,9 @@ func channelEventStream(w http.ResponseWriter, r *http.Request, v any) error {
 				}
 			}
 
+			if res, ok := v.(Responder); ok {
+				v = res.Response(w, r)
+			}
 			b, err := json.Marshal(v)
 			if err != nil {
 				_, _ = w.Write([]byte(fmt.Sprintf("event: error\ndata: {\"error\":\"%v\"}\n\n", err)))
@@ -290,6 +306,9 @@ func channelIntoSlice(w http.ResponseWriter, r *http.Request, from interface{}) 
 				} else {
 					v = rv
 				}
+			}
+			if res, ok := v.(Responder); ok {
+				v = res.Response(w, r)
 			}
 
 			to = append(to, v)

@@ -40,19 +40,19 @@ paths:
             A successful request returns a paginated collection of uploads.
             If the selected filters produce an empty list, the `results` will be empty.
             A `404` status code will not be returned.
+          headers:
+            Pagination-Count: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Count" }
+            Pagination-Offset: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Offset" }
+            Pagination-Limit: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Limit" }
+            Pagination-Total: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Total" }
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        description: |-
-                          An array of `Song` resources.
-                        items:
-                          $ref: '#/components/schemas/Upload'
+                type: array
+                description: |-
+                  An array of `Song` resources.
+                items:
+                  $ref: '#/components/schemas/Upload'
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     post:
       operationId: createUpload
@@ -277,16 +277,11 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "../common/pagination.yaml#/components/schemas/PaginatedArray"
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        description: |-
-                          An array of `Song` resources.
-                        items:
-                          $ref: 'songs.yaml#/components/schemas/Song'
+                type: array
+                description: |-
+                  An array of `Song` resources.
+                items:
+                  $ref: 'songs.yaml#/components/schemas/Song'
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }

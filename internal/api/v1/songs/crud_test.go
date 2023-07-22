@@ -123,14 +123,14 @@ func TestController_Find(t *testing.T) {
 				assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 				assert.Equal(t, http.StatusBadRequest, err.Status)
 			} else {
-				var page schema.List[*schema.Song]
+				var page []schema.Song
 				require.NoError(t, json.NewDecoder(resp.Body).Decode(&page))
 				assert.Equal(t, http.StatusOK, resp.StatusCode)
-				assert.Len(t, page.Items, c.ExpectedCount)
-				assert.Equal(t, c.ExpectRequestLimit, page.Limit)
-				assert.Equal(t, c.ExpectedCount, page.Count)
-				assert.Equal(t, int64(len(songs)), page.Total)
-				assert.Equal(t, c.ExpectOffset, page.Offset)
+				assert.Len(t, page, c.ExpectedCount)
+				assert.Equal(t, strconv.Itoa(c.ExpectRequestLimit), resp.Header.Get("Pagination-Limit"))
+				assert.Equal(t, strconv.Itoa(c.ExpectedCount), resp.Header.Get("Pagination-Count"))
+				assert.Equal(t, strconv.Itoa(len(songs)), resp.Header.Get("Pagination-Total"))
+				assert.Equal(t, strconv.Itoa(c.ExpectOffset), resp.Header.Get("Pagination-Offset"))
 			}
 		})
 	}

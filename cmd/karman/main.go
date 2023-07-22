@@ -2,50 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/internal/api"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/internal/service/upload"
-	"github.com/Karaoke-Manager/karman/pkg/rwfs"
-	"github.com/go-chi/chi/v5"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"log"
-	"net/http"
+	"github.com/spf13/cobra"
+	"os"
 )
 
-type Config struct {
-	Address string
-	Prefix  string
-}
-
-var defaultConfig = &Config{
-	Address: ":8080",
-	Prefix:  "/api",
+var rootCmd = &cobra.Command{
+	Use:   "karman",
+	Short: "Karman - The Karaoke Manager",
+	Long:  `The Karaoke Manager helps you organize your UltraStar Karaoke songs.`,
 }
 
 func main() {
-	// TODO: Config management, maybe with Viper
-	// TODO: Proper error handling on startup
-	db, err := gorm.Open(sqlite.Open("test.db"))
-	if err != nil {
-		log.Fatalln(err)
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	defer func() {
-		sqlDB, err := db.DB()
-		if err == nil {
-			_ = sqlDB.Close()
-		}
-	}()
-
-	uploadFS := rwfs.DirFS("tmp/uploads")
-	uploadSvc := upload.NewService(db, uploadFS)
-
-	// songFS := rwfs.DirFS("tmp/data")
-	songSvc := song.NewService(db)
-	apiController := api.NewController(songSvc, uploadSvc)
-
-	r := chi.NewRouter()
-	r.Route(defaultConfig.Prefix+"/", apiController.Router)
-	fmt.Printf("Running on %s\n", defaultConfig.Address)
-	log.Fatalln(http.ListenAndServe(defaultConfig.Address, r))
 }

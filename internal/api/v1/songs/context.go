@@ -37,18 +37,26 @@ func MustGetSong(ctx context.Context) model.Song {
 	return ctx.Value(contextKeyInstance).(model.Song)
 }
 
-// fetchUpload is a middleware that fetches the model.Song instance identified by the request and stores it in the request context.
-func (c *Controller) fetchUpload(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "uuid")
-		song, err := c.svc.GetSong(r.Context(), id)
-		if err != nil {
-			// TODO: Maybe support 410 for soft deleted?
-			_ = render.Render(w, r, apierror.DBError(err))
-			return
+// FetchUpload is a middleware that fetches the model.Song instance identified by the request and stores it in the request context.
+func (c *Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "uuid")
+			var song model.Song
+			var err error
+			if includeFiles {
+				song, err = c.svc.GetSongWithFiles(r.Context(), id)
+			} else {
+				song, err = c.svc.GetSong(r.Context(), id)
+			}
+			if err != nil {
+				// TODO: Maybe support 410 for soft deleted?
+				_ = render.Render(w, r, apierror.DBError(err))
+				return
+			}
+			ctx := SetSong(r.Context(), song)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
-		ctx := SetSong(r.Context(), song)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		return http.HandlerFunc(fn)
 	}
-	return http.HandlerFunc(fn)
 }

@@ -27,7 +27,7 @@ func init() {
 		Model
 
 		UploadID *uint
-		Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+		Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 		Path     string
 
 		Size     uint64

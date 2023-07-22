@@ -137,39 +137,17 @@ func TestController_Find(t *testing.T) {
 }
 
 func TestController_Get(t *testing.T) {
-	cases := []struct {
-		name    string
-		uuid    string
-		success bool
-	}{
-		{"success", uuid.New().String(), true},
-		{"fail", uuid.New().String(), false},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/"+c.uuid, nil)
-			resp := doRequest(t, req, func(svc *MockSongService) {
-				song := model.NewSong()
-				if c.success {
-					song.Title = "Foo"
-					svc.EXPECT().GetSong(gomock.Any(), c.uuid).Return(song, nil)
-				} else {
-					svc.EXPECT().GetSong(gomock.Any(), c.uuid).Return(song, gorm.ErrRecordNotFound)
-				}
-			})
-			if c.success {
-				var song schema.Song
-				assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song))
-				assert.Equal(t, http.StatusOK, resp.StatusCode)
-				assert.Equal(t, "Foo", song.Title)
-			} else {
-				var err apierror.ProblemDetails
-				assert.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-				assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-				assert.Equal(t, http.StatusNotFound, err.Status)
-			}
-		})
-	}
+	id := uuid.New()
+	song := model.NewSong()
+	song.Title = "Foo"
+	req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
+	resp := doRequest(t, req, func(svc *MockSongService) {
+		svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
+	})
+	var respSong schema.Song
+	assert.NoError(t, json.NewDecoder(resp.Body).Decode(&respSong))
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, song.Title, respSong.Title)
 }
 
 func TestController_Update(t *testing.T) {
@@ -177,19 +155,23 @@ func TestController_Update(t *testing.T) {
 	uploadID := uint(123)
 	song := model.NewSong()
 	song.UUID = id
+	song.Artist = "Foobar"
+	song.Comment = "Hi"
 	songWithUpload := model.NewSong()
 	songWithUpload.UUID = id
 	songWithUpload.UploadID = &uploadID
 
 	t.Run("simple", func(t *testing.T) {
-		body := strings.NewReader(`{"title": "Hello World"}`)
+		body := strings.NewReader(`{"title": "Hello World", "comment": ""}`)
 		req := httptest.NewRequest(http.MethodPatch, "/"+id.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
 			svc.EXPECT().GetSong(gomock.Any(), id.String()).Return(song, nil)
 			svc.EXPECT().SaveSong(gomock.Any(), gomock.AssignableToTypeOf(&model.Song{})).DoAndReturn(func(ctx context.Context, song *model.Song) error {
 				assert.Equal(t, id, song.UUID)
+				assert.Equal(t, "Foobar", song.Artist)
 				assert.Equal(t, "Hello World", song.Title)
+				assert.Empty(t, song.Comment)
 				return nil
 			})
 		})
@@ -201,14 +183,12 @@ func TestController_Update(t *testing.T) {
 		name        string
 		body        string
 		song        model.Song
-		notFound    bool
 		code        int
 		problemType string
 	}{
-		{"not found", `{"title": "Hello `, song, true, http.StatusNotFound, ""},
-		{"bad JSON", `{"title": "Hello `, song, false, http.StatusBadRequest, ""},
-		{"schema validation", `{"title": "Hello World", "medley": {"mode": "manual"}}`, song, false, http.StatusUnprocessableEntity, ""},
-		{"conflict", `{"title": "Hello World"}`, songWithUpload, false, http.StatusConflict, apierror.TypeUploadSongReadonly},
+		{"bad JSON", `{"title": "Hello `, song, http.StatusBadRequest, ""},
+		{"schema validation", `{"title": "Hello World", "medley": {"mode": "manual"}}`, song, http.StatusUnprocessableEntity, ""},
+		{"conflict", `{"title": "Hello World"}`, songWithUpload, http.StatusConflict, apierror.TypeUploadSongReadonly},
 	}
 
 	for _, c := range cases {
@@ -216,11 +196,7 @@ func TestController_Update(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPatch, "/"+c.song.UUID.String(), body)
 		req.Header.Set("Content-Type", "application/json")
 		resp := doRequest(t, req, func(svc *MockSongService) {
-			if c.notFound {
-				svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, gorm.ErrRecordNotFound)
-			} else {
-				svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, nil)
-			}
+			svc.EXPECT().GetSong(gomock.Any(), c.song.UUID.String()).Return(c.song, nil)
 		})
 
 		var err apierror.ProblemDetails

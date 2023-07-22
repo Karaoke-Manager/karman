@@ -3,7 +3,7 @@ module github.com/Karaoke-Manager/karman
 go 1.20
 
 require (
-	github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230720154324-5ac51e4dffc0
+	github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230722121356-bf0aa98c474a
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.0
 	github.com/pressly/goose/v3 v3.13.4

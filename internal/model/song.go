@@ -9,7 +9,7 @@ type Song struct {
 	Model
 
 	UploadID *uint
-	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 
 	AudioFileID      *uint
 	AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`
@@ -48,10 +48,6 @@ type Song struct {
 	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 }
 
-func (s Song) IsDuet() bool {
-	return s.MusicP2 != nil
-}
-
 func NewSong() Song {
 	return Song{
 		CalcMedley: true,
@@ -85,4 +81,8 @@ func NewSongWithData(data *ultrastar.Song) Song {
 		MusicP1:         data.MusicP1.Clone(),
 		MusicP2:         data.MusicP2.Clone(),
 	}
+}
+
+func (s Song) IsDuet() bool {
+	return s.MusicP2 != nil
 }

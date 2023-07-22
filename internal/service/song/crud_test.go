@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"testing"
+	"time"
 )
 
 func setupService(t *testing.T) Service {
@@ -97,22 +98,46 @@ func TestService_GetSong(t *testing.T) {
 		_, err := svc.GetSong(ctx, "non existing")
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})
-	t.Run("create and read", func(t *testing.T) {
-		song := model.NewSong()
-		song.Title = "Hello World"
-		song.Edition = "Testing"
-		err := svc.SaveSong(ctx, &song)
-		require.NoError(t, err)
 
-		song2, err := svc.GetSong(ctx, song.UUID.String())
+	audio := model.File{
+		Size:     1245,
+		Type:     "audio/mpeg",
+		Bitrate:  62372,
+		Duration: 3 * time.Minute,
+	}
+	audio.ID = 123
+	audio.UUID = uuid.New()
+	expected := model.NewSong()
+	expected.Title = "Hello World"
+	expected.Edition = "Testing"
+	expected.AudioFile = &audio
+	err := svc.SaveSong(ctx, &expected)
+	require.NoError(t, err)
+	t.Run("read", func(t *testing.T) {
+		song, err := svc.GetSong(ctx, expected.UUID.String())
 		assert.NoError(t, err)
-		assert.Equal(t, song.UUID, song2.UUID)
-		assert.Equal(t, song.Title, song2.Title)
-		assert.Equal(t, song.Edition, song2.Edition)
+		assert.Equal(t, expected.UUID, song.UUID)
+		assert.Equal(t, expected.Title, song.Title)
+		assert.Equal(t, expected.Edition, song.Edition)
+		require.NotNil(t, song.AudioFileID)
+		assert.Equal(t, uint(123), *song.AudioFileID)
+		assert.Nil(t, song.AudioFile)
+	})
+	t.Run("include files", func(t *testing.T) {
+		song, err := svc.GetSongWithFiles(ctx, expected.UUID.String())
+		assert.NoError(t, err)
+		assert.Equal(t, expected.UUID, song.UUID)
+		assert.Equal(t, expected.Title, song.Title)
+		assert.Equal(t, expected.Edition, song.Edition)
+		require.NotNil(t, song.AudioFileID)
+		assert.Equal(t, uint(123), *song.AudioFileID)
+		require.NotNil(t, song.AudioFile)
+		assert.Equal(t, audio.UUID, song.AudioFile.UUID)
+		assert.Equal(t, audio.Bitrate, song.AudioFile.Bitrate)
 	})
 }
 
-func TestRepository_DeleteSongByUUID(t *testing.T) {
+func TestService_DeleteSongByUUID(t *testing.T) {
 	ctx := context.Background()
 	svc := setupService(t)
 	song := model.NewSong()

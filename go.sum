@@ -1,5 +1,9 @@
 github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230720154324-5ac51e4dffc0 h1:WRwBs0ZOvy5WRk8oyh4fQpUHaovToehHQAHBcgCxF5M=
 github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230720154324-5ac51e4dffc0/go.mod h1:Qx1iSAjLOdsEtbfCobn2mOXHUwXio1jCO9VTerO8WdE=
+github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230721173202-8e441724a6bf h1:67snJxYgmps9A4eKo+fSfAIxXScS6YkKFa7QTKmqDaY=
+github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230721173202-8e441724a6bf/go.mod h1:Qx1iSAjLOdsEtbfCobn2mOXHUwXio1jCO9VTerO8WdE=
+github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230722121356-bf0aa98c474a h1:QexlBObxln5cwzxeEDsFpDgjV5DVEuSBm9GhKe+adx4=
+github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230722121356-bf0aa98c474a/go.mod h1:Qx1iSAjLOdsEtbfCobn2mOXHUwXio1jCO9VTerO8WdE=
 github.com/ajg/form v1.5.1 h1:t9c7v8JUKu/XxOGBU0yjNpaMloxGEJhUkqFRq0ibGeU=
 github.com/ajg/form v1.5.1/go.mod h1:uL1WgH+h2mgNtvBq0339dVnzXdBETtL2LeUXaIv25UY=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
@@ -95,6 +99,7 @@ golang.org/x/tools v0.11.0 h1:EMCa6U9S2LtZXLAMoWiR/R8dAQFRqbAitmbJ2UKhoi8=
 golang.org/x/tools v0.11.0/go.mod h1:anzJrxPjNtfgiYQYirP2CPGzGLxrH2u2QBhn6Bf3qY8=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=

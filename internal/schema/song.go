@@ -8,34 +8,48 @@ import (
 	"time"
 )
 
+// MedleyMode indicates how a song's medley is to be calculated.
 type MedleyMode string
 
 const (
-	MedleyModeOff    MedleyMode = "off"
-	MedleyModeAuto   MedleyMode = "auto"
+	// MedleyModeOff disables medley calculation.
+	// The song will not have a medley.
+	MedleyModeOff MedleyMode = "off"
+
+	// MedleyModeAuto enables automatic medley detection by UltraStar.
+	// This is the default.
+	MedleyModeAuto MedleyMode = "auto"
+
+	// MedleyModeManual disables automatic medley calculation but provides manual medley start and end times.
 	MedleyModeManual MedleyMode = "manual"
 )
 
+// AudioFile contains data about an audio file.
 type AudioFile struct {
-	Type     string        `json:"type"`
-	Bitrate  int           `json:"bitrate"`
+	Type     string        `json:"type"`    // RFC 6838 media type
+	Bitrate  int           `json:"bitrate"` // in bits per second
 	Duration time.Duration `json:"duration"`
 }
 
+// VideoFile contains data about a video file.
 type VideoFile struct {
-	Type     string        `json:"type"`
-	Bitrate  int           `json:"bitrate"`
+	Type     string        `json:"type"`    // RFC 6838 media type
+	Bitrate  int           `json:"bitrate"` // in bits per second
 	Duration time.Duration `json:"duration"`
-	Width    int           `json:"width"`
-	Height   int           `json:"height"`
+	Width    int           `json:"width"`  // in pixels
+	Height   int           `json:"height"` // in pixels
 }
 
+// ImageFile contains data about an image file.
 type ImageFile struct {
-	Type   string `json:"type"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
+	Type   string `json:"type"`   // RFC 6838 media type
+	Width  int    `json:"width"`  // in pixels
+	Height int    `json:"height"` // in pixels
 }
 
+// SongRW is the main schema for working with songs.
+// All fields in SongRW are readable and writeable fields.
+// The Song schema extends this with some read-only fields.
 type SongRW struct {
 	Title    string `json:"title"`
 	Artist   string `json:"artist,omitempty"`
@@ -64,6 +78,8 @@ type SongRW struct {
 	} `json:"medley"`
 }
 
+// Song extends SongRW with additional read-only fields used in API responses.
+// The Song schema should not be used as request schema.
 type Song struct {
 	SongRW
 	UUID string `json:"uuid"`
@@ -75,6 +91,7 @@ type Song struct {
 	Background *ImageFile `json:"background"`
 }
 
+// FromSong converts m into a schema instance representing the current state of m.
 func FromSong(m model.Song) Song {
 	song := Song{
 		SongRW: SongRW{
@@ -144,6 +161,7 @@ func FromSong(m model.Song) Song {
 	return song
 }
 
+// Apply stores the fields of s into the respective fields of m.
 func (s *SongRW) Apply(m *model.Song) {
 	m.Title = s.Title
 	m.Artist = s.Artist
@@ -178,6 +196,8 @@ func (s *SongRW) Apply(m *model.Song) {
 	}
 }
 
+// Render implements the render.Renderer interface.
+// Render makes sure that medley information is generated consistently.
 func (s *SongRW) Render(http.ResponseWriter, *http.Request) error {
 	if s.Medley.Mode != MedleyModeManual {
 		s.Medley.MedleyStartBeat = 0
@@ -186,9 +206,10 @@ func (s *SongRW) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
+// Bind implements the render.Bind interface.
+// Bind makes sure that the medley information is valid.
 func (s *SongRW) Bind(*http.Request) error {
 	if s.Medley.Mode == MedleyModeManual && (s.Medley.MedleyStartBeat == 0 || s.Medley.MedleyEndBeat == 0) {
-		// TODO: Maybe a defined error variable?
 		return errors.New("medley mode manual can only be set with an explicit medley start and end beat")
 	}
 	return nil

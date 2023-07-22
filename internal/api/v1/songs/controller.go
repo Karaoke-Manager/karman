@@ -21,9 +21,14 @@ func (c *Controller) Router(r chi.Router) {
 	r.Delete("/{uuid}", c.Delete)
 
 	r.Group(func(r chi.Router) {
-		r.Use(c.fetchUpload)
+		r.Use(c.FetchUpload(false))
 		r.Get("/{uuid}", c.Get)
 		r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(c.FetchUpload(true))
+		r.Get("/{uuid}/txt", c.GetTxt)
 	})
 
 	// GET /{uuid}/artwork
@@ -34,6 +39,5 @@ func (c *Controller) Router(r chi.Router) {
 	// POST /{uuid}/video (JSON, video types)
 	// GET /{uuid}/background
 	// POST /{uuid}/background (JSON, image types)
-	// GET /{uuid}/txt?????
 	// POST /{uuid}/txt (txt, file references are ignored)
 }

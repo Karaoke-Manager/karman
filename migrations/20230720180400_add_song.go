@@ -33,7 +33,7 @@ func init() {
 		Model
 
 		UploadID *uint
-		Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+		Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 
 		AudioFileID      *uint
 		AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`

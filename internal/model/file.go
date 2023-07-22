@@ -12,10 +12,10 @@ type File struct {
 	Model
 
 	UploadID *uint
-	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
+	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 	Path     string
 
-	Size     uint64
+	Size     uint64 // in bytes
 	Checksum []byte
 	Type     string // Mime type of the file. Must not contain parameters
 

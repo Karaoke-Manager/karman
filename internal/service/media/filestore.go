@@ -40,10 +40,18 @@ func (s *FileStore) CreateFile(ctx context.Context, file model.File) (io.WriteCl
 		return nil, ErrMissingUUID
 	}
 	id := file.UUID.String()
-	folder := filepath.Join(s.Root, id[:2])
-	if err := os.MkdirAll(folder, s.FolderMode); err != nil {
+	path := filepath.Join(s.Root, id[:2], id)
+	if err := os.MkdirAll(filepath.Dir(path), s.FolderMode); err != nil {
 		return nil, err
 	}
-	path := filepath.Join(folder, id)
 	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, s.FileMode)
+}
+
+func (s *FileStore) ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error) {
+	if file.UUID == uuid.Nil {
+		return nil, ErrMissingUUID
+	}
+	id := file.UUID.String()
+	path := filepath.Join(s.Root, id[:2], id)
+	return os.Open(path)
 }

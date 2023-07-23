@@ -93,3 +93,29 @@ func TestFileStore_CreateFile(t *testing.T) {
 		assert.Equal(t, int64(13), stat.Size())
 	})
 }
+
+func TestFileStore_ReadFile(t *testing.T) {
+	ctx := context.Background()
+	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
+	store, dir := fileStore(t)
+	require.NoError(t, os.Mkdir(filepath.Join(dir, "e4"), 0770))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "e4", id.String()), []byte("Hello World"), 0660))
+
+	t.Run("read file", func(t *testing.T) {
+		file := model.File{}
+		file.UUID = id
+		r, err := store.ReadFile(ctx, file)
+		assert.NoError(t, err)
+		data, err := io.ReadAll(r)
+		assert.NoError(t, err)
+		assert.Equal(t, "Hello World", string(data))
+		require.NoError(t, r.Close())
+	})
+
+	t.Run("non existing", func(t *testing.T) {
+		file := model.File{}
+		file.UUID = uuid.New()
+		_, err := store.ReadFile(ctx, file)
+		assert.ErrorIs(t, err, os.ErrNotExist)
+	})
+}

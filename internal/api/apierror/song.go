@@ -9,10 +9,14 @@ import (
 
 const (
 	// TypeInvalidTXT indicates that the UltraStar txt data could not be parsed.
-	// It is usually accompanied with a line number that caused the error.
+	// It is usually accompanied by a line number that caused the error.
 	TypeInvalidTXT = ProblemTypeDomain + "/invalid-ultrastar-txt"
 
+	// TypeUploadSongReadonly indicates that the song cannot be modified because it belongs to an upload.
 	TypeUploadSongReadonly = ProblemTypeDomain + "/upload-song-readonly"
+
+	// TypeMediaFileNotFound indicates that the requested media file was not found.
+	TypeMediaFileNotFound = ProblemTypeDomain + "/song-media-not-found"
 )
 
 // InvalidUltraStarTXT generates an error indicating that the UltraStar data in the request could not be parsed.
@@ -41,6 +45,19 @@ func UploadSongReadonly(song model.Song) *ProblemDetails {
 		Detail: "The song must be imported before it can be modified.",
 		Fields: map[string]any{
 			"uuid": song.UUID.String(),
+		},
+	}
+}
+
+func MediaFileNotFound(song model.Song, media string) *ProblemDetails {
+	return &ProblemDetails{
+		Type:   TypeMediaFileNotFound,
+		Title:  "Media File Not Found",
+		Status: http.StatusNotFound,
+		Detail: "The song has no " + media + ".",
+		Fields: map[string]any{
+			"uuid":  song.UUID.String(),
+			"media": media,
 		},
 	}
 }

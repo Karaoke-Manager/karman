@@ -79,7 +79,6 @@ paths:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
-        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/background:
     parameters:
@@ -141,7 +140,6 @@ paths:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
-        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/video:
     parameters:
@@ -203,7 +201,6 @@ paths:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
-        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/songs/{uuid}/audio:
     parameters:
@@ -265,7 +262,6 @@ paths:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
-        409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 components:
   schemas:

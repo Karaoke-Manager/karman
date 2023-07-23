@@ -17,6 +17,7 @@ import (
 
 type Service interface {
 	StoreImageFile(ctx context.Context, mediaType string, r io.Reader) (model.File, error)
+	ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error)
 }
 
 func NewService(db *gorm.DB, store Store) Service {
@@ -85,4 +86,8 @@ func (s service) StoreImageFile(ctx context.Context, mediaType string, r io.Read
 		return
 	}
 	return
+}
+
+func (s service) ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error) {
+	return s.store.ReadFile(ctx, file)
 }

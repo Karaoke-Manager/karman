@@ -4,7 +4,6 @@ theme:
   openapi:
     hideHostname: true
     showAccessMode: true
-    requiredPropsFirst: true
 rules:
   # We don't have a hosted instance
   no-empty-servers: off

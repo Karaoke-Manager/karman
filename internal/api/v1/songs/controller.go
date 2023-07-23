@@ -25,17 +25,24 @@ func (c Controller) Router(r chi.Router) {
 		r.Use(middleware.UUID("uuid"))
 
 		r.Group(func(r chi.Router) {
-			r.Use(c.FetchUpload(false))
-			r.With(c.CheckModify).With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
-			r.With(c.CheckModify).With(middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
-			r.With(c.CheckModify).With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
-		})
-
-		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(true))
 			r.Get("/{uuid}", c.Get)
 			r.Get("/{uuid}/txt", c.GetTxt)
 			// r.Get("{uuid}/archive", c.GetArchive)
+			r.Get("/{uuid}/cover", c.GetCover)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(c.FetchUpload(false), c.CheckModify)
+			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
+			r.With(middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
+			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(c.FetchUpload(false))
+			// Deleting media is allowed in uploads
+			r.Delete("/{uuid}/cover", c.DeleteCover)
 		})
 	})
 
@@ -45,9 +52,6 @@ func (c Controller) Router(r chi.Router) {
 	// GET /{uuid}/video
 	// PUT /{uuid}/video
 	// DELETE /{uuid}/video
-	// GET /{uuid}/artwork
-	// PUT /{uuid}/artwork
-	// DELETE /{uuid}/artwork
 	// GET /{uuid}/background
 	// PUT /{uuid}/background
 	// DELETE /{uuid}/background

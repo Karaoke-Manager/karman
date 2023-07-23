@@ -13,4 +13,5 @@ var (
 
 type Store interface {
 	CreateFile(ctx context.Context, file model.File) (io.WriteCloser, error)
+	ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error)
 }

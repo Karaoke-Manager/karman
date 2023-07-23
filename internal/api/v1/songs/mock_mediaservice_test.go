@@ -36,6 +36,45 @@ func (m *MockMediaService) EXPECT() *MockMediaServiceMockRecorder {
 	return m.recorder
 }
 
+// ReadFile mocks base method.
+func (m *MockMediaService) ReadFile(arg0 context.Context, arg1 model.File) (io.ReadCloser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadFile", arg0, arg1)
+	ret0, _ := ret[0].(io.ReadCloser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadFile indicates an expected call of ReadFile.
+func (mr *MockMediaServiceMockRecorder) ReadFile(arg0, arg1 interface{}) *ServiceReadFileCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadFile", reflect.TypeOf((*MockMediaService)(nil).ReadFile), arg0, arg1)
+	return &ServiceReadFileCall{Call: call}
+}
+
+// ServiceReadFileCall wrap *gomock.Call
+type ServiceReadFileCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *ServiceReadFileCall) Return(arg0 io.ReadCloser, arg1 error) *ServiceReadFileCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *ServiceReadFileCall) Do(f func(context.Context, model.File) (io.ReadCloser, error)) *ServiceReadFileCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *ServiceReadFileCall) DoAndReturn(f func(context.Context, model.File) (io.ReadCloser, error)) *ServiceReadFileCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
 // StoreImageFile mocks base method.
 func (m *MockMediaService) StoreImageFile(arg0 context.Context, arg1 string, arg2 io.Reader) (model.File, error) {
 	m.ctrl.T.Helper()

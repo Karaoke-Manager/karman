@@ -15,20 +15,37 @@ import (
 	_ "image/png"
 )
 
+// Service provides an interface for working with media files in Karman.
+// An implementation of the Service interface implements the core logic associated with these files.
 type Service interface {
+	// StoreImageFile creates a new model.File and writes the data provided by r into the file.
+	// This method should update known file metadata fields during the upload.
+	//
+	// If an error occurs r may have been partially consumed.
+	// If any bytes have been persisted, this method must return a valid model.File that is able to identify the (potentially partial) data.
+	// If the file has not been stored successfully, an error is returned.
 	StoreImageFile(ctx context.Context, mediaType string, r io.Reader) (model.File, error)
+
+	// ReadFile creates a reader that can be used to read the file.
+	// It is the caller's responsibility to close the reader when done.
 	ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error)
 }
 
+// NewService creates a new Service instance using the supplied db and store.
+// The default implementation will store media files in the store as well as in the DB.
+// For each media file there will be an entry in the DB, the actual data however lives in the store.
 func NewService(db *gorm.DB, store Store) Service {
 	return service{db, store}
 }
 
+// service is the default Service implementation.
 type service struct {
 	db    *gorm.DB
 	store Store
 }
 
+// StoreImageFile creates a new mode.File in the database and then saves the data from r into the store.
+// The image is analyzed on the fly.
 func (s service) StoreImageFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
 	file.Type = mediaType
 	// We save the file here and at the end of the method to make sure that even
@@ -88,6 +105,7 @@ func (s service) StoreImageFile(ctx context.Context, mediaType string, r io.Read
 	return
 }
 
+// ReadFile is passed on directly to s.store.
 func (s service) ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error) {
 	return s.store.ReadFile(ctx, file)
 }

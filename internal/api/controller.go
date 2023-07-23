@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/service/media"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/go-chi/chi/v5"
@@ -21,9 +22,9 @@ type Controller struct {
 
 // NewController creates a new Controller instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-controllers.
-func NewController(songService song.Service, uploadService upload.Service) Controller {
+func NewController(songService song.Service, mediaService media.Service, uploadService upload.Service) Controller {
 	return Controller{
-		v1Controller: v1.NewController(songService, uploadService),
+		v1Controller: v1.NewController(songService, mediaService, uploadService),
 	}
 }
 

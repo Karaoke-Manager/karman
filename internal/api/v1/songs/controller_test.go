@@ -8,18 +8,20 @@ import (
 	"testing"
 )
 
-//go:generate mockgen -package songs -typed -mock_names Service=MockSongService -destination ./mock_service_test.go github.com/Karaoke-Manager/karman/internal/service/song Service
+//go:generate mockgen -package songs -typed -mock_names Service=MockSongService -destination ./mock_songservice_test.go github.com/Karaoke-Manager/karman/internal/service/song Service
+//go:generate mockgen -package songs -typed -mock_names Service=MockMediaService -destination ./mock_mediaservice_test.go github.com/Karaoke-Manager/karman/internal/service/media Service
 
 // doRequest executes the specified request against a songs.Controller backed by a MockSongService.
 // Before the request is executed the expect function is invoked giving you the opportunity to register expected calls on the service.
-func doRequest(t *testing.T, req *http.Request, expect func(svc *MockSongService)) *http.Response {
+func doRequest(t *testing.T, req *http.Request, expect func(songSvc *MockSongService, mediaSvc *MockMediaService)) *http.Response {
 	ctrl := gomock.NewController(t)
-	svc := NewMockSongService(ctrl)
+	songSvc := NewMockSongService(ctrl)
+	mediaSvc := NewMockMediaService(ctrl)
 	if expect != nil {
-		expect(svc)
+		expect(songSvc, mediaSvc)
 	}
 	r := chi.NewRouter()
-	r.Route("/", NewController(svc).Router)
+	r.Route("/", NewController(songSvc, mediaSvc).Router)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	ctrl.Finish()

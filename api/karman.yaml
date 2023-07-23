@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Karman API
-  version: v1.0-alpha1
+  version: ""
   description: |-
     This is the API specification for [Karman](https://github.com/Karaoke-Manager/karman), the Karaoke Manager.
     

@@ -45,9 +45,9 @@ func (c Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.
 			var song model.Song
 			var err error
 			if includeFiles {
-				song, err = c.svc.GetSongWithFiles(r.Context(), id)
+				song, err = c.songSvc.GetSongWithFiles(r.Context(), id)
 			} else {
-				song, err = c.svc.GetSong(r.Context(), id)
+				song, err = c.songSvc.GetSong(r.Context(), id)
 			}
 			if err != nil {
 				// TODO: Maybe support 410 for soft deleted?

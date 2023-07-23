@@ -30,9 +30,9 @@ func init() {
 		Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
 		Path     string
 
-		Size     uint64
-		Checksum []byte
-		Type     string // Mime type of the file. Must not contain parameters
+		Type     string
+		Size     int64
+		Checksum []byte `gorm:"type:varbinary"`
 
 		// Audio & Video
 		Bitrate  int

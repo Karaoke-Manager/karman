@@ -21,7 +21,7 @@ func (m *Model) Deleted() bool {
 
 // BeforeCreate ensures that m.UUID is set to a valid value.
 func (m *Model) BeforeCreate(tx *gorm.DB) error {
-	if m.UUID.Version() == 0 {
+	if m.UUID == uuid.Nil {
 		m.UUID = uuid.New()
 	}
 	return nil

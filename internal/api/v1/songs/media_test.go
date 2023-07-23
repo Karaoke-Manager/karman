@@ -2,6 +2,7 @@ package songs
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/Karaoke-Manager/go-ultrastar"
 	"github.com/Karaoke-Manager/go-ultrastar/txt"
@@ -25,7 +26,7 @@ func TestController_GetTxt(t *testing.T) {
 	usSong := ultrastar.NewSong()
 	usSong.Title = "Foo"
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String()+"/txt", nil)
-	resp := doRequest(t, req, func(svc *MockSongService) {
+	resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
 		svc.EXPECT().SongData(song).Return(usSong)
 	})
@@ -42,10 +43,10 @@ func TestController_ReplaceTxt(t *testing.T) {
 	id := uuid.New()
 	req := httptest.NewRequest(http.MethodPut, "/"+id.String()+"/txt", strings.NewReader("#TITLE:Foo"))
 	req.Header.Set("Content-Type", "text/plain")
-	resp := doRequest(t, req, func(svc *MockSongService) {
+	resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 		s := model.NewSong()
 		s.UUID = id
-		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(s, nil)
+		svc.EXPECT().GetSong(gomock.Any(), id).Return(s, nil)
 		svc.EXPECT().UpdateSongFromData(&s, gomock.Any()).DoAndReturn(func(song *model.Song, data *ultrastar.Song) {
 			assert.Equal(t, "Foo", data.Title)
 			song.Title = "Bar"
@@ -56,4 +57,30 @@ func TestController_ReplaceTxt(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&s))
 	assert.Equal(t, "Bar", s.Title)
+}
+
+func TestController_ReplaceCover(t *testing.T) {
+	id := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPut, "/"+id.String()+"/cover", strings.NewReader("content"))
+	req.Header.Set("Content-Type", "image/png")
+	resp := doRequest(t, req, func(songSvc *MockSongService, mediaSvc *MockMediaService) {
+		song := model.NewSong()
+		song.UUID = id
+		songSvc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
+		file := model.File{}
+		file.ID = 123
+		file.UUID = uuid.New()
+		mediaSvc.EXPECT().StoreImageFile(gomock.Any(), "image/png", gomock.Any()).DoAndReturn(func(ctx context.Context, _ string, r io.Reader) (model.File, error) {
+			data, err := io.ReadAll(r)
+			assert.NoError(t, err)
+			assert.Equal(t, "content", string(data))
+			return file, nil
+		})
+		songSvc.EXPECT().SaveSong(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, song *model.Song) error {
+			assert.Equal(t, file, *song.CoverFile)
+			return nil
+		})
+	})
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }

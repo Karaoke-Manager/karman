@@ -25,7 +25,7 @@ func TestController_FetchUpload(t *testing.T) {
 		req = req.WithContext(middleware.SetUUID(req.Context(), id))
 		ctrl := gomock.NewController(t)
 		svc := NewMockSongService(ctrl)
-		c := NewController(svc)
+		c := NewController(svc, nil)
 		svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
 		handler := c.FetchUpload(false)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s := MustGetSong(r.Context())
@@ -41,7 +41,7 @@ func TestController_FetchUpload(t *testing.T) {
 		req = req.WithContext(middleware.SetUUID(req.Context(), id))
 		ctrl := gomock.NewController(t)
 		svc := NewMockSongService(ctrl)
-		c := NewController(svc)
+		c := NewController(svc, nil)
 		svc.EXPECT().GetSong(gomock.Any(), id).Return(model.Song{}, gorm.ErrRecordNotFound)
 		handler := c.FetchUpload(false)(nil)
 		w := httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestController_CheckModify(t *testing.T) {
 		req = req.WithContext(SetSong(req.Context(), song))
 
 		ctrl := gomock.NewController(t)
-		handler := NewController(NewMockSongService(ctrl)).CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := NewController(NewMockSongService(ctrl), nil).CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		}))
 		w := httptest.NewRecorder()
@@ -87,7 +87,7 @@ func TestController_CheckModify(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/"+id.String(), nil)
 		req = req.WithContext(SetSong(req.Context(), song))
 		ctrl := gomock.NewController(t)
-		handler := NewController(NewMockSongService(ctrl)).CheckModify(nil)
+		handler := NewController(NewMockSongService(ctrl), nil).CheckModify(nil)
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 		ctrl.Finish()

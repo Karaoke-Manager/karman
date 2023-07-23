@@ -10,6 +10,10 @@ import (
 
 // File is a model that represents a media file of a song.
 // A single File may be used by multiple songs and in different "functions" (audio/video, cover/background).
+//
+// A File should be considered read-only for the most part.
+// Instead of overwriting a file a new file should be created and the old one deleted.
+// In practice edits to a file should be done extremely carefully to not disrupt the integrity of the File struct.
 type File struct {
 	Model
 
@@ -26,9 +30,9 @@ type File struct {
 	// Media Type of the file.
 	Type string
 	// Filesize in bytes.
-	Size uint64
-	// Checksum is a checksum of this file, uniquely identifying its content.
-	Checksum []byte
+	Size int64
+	// Checksum is the Sha256 checksum of this file, uniquely identifying its content.
+	Checksum []byte `gorm:"type:varbinary"`
 
 	// Bitrate and Durations are set only if the file's Type identifies an audio or video file.
 	Bitrate  int // in bits per second
@@ -38,6 +42,10 @@ type File struct {
 	// Set only if the file's Type identifies an image file.
 	Width  int // in pixels
 	Height int // in pixels
+}
+
+func NewFile() File {
+	return File{}
 }
 
 // BeforeSave ensures that f.Type is valid.

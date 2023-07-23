@@ -9,7 +9,7 @@ import (
 )
 
 func TestService_SongData(t *testing.T) {
-	svc := setupService(t)
+	svc, _ := setupService(t)
 
 	audio := model.File{
 		Size:     1234,

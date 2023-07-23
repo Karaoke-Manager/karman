@@ -42,7 +42,7 @@ func TestController_Create(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
 		req.Header.Set("Content-Type", "text/plain")
-		resp := doRequest(t, req, func(svc *MockSongService) {
+		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 			svc.EXPECT().UpdateSongFromData(gomock.Any(), expected).DoAndReturn(func(song *model.Song, data *ultrastar.Song) {
 				*song = expectedModel
 			})
@@ -105,7 +105,7 @@ func TestController_Find(t *testing.T) {
 				q.Add("offset", c.Offset)
 				req.URL.RawQuery = q.Encode()
 			}
-			resp := doRequest(t, req, func(svc *MockSongService) {
+			resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 				if c.ExpectErr {
 					return
 				}
@@ -145,7 +145,7 @@ func TestController_Get(t *testing.T) {
 	song.UUID = uuid.New()
 	song.Title = "Foo"
 	req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
-	resp := doRequest(t, req, func(svc *MockSongService) {
+	resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
 	})
 	var respSong schema.Song
@@ -170,7 +170,7 @@ func TestController_Update(t *testing.T) {
 		body := strings.NewReader(`{"title": "Hello World", "comment": ""}`)
 		req := httptest.NewRequest(http.MethodPatch, "/"+id.String(), body)
 		req.Header.Set("Content-Type", "application/json")
-		resp := doRequest(t, req, func(svc *MockSongService) {
+		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 			svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
 			svc.EXPECT().SaveSong(gomock.Any(), gomock.AssignableToTypeOf(&model.Song{})).DoAndReturn(func(ctx context.Context, song *model.Song) error {
 				assert.Equal(t, id, song.UUID)
@@ -199,7 +199,7 @@ func TestController_Update(t *testing.T) {
 		body := strings.NewReader(c.body)
 		req := httptest.NewRequest(http.MethodPatch, "/"+c.song.UUID.String(), body)
 		req.Header.Set("Content-Type", "application/json")
-		resp := doRequest(t, req, func(svc *MockSongService) {
+		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
 			svc.EXPECT().GetSong(gomock.Any(), c.song.UUID).Return(c.song, nil)
 		})
 
@@ -219,8 +219,8 @@ func TestController_Delete(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		id := uuid.New()
 		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
-		resp := doRequest(t, req, func(svc *MockSongService) {
-			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id.String()).Return(nil)
+		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
+			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id).Return(nil)
 		})
 
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
@@ -229,8 +229,8 @@ func TestController_Delete(t *testing.T) {
 	t.Run("already deleted", func(t *testing.T) {
 		id := uuid.New()
 		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
-		resp := doRequest(t, req, func(svc *MockSongService) {
-			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id.String()).Return(gorm.ErrRecordNotFound)
+		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
+			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id).Return(gorm.ErrRecordNotFound)
 		})
 
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)

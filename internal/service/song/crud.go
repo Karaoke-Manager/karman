@@ -36,6 +36,6 @@ func (s service) SaveSong(ctx context.Context, song *model.Song) error {
 	return s.db.WithContext(ctx).Save(song).Error
 }
 
-func (s service) DeleteSongByUUID(ctx context.Context, uuid string) error {
-	return s.db.WithContext(ctx).Where("uuid = ?", uuid).Delete(&model.Song{}).Error
+func (s service) DeleteSongByUUID(ctx context.Context, id uuid.UUID) error {
+	return s.db.WithContext(ctx).Where("uuid = ?", id).Delete(&model.Song{}).Error
 }

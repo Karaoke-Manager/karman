@@ -38,7 +38,7 @@ func (m *MockSongService) EXPECT() *MockSongServiceMockRecorder {
 }
 
 // DeleteSongByUUID mocks base method.
-func (m *MockSongService) DeleteSongByUUID(arg0 context.Context, arg1 string) error {
+func (m *MockSongService) DeleteSongByUUID(arg0 context.Context, arg1 uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteSongByUUID", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -64,13 +64,13 @@ func (c *ServiceDeleteSongByUUIDCall) Return(arg0 error) *ServiceDeleteSongByUUI
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *ServiceDeleteSongByUUIDCall) Do(f func(context.Context, string) error) *ServiceDeleteSongByUUIDCall {
+func (c *ServiceDeleteSongByUUIDCall) Do(f func(context.Context, uuid.UUID) error) *ServiceDeleteSongByUUIDCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *ServiceDeleteSongByUUIDCall) DoAndReturn(f func(context.Context, string) error) *ServiceDeleteSongByUUIDCall {
+func (c *ServiceDeleteSongByUUIDCall) DoAndReturn(f func(context.Context, uuid.UUID) error) *ServiceDeleteSongByUUIDCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

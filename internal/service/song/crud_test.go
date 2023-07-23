@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func setupService(t *testing.T) Service {
+func setupService(t *testing.T) (Service, *gorm.DB) {
 	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -22,12 +22,12 @@ func setupService(t *testing.T) Service {
 	})
 	err = db.AutoMigrate(&model.Song{}, &model.File{}, &model.Upload{})
 	require.NoError(t, err)
-	return NewService(db)
+	return NewService(db), db
 }
 
 func TestService_SaveSong(t *testing.T) {
 	ctx := context.Background()
-	svc := setupService(t)
+	svc, db := setupService(t)
 
 	t.Run("uuid generation", func(t *testing.T) {
 		song := model.NewSong()
@@ -59,17 +59,28 @@ func TestService_SaveSong(t *testing.T) {
 		assert.NotNil(t, song.MusicP1)
 		assert.Equal(t, data.MusicP1, song.MusicP1)
 	})
+
+	t.Run("update file reference", func(t *testing.T) {
+		song := model.NewSong()
+		require.NoError(t, svc.SaveSong(ctx, &song))
+		file := model.File{Size: 123, Type: "text/plain"}
+		require.NoError(t, db.Save(&file).Error)
+		song.CoverFile = &file
+		require.NoError(t, svc.SaveSong(ctx, &song))
+		assert.Equal(t, file.ID, *song.CoverFileID)
+	})
+
 }
 
 func TestService_FindSongs(t *testing.T) {
 	ctx := context.Background()
-	svc := setupService(t)
+	svc, db := setupService(t)
 	song := model.NewSong()
 	song.Title = "Song 1"
-	require.NoError(t, svc.SaveSong(ctx, &song))
+	require.NoError(t, db.Save(&song).Error)
 	song = model.NewSong()
 	song.Title = "Song 2"
-	require.NoError(t, svc.SaveSong(ctx, &song))
+	require.NoError(t, db.Save(&song).Error)
 
 	t.Run("all songs", func(t *testing.T) {
 		songs, total, err := svc.FindSongs(ctx, 25, 0)
@@ -93,7 +104,7 @@ func TestService_FindSongs(t *testing.T) {
 
 func TestService_GetSong(t *testing.T) {
 	ctx := context.Background()
-	svc := setupService(t)
+	svc, db := setupService(t)
 
 	t.Run("empty", func(t *testing.T) {
 		_, err := svc.GetSong(ctx, uuid.New())
@@ -112,8 +123,7 @@ func TestService_GetSong(t *testing.T) {
 	expected.Title = "Hello World"
 	expected.Edition = "Testing"
 	expected.AudioFile = &audio
-	err := svc.SaveSong(ctx, &expected)
-	require.NoError(t, err)
+	require.NoError(t, db.Save(&expected).Error)
 	t.Run("read", func(t *testing.T) {
 		song, err := svc.GetSong(ctx, expected.UUID)
 		assert.NoError(t, err)
@@ -140,15 +150,22 @@ func TestService_GetSong(t *testing.T) {
 
 func TestService_DeleteSongByUUID(t *testing.T) {
 	ctx := context.Background()
-	svc := setupService(t)
-	song := model.NewSong()
-	song.UUID = uuid.New()
-	song.Title = "Song 1"
-	require.NoError(t, svc.SaveSong(ctx, &song))
+	svc, db := setupService(t)
 
-	err := svc.DeleteSongByUUID(ctx, song.UUID.String())
-	assert.NoError(t, err)
-	_, total, err := svc.FindSongs(ctx, 25, 0)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(0), total)
+	t.Run("success", func(t *testing.T) {
+		song := model.NewSong()
+		song.Title = "Song 1"
+		require.NoError(t, db.Save(&song).Error)
+
+		err := svc.DeleteSongByUUID(ctx, song.UUID)
+		assert.NoError(t, err)
+		var total int64
+		require.NoError(t, db.Model(&song).Count(&total).Error)
+		assert.Equal(t, int64(0), total)
+	})
+
+	t.Run("already absent", func(t *testing.T) {
+		err := svc.DeleteSongByUUID(ctx, uuid.New())
+		assert.NoError(t, err)
+	})
 }

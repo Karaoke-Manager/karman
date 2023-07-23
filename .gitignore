@@ -22,4 +22,7 @@ go.work
 
 # Compiled Binaries
 build/
+
+# Testing files
+tmp/
 *.db

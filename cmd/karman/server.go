@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Karaoke-Manager/karman/internal/api"
+	"github.com/Karaoke-Manager/karman/internal/service/media"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
 	"github.com/Karaoke-Manager/karman/internal/service/upload"
 	"github.com/Karaoke-Manager/karman/pkg/rwfs"
@@ -49,12 +50,18 @@ func runServer(cmd *cobra.Command, args []string) {
 		}
 	}()
 
+	songSvc := song.NewService(db)
+
+	mediaStore, err := media.NewFileStore("tmp/media")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	mediaSvc := media.NewService(db, mediaStore)
+
 	uploadFS := rwfs.DirFS("tmp/uploads")
 	uploadSvc := upload.NewService(db, uploadFS)
 
-	// songFS := rwfs.DirFS("tmp/data")
-	songSvc := song.NewService(db)
-	apiController := api.NewController(songSvc, uploadSvc)
+	apiController := api.NewController(songSvc, mediaSvc, uploadSvc)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)

@@ -8,7 +8,6 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 	"net/http"
 )
@@ -20,8 +19,8 @@ func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	song := model.NewSong()
-	c.svc.UpdateSongFromData(&song, data)
-	if err = c.svc.SaveSong(r.Context(), &song); err != nil {
+	c.songSvc.UpdateSongFromData(&song, data)
+	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -31,7 +30,7 @@ func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 
 func (c Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	songs, total, err := c.svc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
+	songs, total, err := c.songSvc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -64,7 +63,7 @@ func (c Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	update.Apply(&song)
-	if err := c.svc.SaveSong(r.Context(), &song); err != nil {
+	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
 		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -73,8 +72,8 @@ func (c Controller) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c Controller) Delete(w http.ResponseWriter, r *http.Request) {
-	uuid := chi.URLParam(r, "uuid")
-	if err := c.svc.DeleteSongByUUID(r.Context(), uuid); err != nil {
+	id := middleware.MustGetUUID(r.Context())
+	if err := c.songSvc.DeleteSongByUUID(r.Context(), id); err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			_ = render.Render(w, r, apierror.DBError(err))
 			return

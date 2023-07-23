@@ -3,6 +3,7 @@ package songs
 import (
 	"github.com/Karaoke-Manager/go-ultrastar/txt"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"io"
@@ -42,17 +43,48 @@ func (c Controller) GetCover(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "cover"))
 		return
 	}
-	file, err := c.mediaSvc.ReadFile(r.Context(), *song.CoverFile)
+	c.sendFile(w, r, *song.CoverFile)
+}
+
+func (c Controller) GetBackground(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	if song.BackgroundFile == nil {
+		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "background"))
+		return
+	}
+	c.sendFile(w, r, *song.BackgroundFile)
+}
+
+func (c Controller) GetAudio(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	if song.AudioFile == nil {
+		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "audio"))
+		return
+	}
+	c.sendFile(w, r, *song.AudioFile)
+}
+
+func (c Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	if song.VideoFile == nil {
+		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "video"))
+		return
+	}
+	c.sendFile(w, r, *song.VideoFile)
+}
+
+func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.File) {
+	f, err := c.mediaSvc.ReadFile(r.Context(), file)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
-	defer file.Close()
-	w.Header().Set("Content-Type", song.CoverFile.Type)
-	w.Header().Set("Content-Length", strconv.FormatInt(song.CoverFile.Size, 10))
+	defer f.Close()
+	w.Header().Set("Content-Type", file.Type)
+	w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
 	w.WriteHeader(http.StatusOK)
 	// The header is already written. We can't send error messages anymore
-	_, _ = io.Copy(w, file)
+	_, _ = io.Copy(w, f)
 }
 
 func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +104,56 @@ func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+func (c Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	mediaType := r.Header.Get("Content-Type")
+	file, err := c.mediaSvc.StoreImageFile(r.Context(), mediaType, r.Body)
+	if err != nil {
+		// TODO: Logging
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	song.BackgroundFile = &file
+	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
 func (c Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.CoverFileID = nil
+	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
+func (c Controller) DeleteBackground(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	song.BackgroundFileID = nil
+	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
+func (c Controller) DeleteAudio(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	song.AudioFileID = nil
+	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
+func (c Controller) DeleteVideo(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	song.VideoFileID = nil
 	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return

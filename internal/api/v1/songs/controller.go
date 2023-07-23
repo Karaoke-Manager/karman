@@ -30,6 +30,9 @@ func (c Controller) Router(r chi.Router) {
 			r.Get("/{uuid}/txt", c.GetTxt)
 			// r.Get("{uuid}/archive", c.GetArchive)
 			r.Get("/{uuid}/cover", c.GetCover)
+			r.Get("/{uuid}/background", c.GetBackground)
+			r.Get("/{uuid}/audio", c.GetAudio)
+			r.Get("/{uuid}/video", c.GetVideo)
 		})
 
 		r.Group(func(r chi.Router) {
@@ -37,22 +40,19 @@ func (c Controller) Router(r chi.Router) {
 			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
 			r.With(middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
+			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/background", c.ReplaceBackground)
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(false))
 			// Deleting media is allowed in uploads
 			r.Delete("/{uuid}/cover", c.DeleteCover)
+			r.Delete("/{uuid}/background", c.DeleteBackground)
+			r.Delete("/{uuid}/audio", c.DeleteAudio)
+			r.Delete("/{uuid}/video", c.DeleteVideo)
 		})
 	})
 
-	// GET /{uuid}/audio
 	// PUT /{uuid}/audio
-	// DELETE /{uuid}/audio
-	// GET /{uuid}/video
 	// PUT /{uuid}/video
-	// DELETE /{uuid}/video
-	// GET /{uuid}/background
-	// PUT /{uuid}/background
-	// DELETE /{uuid}/background
 }

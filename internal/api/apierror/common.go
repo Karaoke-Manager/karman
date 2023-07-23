@@ -17,6 +17,7 @@ const (
 	// TypeValidationError indicates a that the request data did not conform to the required schema.
 	// This error should be associated with HTTP status code 422.
 	TypeValidationError = ProblemTypeDomain + "/validation-error"
+
 	// TypeInvalidUUID indicates that a UUID parameter was not a valid UUID.
 	// This error should be associated with HTTP status code 400.
 	TypeInvalidUUID = ProblemTypeDomain + "/invalid-uuid"

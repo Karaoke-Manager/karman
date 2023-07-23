@@ -10,8 +10,10 @@ import (
 const (
 	// TypeUploadClosed indicates that a file action to an upload was rejected because the upload has already been marked for processing.
 	TypeUploadClosed = ProblemTypeDomain + "/upload-closed"
+
 	// TypeUploadFileNotFound indicates that a file was requested from an upload but the file was not found.
 	TypeUploadFileNotFound = ProblemTypeDomain + "/upload-file-not-found"
+
 	// TypeInvalidUploadPath indicates that the file path within an upload is not a valid path.
 	TypeInvalidUploadPath = ProblemTypeDomain + "/invalid-upload-path"
 )

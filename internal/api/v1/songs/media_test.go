@@ -88,6 +88,9 @@ func TestController_GetMedia(t *testing.T) {
 		field *model.File
 	}{
 		{"cover", song.CoverFile},
+		{"background", song.BackgroundFile},
+		{"audio", song.AudioFile},
+		{"video", song.VideoFile},
 	}
 
 	for _, c := range cases {
@@ -130,6 +133,7 @@ func TestController_ReplaceMedia(t *testing.T) {
 		field     **model.File
 	}{
 		{"cover", "image/png", true, &song.CoverFile},
+		{"background", "image/jpeg", true, &song.BackgroundFile},
 	}
 
 	for _, c := range cases {
@@ -169,6 +173,9 @@ func TestController_DeleteMedia(t *testing.T) {
 		field **uint
 	}{
 		{"cover", &song.CoverFileID},
+		{"background", &song.BackgroundFileID},
+		{"audio", &song.AudioFileID},
+		{"video", &song.VideoFileID},
 	}
 
 	for _, c := range cases {

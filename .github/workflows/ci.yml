@@ -1,0 +1,29 @@
+on: [push, pull_request]
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+      - name: Vet Code
+        run: go vet ./...
+      - name: Check Formatting
+        run: gofmt -l .
+      # TODO: Maybe use more advanced linting via golangci-lint
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - name: Fetch Dependencies
+        run: go get .
+      - name: Run Tests
+        run: go test ./...

@@ -1,0 +1,138 @@
+#TITLE:Oedipus the King
+#ARTIST:Homer
+#LANGUAGE:Tsonga
+#GENRE:Thriller
+#YEAR:1943
+#CREATOR:King8924
+#BPM:88.28
+#GAP:16809
+: 396 4 2 fact
+* 409 8 3 lady
+: 426 6 3 shiny
+: 437 3 5 Sri-Lankan
+- 449
+: 455 2 13 some
+: 475 9 0 practically
+: 486 10 12 over
+: 503 11 3 it
+: 533 11 10 here
+- 550
+: 562 9 7 of
+: 582 1 4 might
+: 596 8 13 you
+: 605 12 5 really
+: 620 2 11 sheaf
+: 631 11 1 whenever
+: 646 6 2 outside
+- 662
+: 674 4 0 all
+: 688 5 16 boat
+: 711 7 7 should
+: 738 8 0 early
+: 748 8 10 can
+: 769 6 5 it
+: 791 8 3 for
+- 806
+: 807 5 8 with
+: 827 2 13 cast
+: 835 6 8 Bahrainean
+: 843 6 10 recently
+: 852 6 6 rather
+- 862
+: 866 7 5 whom
+: 882 3 9 throughout
+: 889 11 4 finally
+: 911 6 15 whom
+: 920 11 16 begin
+: 937 12 0 teacher
+: 965 8 4 have
+: 981 10 13 forest
+- 992
+: 1007 10 15 by
+: 1032 6 13 week
+: 1054 4 10 whose
+: 1072 9 3 flock
+* 1100 2 10 downstairs
+: 1122 4 6 problem
+: 1131 3 13 itself
+- 1151
+: 1161 7 7 elsewhere
+: 1187 7 12 school
+: 1203 8 11 write
+: 1228 5 6 constantly
+: 1235 11 12 stairs
+: 1259 5 5 to
+: 1281 10 2 normally
+- 1310
+: 1321 1 12 occasionally
+: 1331 6 15 success
+: 1343 2 14 leap
+: 1362 11 4 already
+: 1378 10 1 sometimes
+: 1400 3 1 her
+: 1420 9 8 does
+- 1442
+: 1456 7 14 she
+: 1470 6 12 those
+: 1495 8 15 Alpine
+: 1507 3 3 whose
+: 1526 2 0 city
+: 1543 6 5 wander
+: 1552 10 5 constantly
+- 1567
+: 1572 12 7 however
+: 1593 4 0 disregard
+: 1616 3 3 they
+: 1625 3 7 yours
+: 1637 10 5 into
+: 1660 6 12 we
+- 1674
+: 1680 7 13 to
+: 1706 1 16 permission
+: 1723 9 12 can
+: 1746 4 7 myself
+* 1767 6 16 muster
+: 1780 4 14 it
+* 1788 7 12 whom
+: 1805 5 15 which
+- 1819
+: 1830 11 13 time
+: 1848 12 1 cackle
+: 1862 9 12 spite
+: 1884 5 11 always
+: 1899 3 4 block
+: 1909 5 7 this
+: 1922 5 13 I
+- 1932
+: 1940 9 11 mine
+* 1960 10 16 from
+* 1985 4 2 crew
+: 2002 12 14 her
+: 2023 12 2 table
+: 2053 1 5 those
+: 2073 11 11 all
+- 2096
+: 2116 5 14 team
+: 2137 2 0 in
+: 2159 6 10 which
+: 2179 7 15 contradict
+* 2193 9 11 tonight
+- 2209
+: 2222 2 3 patrol
+* 2243 11 2 dream
+: 2263 3 11 hug
+: 2278 3 10 aid
+: 2300 1 9 as
+: 2313 4 6 besides
+: 2336 4 12 somebody
+: 2344 9 2 theirs
+- 2361
+: 2372 2 12 am
+: 2378 4 6 it
+* 2383 2 7 care
+: 2396 5 1 someone
+: 2420 7 14 where
+: 2439 4 12 everything
+: 2450 10 7 lately
+* 2466 9 14 annually
+E

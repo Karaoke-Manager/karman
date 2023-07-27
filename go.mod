@@ -3,14 +3,14 @@ module github.com/Karaoke-Manager/karman
 go 1.20
 
 require (
-	github.com/Karaoke-Manager/go-ultrastar v0.0.0-20230722121356-bf0aa98c474a
+	codello.dev/ultrastar v0.0.0-20230727073949-61c2034f954f
+	github.com/brianvoe/gofakeit/v6 v6.23.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.0
 	github.com/pressly/goose/v3 v3.13.4
 	github.com/psanford/memfs v0.0.0-20230130182539-4dbf7e3e865e
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/mock v0.2.0
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2
 )

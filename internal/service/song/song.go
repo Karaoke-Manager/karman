@@ -2,15 +2,16 @@ package song
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/internal/model"
 	"mime"
+
+	"codello.dev/ultrastar"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 func (s service) UpdateSongFromData(song *model.Song, data *ultrastar.Song) {
 	song.Gap = data.Gap
 	song.VideoGap = data.VideoGap
-	song.NotesGap = data.NotesGap
 	song.Start = data.Start
 	song.End = data.End
 	song.PreviewStart = data.PreviewStart
@@ -41,14 +42,12 @@ func (s service) SongData(song model.Song) *ultrastar.Song {
 	usSong := &ultrastar.Song{
 		Gap:             song.Gap,
 		VideoGap:        song.VideoGap,
-		NotesGap:        song.NotesGap,
 		Start:           song.Start,
 		End:             song.End,
 		PreviewStart:    song.PreviewStart,
 		MedleyStartBeat: song.MedleyStartBeat,
 		MedleyEndBeat:   song.MedleyEndBeat,
 		CalcMedley:      song.CalcMedley,
-		Resolution:      4,
 		Title:           song.Title,
 		Artist:          song.Artist,
 		Genre:           song.Genre,

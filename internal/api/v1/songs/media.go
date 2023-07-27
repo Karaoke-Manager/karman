@@ -1,14 +1,16 @@
 package songs
 
 import (
-	"github.com/Karaoke-Manager/go-ultrastar/txt"
+	"io"
+	"net/http"
+	"strconv"
+
+	"codello.dev/ultrastar/txt"
+
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
 	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"io"
-	"net/http"
-	"strconv"
 )
 
 func (c Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +85,7 @@ func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.
 	w.Header().Set("Content-Type", file.Type)
 	w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
 	w.WriteHeader(http.StatusOK)
+	// TODO: Logging
 	// The header is already written. We can't send error messages anymore
 	_, _ = io.Copy(w, f)
 }

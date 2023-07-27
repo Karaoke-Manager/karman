@@ -1,238 +1,128 @@
 package songs
 
 import (
-	"context"
 	"encoding/json"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/schema"
+	"github.com/Karaoke-Manager/karman/internal/test"
 )
 
-func TestController_Create(t *testing.T) {
-	t.Run("simple", func(t *testing.T) {
-		data := `#TITLE:Hello World
-#ARTIST:Foo
-#BPM:12`
-		expected := ultrastar.NewSongWithBPM(12 * 4)
-		expected.Title = "Hello World"
-		expected.Artist = "Foo"
-		expectedModel := model.Song{
-			Title:      "Hello World",
-			Artist:     "Foo",
-			CalcMedley: true,
-		}
-		expectedSchema := schema.Song{
-			SongRW: schema.SongRW{
-				Title:  "Hello World",
-				Artist: "Foo",
-			},
-		}
-		expectedSchema.Medley.Mode = schema.MedleyModeAuto
+//go:generate go run ../../../../tools/gensong -output testdata/valid-song.txt
 
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
-		req.Header.Set("Content-Type", "text/plain")
-		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-			svc.EXPECT().UpdateSongFromData(gomock.Any(), expected).DoAndReturn(func(song *model.Song, data *ultrastar.Song) {
-				*song = expectedModel
-			})
-			svc.EXPECT().SaveSong(gomock.Any(), &expectedModel).Return(nil)
-		})
+func TestController_Create(t *testing.T) {
+	h, _, _ := setup(t, false)
+
+	t.Run("200 OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/", test.MustOpen(t, "testdata/valid-song.txt"))
+		r.Header.Set("Content-Type", "text/plain")
+		resp := test.DoRequest(h, r)
 
 		var song schema.Song
-		err := json.NewDecoder(resp.Body).Decode(&song)
-		assert.NoError(t, err)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, expectedSchema, song)
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&song), "response decode")
+		assert.Equal(t, http.StatusCreated, resp.StatusCode, "status Code")
+		assert.NotEmpty(t, song.UUID)
+		assert.Equal(t, "Oedipus the King", song.Title, "song title")
 	})
-
-	t.Run("syntax error", func(t *testing.T) {
-		data := `#TITLE:Foo
-unknown line`
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(data))
-		req.Header.Set("Content-Type", "text/plain")
-		resp := doRequest(t, req, nil)
-
-		var err apierror.ProblemDetails
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-		assert.Equal(t, http.StatusBadRequest, err.Status)
-		assert.Equal(t, apierror.TypeInvalidTXT, err.Type)
-		assert.Equal(t, float64(2), err.Fields["line"])
+	t.Run("400 Bad Request (Body)", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("Foo"))
+		r.Header.Set("Content-Type", "text/plain")
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidTXT, map[string]any{
+			"line": 1,
+		})
 	})
+	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPost, "/", "text/plain"))
+	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPost, "/", "application/json", "text/plain"))
 }
 
 func TestController_Find(t *testing.T) {
-	songs := make([]model.Song, 150)
-	for i := range songs {
-		songs[i] = model.Song{
-			Title:  "Song " + strconv.Itoa(i),
-			Artist: "Testing",
+	h, _, _ := setup(t, true)
+
+	t.Run("200 OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		resp := test.DoRequest(h, r)
+
+		test.AssertPagination(t, resp, 0, 25, 25, 150)
+		var songs []schema.Song
+		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&songs), "decode songs") {
+			assert.Len(t, songs, 25, "length of result")
 		}
-	}
-	cases := []struct {
-		Name               string
-		Default            bool
-		Limit              string
-		Offset             string
-		ExpectRequestLimit int
-		ExpectLimit        int
-		ExpectOffset       int
-		ExpectedCount      int
-		ExpectErr          bool
-	}{
-		{"high limit", false, "130", "20", 130, 100, 20, 100, false},
-		{"length past end", false, "50", "120", 50, 50, 120, 30, false},
-		{"offset past end", false, "30", "170", 30, 30, 170, 0, false},
-	}
-
-	for _, c := range cases {
-		t.Run(c.Name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/", nil)
-			if !c.Default {
-				q := req.URL.Query()
-				q.Add("limit", c.Limit)
-				q.Add("offset", c.Offset)
-				req.URL.RawQuery = q.Encode()
-			}
-			resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-				if c.ExpectErr {
-					return
-				}
-				low := c.ExpectOffset
-				if low > len(songs) {
-					low = len(songs)
-				}
-				high := low + c.ExpectLimit
-				if high > len(songs) {
-					high = len(songs)
-				}
-				svc.EXPECT().FindSongs(gomock.Any(), c.ExpectLimit, c.ExpectOffset).Return(songs[low:high], int64(len(songs)), nil)
-			})
-
-			if c.ExpectErr {
-				var err apierror.ProblemDetails
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-				assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				assert.Equal(t, http.StatusBadRequest, err.Status)
-			} else {
-				var page []schema.Song
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&page))
-				assert.Equal(t, http.StatusOK, resp.StatusCode)
-				assert.Len(t, page, c.ExpectedCount)
-				assert.Equal(t, strconv.Itoa(c.ExpectRequestLimit), resp.Header.Get("Pagination-Limit"))
-				assert.Equal(t, strconv.Itoa(c.ExpectedCount), resp.Header.Get("Pagination-Count"))
-				assert.Equal(t, strconv.Itoa(len(songs)), resp.Header.Get("Pagination-Total"))
-				assert.Equal(t, strconv.Itoa(c.ExpectOffset), resp.Header.Get("Pagination-Offset"))
-			}
-		})
-	}
+	})
+	t.Run("400 Bad Request (Pagination)", test.InvalidPagination(h, http.MethodGet, "/"))
 }
 
 func TestController_Get(t *testing.T) {
-	id := uuid.New()
-	song := model.NewSong()
-	song.UUID = uuid.New()
-	song.Title = "Foo"
-	req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
-	resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-		svc.EXPECT().GetSongWithFiles(gomock.Any(), id).Return(song, nil)
+	h, _, data := setup(t, true)
+
+	t.Run("200 OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/"+data.SongWithoutMediaAndMusic.UUID.String(), nil)
+		resp := test.DoRequest(h, r)
+
+		var song schema.Song
+		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song), "decode song") {
+			assert.Equal(t, schema.FromSong(data.SongWithoutMediaAndMusic), song, "song data")
+		}
 	})
-	var respSong schema.Song
-	assert.NoError(t, json.NewDecoder(resp.Body).Decode(&respSong))
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, song.UUID, respSong.UUID)
-	assert.Equal(t, song.Title, respSong.Title)
+	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID))
+	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, "/"+data.AbsentSongUUID.String(), http.StatusNotFound))
 }
 
 func TestController_Update(t *testing.T) {
-	id := uuid.New()
-	uploadID := uint(123)
-	song := model.NewSong()
-	song.UUID = id
-	song.Artist = "Foobar"
-	song.Comment = "Hi"
-	songWithUpload := model.NewSong()
-	songWithUpload.UUID = id
-	songWithUpload.UploadID = &uploadID
+	h, _, data := setup(t, true)
+	path := "/" + data.SongWithoutMediaAndMusic.UUID.String()
 
-	t.Run("simple", func(t *testing.T) {
-		body := strings.NewReader(`{"title": "Hello World", "comment": ""}`)
-		req := httptest.NewRequest(http.MethodPatch, "/"+id.String(), body)
-		req.Header.Set("Content-Type", "application/json")
-		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-			svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
-			svc.EXPECT().SaveSong(gomock.Any(), gomock.AssignableToTypeOf(&model.Song{})).DoAndReturn(func(ctx context.Context, song *model.Song) error {
-				assert.Equal(t, id, song.UUID)
-				assert.Equal(t, "Foobar", song.Artist)
-				assert.Equal(t, "Hello World", song.Title)
-				assert.Empty(t, song.Comment)
-				return nil
-			})
-		})
-
+	t.Run("200 OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPatch, path, strings.NewReader(`
+			{"title": "Foobar"}
+		`))
+		r.Header.Set("Content-Type", "application/json")
+		resp := test.DoRequest(h, r)
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
-
-	cases := []struct {
-		name        string
-		body        string
-		song        model.Song
-		code        int
-		problemType string
-	}{
-		{"bad JSON", `{"title": "Hello `, song, http.StatusBadRequest, ""},
-		{"schema validation", `{"title": "Hello World", "medley": {"mode": "manual"}}`, song, http.StatusUnprocessableEntity, ""},
-	}
-
-	for _, c := range cases {
-		body := strings.NewReader(c.body)
-		req := httptest.NewRequest(http.MethodPatch, "/"+c.song.UUID.String(), body)
-		req.Header.Set("Content-Type", "application/json")
-		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-			svc.EXPECT().GetSong(gomock.Any(), c.song.UUID).Return(c.song, nil)
-		})
-
-		var err apierror.ProblemDetails
-		assert.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-		assert.Equal(t, c.code, resp.StatusCode)
-		assert.Equal(t, c.code, err.Status)
-		if c.problemType == "" {
-			assert.True(t, err.IsDefaultType())
-		} else {
-			assert.Equal(t, c.problemType, err.Type)
-		}
-	}
+	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID))
+	t.Run("400 Bad Request (Invalid Body)", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPatch, path, strings.NewReader(`
+			{"title": "Foo
+		`))
+		r.Header.Set("Content-Type", "application/json")
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusBadRequest, "", nil)
+	})
+	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPatch, path, "application/json"))
+	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPatch, path, "text/plain", "application/json"))
+	t.Run("404 Not Found", test.HTTPError(h, http.MethodPatch, "/"+data.AbsentSongUUID.String(), http.StatusNotFound))
+	t.Run("409 Conflict", testSongConflict(h, http.MethodPatch, "/"+data.SongWithUpload.UUID.String(), data.SongWithUpload.UUID))
+	t.Run("422 Unprocessable Entity", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPatch, path, strings.NewReader(`
+			{"title": "Foobar", "medley": {"mode": "manual"}}
+		`))
+		r.Header.Set("Content-Type", "application/json")
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, "", nil)
+	})
 }
 
 func TestController_Delete(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		id := uuid.New()
-		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
-		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id).Return(nil)
-		})
+	h, _, data := setup(t, true)
+	path := "/" + data.SongWithoutMediaAndMusic.UUID.String()
 
+	t.Run("204 No Content", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodDelete, path, nil)
+		resp := test.DoRequest(h, r)
+		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+		// Repeat the same delete to test idempotency
+		r = httptest.NewRequest(http.MethodDelete, path, nil)
+		resp = test.DoRequest(h, r)
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
-
-	t.Run("already deleted", func(t *testing.T) {
-		id := uuid.New()
-		req := httptest.NewRequest(http.MethodDelete, "/"+id.String(), nil)
-		resp := doRequest(t, req, func(svc *MockSongService, _ *MockMediaService) {
-			svc.EXPECT().DeleteSongByUUID(gomock.Any(), id).Return(gorm.ErrRecordNotFound)
-		})
-
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-	})
+	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID))
 }

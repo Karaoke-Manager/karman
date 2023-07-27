@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -36,7 +37,6 @@ var (
 
 // runVersion actually prints the current Karman version.
 func runVersion(cmd *cobra.Command, args []string) {
-	// TODO: Support JSON output
 	info := getVersionInfo()
 	if info == nil {
 		_, _ = fmt.Fprintln(os.Stderr, "No version info provided during build.")

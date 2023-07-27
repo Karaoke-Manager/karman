@@ -4,6 +4,38 @@ info:
   version: v1
 paths: {}
 components:
+  parameters:
+    limit:
+      in: query
+      name: limit
+      required: false
+      allowEmptyValue: false
+      description: |-
+        The limit sets the number of items to return (if available).
+        The actual number of results depends on the number of available items.
+        Depending on the endpoint the actual maximum limit may be higher or lower.
+        
+        `limit=0` will always return an empty list.
+        This can be useful to find the total number of items.
+      schema:
+        type: integer
+        default: 25
+        minimum: 0
+        maximum: 100
+        example: 50
+    offset:
+      in: query
+      name: offset
+      required: false
+      allowEmptyValue: false
+      description: |-
+        The offset specifies the start value for pagination.
+        If a previous request has yielded the first 50 items you can use `offset=50&limit=50` to get the next 50 items.
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+        example: 25
   headers:
     Pagination-Count:
       description: |-

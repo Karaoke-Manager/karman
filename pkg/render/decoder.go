@@ -62,6 +62,7 @@ func DecodeXML(r io.Reader, v any) error {
 
 // DecodeForm decodes a given reader into an interface using the form decoder.
 func DecodeForm(r io.Reader, v any) error {
+	defer io.Copy(io.Discard, r)
 	decoder := form.NewDecoder(r)
 	return decoder.Decode(v)
 }

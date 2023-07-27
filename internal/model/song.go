@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/Karaoke-Manager/go-ultrastar"
 	"time"
+
+	"codello.dev/ultrastar"
 )
 
 // Song is the model for songs.

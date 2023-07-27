@@ -59,7 +59,8 @@ func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handl
 			}
 			s, _, err := mime.ParseMediaType(contentType)
 			if err != nil {
-				_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
+				// FIXME: Bad Request??
+				_ = render.Render(w, r, apierror.UnsupportedMediaType(mediaTypes...))
 				return
 			}
 			if allowAll {
@@ -70,13 +71,14 @@ func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handl
 			}
 			media, sub, ok := strings.Cut(s, "/")
 			if !ok {
-				_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
+				// FIXME: Bad Request?
+				_ = render.Render(w, r, apierror.UnsupportedMediaType(mediaTypes...))
 				return
 			}
 			sub = strings.ToLower(sub)
 			if sub == "*" {
 				// FIXME: Bad Request?
-				_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
+				_ = render.Render(w, r, apierror.UnsupportedMediaType(mediaTypes...))
 				return
 			}
 			allowedSubs := allowed[media]
@@ -86,7 +88,7 @@ func RequireContentType(mediaTypes ...string) func(next http.Handler) http.Handl
 					return
 				}
 			}
-			_ = render.Render(w, r, apierror.ErrUnsupportedMediaType)
+			_ = render.Render(w, r, apierror.UnsupportedMediaType(mediaTypes...))
 		}
 		return http.HandlerFunc(fn)
 	}

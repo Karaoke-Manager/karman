@@ -2,10 +2,12 @@ package song
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/internal/model"
+
+	"codello.dev/ultrastar"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 type Service interface {

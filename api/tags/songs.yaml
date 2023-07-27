@@ -59,6 +59,9 @@ paths:
       operationId: findSongs
       summary: Find Songs
       tags: [ song ]
+      parameters:
+        - $ref: "../common/pagination.yaml#/components/parameters/limit"
+        - $ref: "../common/pagination.yaml#/components/parameters/offset"
       description: |-
         List all songs in the database.
       # TODO: Add filter and sort options
@@ -309,6 +312,7 @@ components:
       in: path
       name: uuid
       required: true
+      allowReserved: true
       schema:
         type: string
         format: uuid

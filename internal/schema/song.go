@@ -2,11 +2,13 @@ package schema
 
 import (
 	"errors"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"codello.dev/ultrastar"
+	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 // MedleyMode indicates how a song's medley is to be calculated.

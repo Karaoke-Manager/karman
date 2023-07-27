@@ -7,7 +7,8 @@ import (
 
 const (
 	// TypeMissingContentType indicates that a Content-Type header is required but was not specified.
-	TypeMissingContentType = ProblemTypeDomain + "/missing-content-type"
+	TypeMissingContentType   = ProblemTypeDomain + "/missing-content-type"
+	TypeUnsupportedMediaType = ProblemTypeDomain + "/unsupported-media-type"
 )
 
 // These errors are ProblemDetails representations of common HTTP error codes.
@@ -31,6 +32,17 @@ func MissingContentType(allowed ...string) *ProblemDetails {
 		Status: http.StatusBadRequest,
 		Detail: "The HTTP header Content-Type is required but was not specified. " +
 			"The following content types are allowed: " + strings.Join(allowed, ", "),
+		Fields: map[string]any{
+			"acceptedContentTypes": allowed,
+		},
+	}
+}
+
+func UnsupportedMediaType(allowed ...string) *ProblemDetails {
+	return &ProblemDetails{
+		Type:   TypeUnsupportedMediaType,
+		Status: http.StatusUnsupportedMediaType,
+		Detail: "The following content types are allowed: " + strings.Join(allowed, ", "),
 		Fields: map[string]any{
 			"acceptedContentTypes": allowed,
 		},

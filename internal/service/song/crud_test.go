@@ -2,15 +2,17 @@ package song
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"testing"
+	"time"
+
+	"codello.dev/ultrastar"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"testing"
-	"time"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 func setupService(t *testing.T) (Service, *gorm.DB) {

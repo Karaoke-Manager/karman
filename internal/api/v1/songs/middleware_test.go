@@ -1,102 +1,52 @@
 package songs
 
 import (
-	"encoding/json"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/api/middleware"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/api/middleware"
+	"github.com/Karaoke-Manager/karman/internal/test"
 )
 
 func TestController_FetchUpload(t *testing.T) {
-	id := uuid.New()
-	song := model.NewSong()
-	song.UUID = id
+	_, c, data := setup(t, true)
+	h := c.FetchUpload(true)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, ok := GetSong(r.Context())
+		assert.True(t, ok, "Did not find a song in the context.")
+	}))
 
-	t.Run("success", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
-		req = req.WithContext(middleware.SetUUID(req.Context(), id))
-		ctrl := gomock.NewController(t)
-		svc := NewMockSongService(ctrl)
-		c := NewController(svc, nil)
-		svc.EXPECT().GetSong(gomock.Any(), id).Return(song, nil)
-		handler := c.FetchUpload(false)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s := MustGetSong(r.Context())
-			assert.Equal(t, id, s.UUID)
-		}))
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
-		ctrl.Finish()
+	t.Run("OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), data.SongWithoutMediaAndMusic.UUID))
+		test.DoRequest(h, r)
 	})
-
-	t.Run("not found", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/"+id.String(), nil)
-		req = req.WithContext(middleware.SetUUID(req.Context(), id))
-		ctrl := gomock.NewController(t)
-		svc := NewMockSongService(ctrl)
-		c := NewController(svc, nil)
-		svc.EXPECT().GetSong(gomock.Any(), id).Return(model.Song{}, gorm.ErrRecordNotFound)
-		handler := c.FetchUpload(false)(nil)
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
-		ctrl.Finish()
-		resp := w.Result()
-
-		var err apierror.ProblemDetails
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-		assert.Equal(t, http.StatusNotFound, err.Status)
+	t.Run("404 Not Found", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), data.AbsentSongUUID))
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
 
 func TestController_CheckModify(t *testing.T) {
-	id := uuid.New()
+	_, c, data := setup(t, true)
+	h := c.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
-	t.Run("success", func(t *testing.T) {
-		song := model.NewSong()
-		song.UUID = id
-
-		req := httptest.NewRequest(http.MethodPut, "/"+id.String(), nil)
-		req = req.WithContext(SetSong(req.Context(), song))
-
-		ctrl := gomock.NewController(t)
-		handler := NewController(NewMockSongService(ctrl), nil).CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusNoContent)
-		}))
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
-		ctrl.Finish()
-		resp := w.Result()
-
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+	t.Run("OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(SetSong(r.Context(), data.SongWithoutMediaAndMusic))
+		test.DoRequest(h, r)
 	})
-
-	t.Run("fail", func(t *testing.T) {
-		uploadID := uint(123)
-		song := model.NewSong()
-		song.UUID = id
-		song.UploadID = &uploadID
-
-		req := httptest.NewRequest(http.MethodPut, "/"+id.String(), nil)
-		req = req.WithContext(SetSong(req.Context(), song))
-		ctrl := gomock.NewController(t)
-		handler := NewController(NewMockSongService(ctrl), nil).CheckModify(nil)
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, req)
-		ctrl.Finish()
-		resp := w.Result()
-
-		var err apierror.ProblemDetails
-		require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-		assert.Equal(t, http.StatusConflict, resp.StatusCode)
-		assert.Equal(t, http.StatusConflict, err.Status)
-		assert.Equal(t, apierror.TypeUploadSongReadonly, err.Type)
+	t.Run("409 Conflict", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(SetSong(r.Context(), data.SongWithUpload))
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
+			"uuid": data.SongWithUpload.UUID.String(),
+		})
 	})
 }

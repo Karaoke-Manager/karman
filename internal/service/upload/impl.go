@@ -3,16 +3,12 @@ package upload
 import (
 	"context"
 	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/rwfs"
 	"gorm.io/gorm"
 	"io"
 	"io/fs"
 )
 
 type FS interface {
-	rwfs.FS
-	rwfs.MkDirFS
-	rwfs.RemoveFS
 }
 
 type service struct {
@@ -31,11 +27,11 @@ func (s *service) CreateUpload(ctx context.Context) (upload model.Upload, err er
 		return
 	}
 	// TODO: Maybe make the file mode configurable
-	if err = s.fs.MkDir(upload.UUID.String(), fs.ModeDir&0o770); err != nil {
+	/*if err = s.fs.MkDir(upload.UUID.String(), fs.ModeDir&0o770); err != nil {
 		// TODO: If an error occurs it should at least be logged.
 		_ = db.Unscoped().Delete(&upload)
 		return
-	}
+	}*/
 	return
 }
 
@@ -65,7 +61,7 @@ func (s *service) CreateFile(ctx context.Context, upload model.Upload, path stri
 	if !upload.Open {
 		return ErrUploadClosed
 	}
-	file, err := rwfs.Create(s.fs, upload.UUID.String()+"/"+path, 0660)
+	/*file, err := rwfs.Create(s.fs, upload.UUID.String()+"/"+path, 0660)
 	if err != nil {
 		return err
 	}
@@ -74,7 +70,7 @@ func (s *service) CreateFile(ctx context.Context, upload model.Upload, path stri
 	defer file.Close()
 	if _, err = io.Copy(file, r); err != nil {
 		return err
-	}
+	}*/
 	return nil
 }
 
@@ -82,21 +78,24 @@ func (s *service) StatFile(ctx context.Context, upload model.Upload, path string
 	if !upload.Open {
 		return nil, ErrUploadClosed
 	}
-	return fs.Stat(s.fs, upload.UUID.String()+"/"+path)
+	//return fs.Stat(s.fs, upload.UUID.String()+"/"+path)
+	return nil, nil
 }
 
 func (s *service) ReadDir(ctx context.Context, upload model.Upload, path string) ([]fs.DirEntry, error) {
 	if !upload.Open {
 		return nil, ErrUploadClosed
 	}
-	return fs.ReadDir(s.fs, upload.UUID.String()+"/"+path)
+	// return fs.ReadDir(s.fs, upload.UUID.String()+"/"+path)
+	return nil, nil
 }
 
 func (s *service) DeleteFile(ctx context.Context, upload model.Upload, path string) error {
 	if !upload.Open {
 		return ErrUploadClosed
 	}
-	return s.fs.Remove(upload.UUID.String() + "/" + path)
+	// return s.fs.Remove(upload.UUID.String() + "/" + path)
+	return nil
 }
 
 func (s *service) MarkForProcessing(ctx context.Context, upload model.Upload) error {

@@ -2,14 +2,16 @@ package songs
 
 import (
 	"errors"
-	"github.com/Karaoke-Manager/go-ultrastar/txt"
+	"net/http"
+
+	"codello.dev/ultrastar/txt"
+	"gorm.io/gorm"
+
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
 	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"gorm.io/gorm"
-	"net/http"
 )
 
 func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +26,7 @@ func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
+	render.Status(r, http.StatusCreated)
 	s := schema.FromSong(song)
 	_ = render.Render(w, r, &s)
 }

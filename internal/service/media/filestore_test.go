@@ -30,7 +30,7 @@ func TestNewFileStore(t *testing.T) {
 		_ = os.RemoveAll(dir)
 	})
 
-	t.Run("missing root", func(t *testing.T) {
+	t.Run("missing root directory", func(t *testing.T) {
 		_, err = NewFileStore(filepath.Join(dir, "test1"))
 		assert.Error(t, err)
 	})

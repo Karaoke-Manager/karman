@@ -33,12 +33,13 @@ func (c Controller) Router(r chi.Router) {
 			r.Get("/{uuid}/background", c.GetBackground)
 			r.Get("/{uuid}/audio", c.GetAudio)
 			r.Get("/{uuid}/video", c.GetVideo)
+
+			r.With(c.CheckModify, middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(false), c.CheckModify)
 			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
-			r.With(middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/background", c.ReplaceBackground)
 		})

@@ -2,15 +2,17 @@ package song
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/karman/internal/model"
+
 	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 func (s service) FindSongs(ctx context.Context, limit, offset int) (songs []model.Song, total int64, err error) {
-	if err = s.db.WithContext(ctx).Model(&model.Song{}).Count(&total).Error; err != nil {
+	if err = s.db.WithContext(ctx).Model(&model.Song{}).Where("upload_id IS NULL").Count(&total).Error; err != nil {
 		return
 	}
-	if err = s.db.WithContext(ctx).Limit(limit).Offset(offset).Find(&songs).Error; err != nil {
+	if err = s.db.WithContext(ctx).Model(&model.Song{}).Where("upload_id IS NULL").Limit(limit).Offset(offset).Find(&songs).Error; err != nil {
 		return
 	}
 	return

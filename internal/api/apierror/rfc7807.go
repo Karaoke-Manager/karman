@@ -97,12 +97,7 @@ func (p *ProblemDetails) Error() string {
 
 // Render prepares p to be written to w.
 // This method prepares p with some default values.
-func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
-	for key, values := range p.Headers {
-		for _, value := range values {
-			w.Header().Add(key, value)
-		}
-	}
+func (p *ProblemDetails) Render(_ http.ResponseWriter, _ *http.Request) error {
 	if p.Type == "" || p.Type == "about:blank" || p.Title == "" {
 		p.Title = http.StatusText(p.Status)
 	}
@@ -113,6 +108,11 @@ func (p *ProblemDetails) Render(w http.ResponseWriter, r *http.Request) error {
 // Response prepares the render package to write p to w.
 // This method does not actually write anything to w but sets appropriate context keys for the render package.
 func (p *ProblemDetails) Response(w http.ResponseWriter, r *http.Request) any {
+	for key, values := range p.Headers {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	}
 	render.Status(r, p.Status)
 	switch render.GetResponseFormat(r) {
 	case render.FormatXML:

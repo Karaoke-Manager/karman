@@ -2,9 +2,11 @@ package apierror
 
 import (
 	"errors"
-	"github.com/Karaoke-Manager/go-ultrastar/txt"
-	"github.com/Karaoke-Manager/karman/internal/model"
 	"net/http"
+
+	"codello.dev/ultrastar/txt"
+
+	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 const (

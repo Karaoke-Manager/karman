@@ -5,8 +5,6 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/api"
 	"github.com/Karaoke-Manager/karman/internal/service/media"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/internal/service/upload"
-	"github.com/Karaoke-Manager/karman/pkg/rwfs"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
@@ -58,10 +56,10 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 	mediaSvc := media.NewService(db, mediaStore)
 
-	uploadFS := rwfs.DirFS("tmp/uploads")
-	uploadSvc := upload.NewService(db, uploadFS)
+	// uploadFS := rwfs.DirFS("tmp/uploads")
+	// uploadSvc := upload.NewService(db, uploadFS)
 
-	apiController := api.NewController(songSvc, mediaSvc, uploadSvc)
+	apiController := api.NewController(songSvc, mediaSvc, nil)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)

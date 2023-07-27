@@ -33,6 +33,9 @@ paths:
       description: |-
         Lists all uploads in the database.
       # TODO: Add filter and sort options
+      parameters:
+        - $ref: "../common/pagination.yaml#/components/parameters/limit"
+        - $ref: "../common/pagination.yaml#/components/parameters/offset"
       responses:
         200:
           x-summary: Success

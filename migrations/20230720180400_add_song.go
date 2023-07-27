@@ -3,13 +3,15 @@ package migrations
 import (
 	"context"
 	"database/sql"
-	"github.com/Karaoke-Manager/go-ultrastar"
-	"github.com/Karaoke-Manager/karman/migrations/db"
+	"runtime"
+	"time"
+
+	"codello.dev/ultrastar"
 	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
 	"gorm.io/gorm"
-	"runtime"
-	"time"
+
+	"github.com/Karaoke-Manager/karman/migrations/db"
 )
 
 // This migration adds the Song model.

@@ -1,29 +1,49 @@
 package songs
 
 import (
-	"github.com/go-chi/chi/v5"
-	"go.uber.org/mock/gomock"
+	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Karaoke-Manager/karman/internal/service/media"
+	"github.com/Karaoke-Manager/karman/internal/service/song"
+	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/go-chi/chi/v5"
 )
 
-//go:generate mockgen -package songs -typed -mock_names Service=MockSongService -destination ./mock_songservice_test.go github.com/Karaoke-Manager/karman/internal/service/song Service
-//go:generate mockgen -package songs -typed -mock_names Service=MockMediaService -destination ./mock_mediaservice_test.go github.com/Karaoke-Manager/karman/internal/service/media Service
-
-// doRequest executes the specified request against a songs.Controller backed by a MockSongService.
-// Before the request is executed the expect function is invoked giving you the opportunity to register expected calls on the service.
-func doRequest(t *testing.T, req *http.Request, expect func(songSvc *MockSongService, mediaSvc *MockMediaService)) *http.Response {
-	ctrl := gomock.NewController(t)
-	songSvc := NewMockSongService(ctrl)
-	mediaSvc := NewMockMediaService(ctrl)
-	if expect != nil {
-		expect(songSvc, mediaSvc)
+// setup prepares a test instance of the songs.Controller.
+// The tests in this package are more integration tests than unit tests as we test against an in-memory SQLite database
+// instead of mocking service objects.
+// The reason for this approach is mainly reduced testing complexity.
+//
+// If withData is true, a test dataset will be created and stored in the DB.
+// Otherwise, data will be nil.
+func setup(t *testing.T, withData bool) (h http.Handler, c Controller, data *test.Dataset) {
+	db := test.NewDB(t)
+	if withData {
+		data = test.NewDataset(db)
 	}
+	songSvc := song.NewService(db)
+	mediaSvc := media.NewFakeService("Foobar", db)
+	c = NewController(songSvc, mediaSvc)
 	r := chi.NewRouter()
-	r.Route("/", NewController(songSvc, mediaSvc).Router)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	ctrl.Finish()
-	return w.Result()
+	r.Route("/", c.Router)
+	return r, c, data
+}
+
+func songPath(song model.Song, suffix string) string {
+	return "/" + song.UUID.String() + suffix
+}
+
+func testSongConflict(h http.Handler, method string, path string, id uuid.UUID) func(t *testing.T) {
+	return func(t *testing.T) {
+		r := httptest.NewRequest(method, path, nil)
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
+			"uuid": id.String(),
+		})
+	}
 }

@@ -95,9 +95,14 @@ func (s service) preferredBackgroundName(song model.Song) string {
 }
 
 func (service) extensionForType(t string) string {
-	if t == "audio/mpeg" {
-		// special case for MP3 as this media type encompasses MP2 as well.
+	// preferred, known types
+	switch t {
+	case "audio/mpeg":
 		return ".mp3"
+	case "video/mp4":
+		return ".mp4"
+	case "image/jpeg":
+		return ".jpg"
 	}
 	ext, _ := mime.ExtensionsByType(t)
 	if len(ext) == 0 {

@@ -39,7 +39,7 @@ func TestService_SongData(t *testing.T) {
 	assert.Equal(t, song.Artist, usSong.Artist)
 	assert.Equal(t, song.Title, usSong.Title)
 	assert.Equal(t, "Foobar - Hello World [AUDIO].mp3", usSong.AudioFile)
-	assert.Equal(t, "Foobar - Hello World [VIDEO].m4v", usSong.VideoFile)
+	assert.Equal(t, "Foobar - Hello World [VIDEO].mp4", usSong.VideoFile)
 	assert.Empty(t, usSong.CoverFile)
 	assert.Empty(t, usSong.BackgroundFile)
 }

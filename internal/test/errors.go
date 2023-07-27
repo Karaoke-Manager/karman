@@ -10,6 +10,9 @@ import (
 	"testing"
 )
 
+// AssertProblemDetails validates that resp encodes a problem details instance with the specified values.
+// Any fields will be checked for presence in the custom fields of the response.
+// This assertion will NOT fail if additional fields are present in the response.
 func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType string, fields map[string]any) {
 	assert.Equal(t, code, resp.StatusCode, "response status code does not equal expected value")
 	var err apierror.ProblemDetails
@@ -34,6 +37,9 @@ func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType s
 	}
 }
 
+// MissingContentType returns a test that runs a request against h without the Content-Type header
+// and validates that the response indicates as much.
+// The variadic argument lets you specify the expected allowed content types for this endpoint.
 func MissingContentType(h http.Handler, method string, path string, allowed ...any) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)
@@ -46,6 +52,9 @@ func MissingContentType(h http.Handler, method string, path string, allowed ...a
 	}
 }
 
+// InvalidContentType returns a test that runs a request against h with the specified invalid Content-Type header
+// and validates that the response indicates as much.
+// The variadic argument lets you specify the expected allowed content types for this endpoint.
 func InvalidContentType(h http.Handler, method string, path string, invalid string, allowed ...any) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)

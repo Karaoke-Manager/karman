@@ -10,26 +10,28 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
+// A Dataset provides named values for the expected content of a testing database.
 type Dataset struct {
 	InvalidUUID string
 
-	ImageFile model.File
-	AudioFile model.File
-	VideoFile model.File
+	ImageFile model.File // may be used by multiple songs
+	AudioFile model.File // may be used by multiple songs
+	VideoFile model.File // may be used by multiple songs
 
 	UploadWithSongs model.Upload
 
-	AbsentSongUUID           uuid.UUID
-	AbsentSong               model.Song
-	SongWithoutMediaAndMusic model.Song
+	AbsentSongUUID uuid.UUID  // may be a present UUID for other types
+	AbsentSong     model.Song // UUID is AbsentSongUUID
+	BasicSong      model.Song // no media, no upload, no music
 
 	SongWithUpload     model.Song
-	SongWithCover      model.Song
-	SongWithBackground model.Song
-	SongWithAudio      model.Song
-	SongWithVideo      model.Song
+	SongWithCover      model.Song // may or may not have other media
+	SongWithBackground model.Song // may or may not have other media
+	SongWithAudio      model.Song // may or may not have other media
+	SongWithVideo      model.Song // may or may not have other media
 }
 
+// NewDataset creates a new Dataset and stores it into the db.
 func NewDataset(db *gorm.DB) *Dataset {
 	data := &Dataset{
 		InvalidUUID:    "Hello%20World",
@@ -74,14 +76,14 @@ func NewDataset(db *gorm.DB) *Dataset {
 	}
 	db.Save(&data.UploadWithSongs)
 
-	data.SongWithoutMediaAndMusic = model.Song{
+	data.BasicSong = model.Song{
 		Title:    "Cold",
 		Artist:   "Darrin DuBuque",
 		Genre:    "Latin",
 		Language: "English",
 		Year:     2003,
 	}
-	db.Save(&data.SongWithoutMediaAndMusic)
+	db.Save(&data.BasicSong)
 
 	data.SongWithUpload = model.Song{
 		Upload:   &data.UploadWithSongs,

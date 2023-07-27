@@ -8,6 +8,9 @@ import (
 	"testing"
 )
 
+// NewDB creates a new database for testing purposes.
+// The returned DB will be backed by an in-memory SQLite database.
+// The database should not be used outside the scope of t.
 func NewDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
 	require.NoError(t, err, "Failed to create in-memory SQLite database.")

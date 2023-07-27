@@ -21,7 +21,7 @@ func TestController_FetchUpload(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(middleware.SetUUID(r.Context(), data.SongWithoutMediaAndMusic.UUID))
+		r = r.WithContext(middleware.SetUUID(r.Context(), data.BasicSong.UUID))
 		test.DoRequest(h, r)
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestController_CheckModify(t *testing.T) {
 
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(SetSong(r.Context(), data.SongWithoutMediaAndMusic))
+		r = r.WithContext(SetSong(r.Context(), data.BasicSong))
 		test.DoRequest(h, r)
 	})
 	t.Run("409 Conflict", func(t *testing.T) {

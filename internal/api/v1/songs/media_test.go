@@ -93,7 +93,7 @@ func TestController_GetCover(t *testing.T) {
 	t.Run("200 OK", testGetFile(h, songPath(data.SongWithCover, "/cover"), data.ImageFile))
 	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID+"/cover"))
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/cover"), http.StatusNotFound))
-	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.SongWithoutMediaAndMusic, "cover"))
+	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "cover"))
 }
 
 func TestController_GetBackground(t *testing.T) {
@@ -102,7 +102,7 @@ func TestController_GetBackground(t *testing.T) {
 	t.Run("200 OK", testGetFile(h, songPath(data.SongWithBackground, "/background"), data.ImageFile))
 	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID+"/background"))
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/background"), http.StatusNotFound))
-	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.SongWithoutMediaAndMusic, "background"))
+	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "background"))
 }
 func TestController_GetAudio(t *testing.T) {
 	h, _, data := setup(t, true)
@@ -110,7 +110,7 @@ func TestController_GetAudio(t *testing.T) {
 	t.Run("200 OK", testGetFile(h, songPath(data.SongWithAudio, "/audio"), data.AudioFile))
 	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID+"/audio"))
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/audio"), http.StatusNotFound))
-	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.SongWithoutMediaAndMusic, "audio"))
+	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "audio"))
 }
 func TestController_GetVideo(t *testing.T) {
 	h, _, data := setup(t, true)
@@ -118,7 +118,7 @@ func TestController_GetVideo(t *testing.T) {
 	t.Run("200 OK", testGetFile(h, songPath(data.SongWithVideo, "/video"), data.VideoFile))
 	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID+"/video"))
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/video"), http.StatusNotFound))
-	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.SongWithoutMediaAndMusic, "video"))
+	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "video"))
 }
 
 func testPutFile(h http.Handler, path string, contentType string) func(t *testing.T) {

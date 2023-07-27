@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// MustOpen opens the named file.
+// If the file cannot be opened the test is aborted.
 func MustOpen(t *testing.T, name string) *os.File {
 	f, err := os.Open(name)
 	require.NoErrorf(t, err, "could not open test file: %s", name)
@@ -20,12 +22,14 @@ func MustOpen(t *testing.T, name string) *os.File {
 	return f
 }
 
+// DoRequest executes r against h, records the response and returns it.
 func DoRequest(h http.Handler, r *http.Request) *http.Response {
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	return w.Result()
 }
 
+// AssertPagination validates that the response provides the expected pagination values.
 func AssertPagination(t *testing.T, resp *http.Response, offset, limit, count int, total int64) {
 	assert.Equal(t, strconv.Itoa(offset), resp.Header.Get("Pagination-Offset"), "Pagination-Offset header does not match")
 	assert.Equal(t, strconv.Itoa(limit), resp.Header.Get("Pagination-Limit"), "Pagination-Limit header does not match")

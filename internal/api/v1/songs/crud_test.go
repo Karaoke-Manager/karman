@@ -63,12 +63,12 @@ func TestController_Get(t *testing.T) {
 	h, _, data := setup(t, true)
 
 	t.Run("200 OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/"+data.SongWithoutMediaAndMusic.UUID.String(), nil)
+		r := httptest.NewRequest(http.MethodGet, "/"+data.BasicSong.UUID.String(), nil)
 		resp := test.DoRequest(h, r)
 
 		var song schema.Song
 		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song), "decode song") {
-			assert.Equal(t, schema.FromSong(data.SongWithoutMediaAndMusic), song, "song data")
+			assert.Equal(t, schema.FromSong(data.BasicSong), song, "song data")
 		}
 	})
 	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID))
@@ -77,7 +77,7 @@ func TestController_Get(t *testing.T) {
 
 func TestController_Update(t *testing.T) {
 	h, _, data := setup(t, true)
-	path := "/" + data.SongWithoutMediaAndMusic.UUID.String()
+	path := "/" + data.BasicSong.UUID.String()
 
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPatch, path, strings.NewReader(`
@@ -112,7 +112,7 @@ func TestController_Update(t *testing.T) {
 
 func TestController_Delete(t *testing.T) {
 	h, _, data := setup(t, true)
-	path := "/" + data.SongWithoutMediaAndMusic.UUID.String()
+	path := "/" + data.BasicSong.UUID.String()
 
 	t.Run("204 No Content", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodDelete, path, nil)

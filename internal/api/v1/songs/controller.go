@@ -7,15 +7,18 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Controller implements the /v1/songs endpoint.
 type Controller struct {
 	songSvc  song.Service
 	mediaSvc media.Service
 }
 
+// NewController creates a new Controller instance using the specified services.
 func NewController(songSvc song.Service, mediaSvc media.Service) Controller {
 	return Controller{songSvc, mediaSvc}
 }
 
+// Router sets up the routing for the endpoint.
 func (c Controller) Router(r chi.Router) {
 	r.With(middleware.RequireContentType("text/plain")).Post("/", c.Create)
 	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)

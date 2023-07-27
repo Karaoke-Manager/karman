@@ -24,6 +24,7 @@ const (
 )
 
 var (
+	// ErrInvalidUUID is an error indicating that a UUID value was invalid.
 	ErrInvalidUUID = &ProblemDetails{
 		Type:   TypeInvalidUUID,
 		Title:  "Invalid UUID",

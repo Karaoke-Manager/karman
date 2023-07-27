@@ -9,11 +9,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Controller implements the /v1 API namespace.
 type Controller struct {
 	uploadController *uploads.Controller
 	songController   songs.Controller
 }
 
+// NewController creates a new controller using the specified services.
+// This function will create the required sub-controllers automatically.
 func NewController(songService song.Service, mediaService media.Service, uploadService upload.Service) Controller {
 	return Controller{
 		uploadController: uploads.NewController(uploadService),
@@ -21,6 +24,7 @@ func NewController(songService song.Service, mediaService media.Service, uploadS
 	}
 }
 
+// Router mounts the v1 sub-routers to r.
 func (c Controller) Router(r chi.Router) {
 	r.Route("/songs", c.songController.Router)
 	r.Route("/uploads", c.uploadController.Router)

@@ -13,6 +13,7 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
+// GetTxt implements the GET /v1/songs/{uuid}/txt endpoint.
 func (c Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	usSong := c.songSvc.SongData(song)
@@ -22,6 +23,7 @@ func (c Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 	_ = txt.WriteSong(w, usSong)
 }
 
+// ReplaceTxt implements the PUT /v1/songs/{uuid}/txt endpoint.
 func (c Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	usSong, err := txt.ReadSong(r.Body)
@@ -39,6 +41,7 @@ func (c Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, &s)
 }
 
+// GetCover implements the GET /v1/songs/{uuid}/cover endpoint.
 func (c Controller) GetCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.CoverFile == nil {
@@ -48,6 +51,7 @@ func (c Controller) GetCover(w http.ResponseWriter, r *http.Request) {
 	c.sendFile(w, r, *song.CoverFile)
 }
 
+// GetBackground implements the GET /v1/songs/{uuid}/background endpoint.
 func (c Controller) GetBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.BackgroundFile == nil {
@@ -57,6 +61,7 @@ func (c Controller) GetBackground(w http.ResponseWriter, r *http.Request) {
 	c.sendFile(w, r, *song.BackgroundFile)
 }
 
+// GetAudio implements the GET /v1/songs/{uuid}/audio endpoint.
 func (c Controller) GetAudio(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.AudioFile == nil {
@@ -66,6 +71,7 @@ func (c Controller) GetAudio(w http.ResponseWriter, r *http.Request) {
 	c.sendFile(w, r, *song.AudioFile)
 }
 
+// GetVideo implements the GET /v1/songs/{uuid}/video endpoint.
 func (c Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.VideoFile == nil {
@@ -75,6 +81,8 @@ func (c Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
 	c.sendFile(w, r, *song.VideoFile)
 }
 
+// sendFile sends the file as response to r.
+// This method makes sure that the required headers are set.
 func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.File) {
 	f, err := c.mediaSvc.ReadFile(r.Context(), file)
 	if err != nil {
@@ -90,6 +98,7 @@ func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.
 	_, _ = io.Copy(w, f)
 }
 
+// ReplaceCover implements the PUT /v1/songs/{uuid}/cover endpoint.
 func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := r.Header.Get("Content-Type")
@@ -107,6 +116,7 @@ func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// ReplaceBackground implements the PUT /v1/songs/{uuid}/background endpoint.
 func (c Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := r.Header.Get("Content-Type")
@@ -124,6 +134,7 @@ func (c Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// DeleteCover implements the DELETE /v1/songs/{uuid}/cover endpoint.
 func (c Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.CoverFileID = nil
@@ -134,6 +145,7 @@ func (c Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// DeleteBackground implements the DELETE /v1/songs/{uuid}/background endpoint.
 func (c Controller) DeleteBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.BackgroundFileID = nil
@@ -144,6 +156,7 @@ func (c Controller) DeleteBackground(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// DeleteAudio implements the DELETE /v1/songs/{uuid}/audio endpoint.
 func (c Controller) DeleteAudio(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.AudioFileID = nil
@@ -154,6 +167,7 @@ func (c Controller) DeleteAudio(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// DeleteVideo implements the DELETE /v1/songs/{uuid}/video endpoint.
 func (c Controller) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.VideoFileID = nil

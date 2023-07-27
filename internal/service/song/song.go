@@ -9,6 +9,7 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
+// UpdateSongFromData applies the metadata and music from data to song.
 func (s service) UpdateSongFromData(song *model.Song, data *ultrastar.Song) {
 	song.Gap = data.Gap
 	song.VideoGap = data.VideoGap
@@ -33,6 +34,7 @@ func (s service) UpdateSongFromData(song *model.Song, data *ultrastar.Song) {
 	song.MusicP2 = data.MusicP2.Clone()
 }
 
+// SongData returns an ultrastar.Song that is equivalent to song.
 func (s service) SongData(song model.Song) *ultrastar.Song {
 	// TODO: Make sure that relations are loaded
 	customTags := make(map[string]string, len(song.Extra))
@@ -78,22 +80,32 @@ func (s service) SongData(song model.Song) *ultrastar.Song {
 	return usSong
 }
 
-func (s service) preferredAudioName(song model.Song) string {
-	return fmt.Sprintf("%s - %s [AUDIO]%s", song.Artist, song.Title, s.extensionForType(song.AudioFile.Type))
-}
-
-func (s service) preferredVideoName(song model.Song) string {
-	return fmt.Sprintf("%s - %s [VIDEO]%s", song.Artist, song.Title, s.extensionForType(song.VideoFile.Type))
-}
-
+// preferredCoverName returns a name for the cover file of song.
+// song.CoverFile must not be nil.
 func (s service) preferredCoverName(song model.Song) string {
 	return fmt.Sprintf("%s - %s [CO]%s", song.Artist, song.Title, s.extensionForType(song.CoverFile.Type))
 }
 
+// preferredBackgroundName returns a name for the background file of song.
+// song.BackgroundFile must not be nil.
 func (s service) preferredBackgroundName(song model.Song) string {
 	return fmt.Sprintf("%s - %s [BG]%s", song.Artist, song.Title, s.extensionForType(song.BackgroundFile.Type))
 }
 
+// preferredAudioName returns a name for the audio file of song.
+// song.AudioFile must not be nil.
+func (s service) preferredAudioName(song model.Song) string {
+	return fmt.Sprintf("%s - %s [AUDIO]%s", song.Artist, song.Title, s.extensionForType(song.AudioFile.Type))
+}
+
+// preferredVideoName returns a name for the video file of song.
+// song.VideoFile must not be nil.
+func (s service) preferredVideoName(song model.Song) string {
+	return fmt.Sprintf("%s - %s [VIDEO]%s", song.Artist, song.Title, s.extensionForType(song.VideoFile.Type))
+}
+
+// extensionForType returns the file extension that should be used for the specified media type.
+// The returned extension includes a leading dot.
 func (service) extensionForType(t string) string {
 	// preferred, known types
 	switch t {

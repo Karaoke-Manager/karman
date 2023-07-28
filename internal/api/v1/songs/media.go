@@ -152,6 +152,24 @@ func (c Controller) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// ReplaceVideo implements the PUT /v1/songs/{uuid}/video endpoint.
+func (c Controller) ReplaceVideo(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	mediaType := r.Header.Get("Content-Type")
+	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	if err != nil {
+		// TODO: Logging
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	song.VideoFile = &file
+	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
 // DeleteCover implements the DELETE /v1/songs/{uuid}/cover endpoint.
 func (c Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())

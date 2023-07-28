@@ -1,16 +1,18 @@
 package media
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"errors"
+	"github.com/Karaoke-Manager/karman/pkg/streamio"
 	"gorm.io/gorm"
 	"image"
 	"io"
 	"strings"
 	"sync"
 	"time"
-	
+
 	"github.com/Karaoke-Manager/karman/internal/model"
 
 	// Supported image formats.
@@ -18,7 +20,8 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	// Audio Libraries.
+	// AV Libraries.
+	"github.com/abema/go-mp4"
 	"github.com/tcolgate/mp3"
 )
 
@@ -111,14 +114,17 @@ func (s service) StoreFile(ctx context.Context, mediaType string, r io.Reader) (
 // also performs content-specific analysis for images, video and audio files.
 func fullAnalyzeFile(r io.Reader, mediaType string, file *model.File) error {
 	var size int64
-	r = countBytes(r, &size)
+	r = streamio.CountBytes(r, &size)
 	h := sha256.New()
 	r = io.TeeReader(r, h)
 
-	if strings.HasPrefix(mediaType, "image/") {
+	switch {
+	case strings.HasPrefix(mediaType, "image/"):
 		_ = analyzeImage(r, mediaType, file)
-	} else if strings.HasPrefix(mediaType, "audio/") {
+	case strings.HasPrefix(mediaType, "audio/"):
 		_ = analyzeAudio(r, mediaType, file)
+	case strings.HasPrefix(mediaType, "video/"):
+		_ = analyzeVideo(r, mediaType, file)
 	}
 	// TODO: Log unknown formats and other errors
 
@@ -162,6 +168,31 @@ func analyzeAudio(r io.Reader, mediaType string, file *model.File) error {
 		}
 		file.Duration = duration
 		// TODO: Support more formats
+	}
+	return nil
+}
+
+// analyzeAudio sets video-specific metadata on file.
+func analyzeVideo(r io.Reader, mediaType string, file *model.File) error {
+	switch mediaType {
+	case "video/mp4":
+		// FIXME: Do we have to buffer the whole file?
+		buf, err := io.ReadAll(r)
+		if err != nil {
+			return err
+		}
+		info, err := mp4.Probe(bytes.NewReader(buf))
+		if err != nil {
+			return err
+		}
+		file.Duration = time.Duration(info.Duration) * time.Millisecond
+		for _, track := range info.Tracks {
+			if track.AVC != nil {
+				file.Width = int(track.AVC.Width)
+				file.Height = int(track.AVC.Height)
+				break
+			}
+		}
 	}
 	return nil
 }

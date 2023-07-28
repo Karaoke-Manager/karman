@@ -46,6 +46,7 @@ func (c Controller) Router(r chi.Router) {
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/background", c.ReplaceBackground)
 			r.With(middleware.RequireContentType("audio/*")).Put("/{uuid}/audio", c.ReplaceAudio)
+			r.With(middleware.RequireContentType("video/*")).Put("/{uuid}/video", c.ReplaceVideo)
 		})
 
 		r.Group(func(r chi.Router) {
@@ -57,7 +58,4 @@ func (c Controller) Router(r chi.Router) {
 			r.Delete("/{uuid}/video", c.DeleteVideo)
 		})
 	})
-
-	// PUT /{uuid}/audio
-	// PUT /{uuid}/video
 }

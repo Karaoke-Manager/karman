@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	codello.dev/ultrastar v0.0.0-20230727073949-61c2034f954f
+	github.com/abema/go-mp4 v0.11.0
 	github.com/brianvoe/gofakeit/v6 v6.23.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.0

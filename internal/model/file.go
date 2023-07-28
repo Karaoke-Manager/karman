@@ -34,12 +34,11 @@ type File struct {
 	// Checksum is the Sha256 checksum of this file, uniquely identifying its content.
 	Checksum []byte `gorm:"type:varbinary"`
 
-	// Bitrate and Durations are set only if the file's Type identifies an audio or video file.
-	Bitrate  int // in bits per second
+	// Duration is set only if the file's Type identifies an audio or video file.
 	Duration time.Duration
 
 	// Width and Height of the image file.
-	// Set only if the file's Type identifies an image file.
+	// Set only if the file's Type identifies an image or video file.
 	Width  int // in pixels
 	Height int // in pixels
 }

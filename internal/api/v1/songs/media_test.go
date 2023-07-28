@@ -154,6 +154,18 @@ func TestController_ReplaceBackground(t *testing.T) {
 	t.Run("409 Conflict", testSongConflict(h, http.MethodPut, songPath(data.SongWithUpload, "/background"), data.SongWithUpload.UUID))
 }
 
+func TestController_ReplaceAudio(t *testing.T) {
+	h, _, data := setup(t, true)
+	path := songPath(data.SongWithBackground, "/audio")
+
+	t.Run("204 No Content", testPutFile(h, path, "audio/x-testing"))
+	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodPut, "/"+data.InvalidUUID+"/audio"))
+	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPut, path, "audio/*"))
+	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPut, path, "video/mp4", "audio/*"))
+	t.Run("404 Not Found", test.HTTPError(h, http.MethodPut, songPath(data.AbsentSong, "/audio"), http.StatusNotFound))
+	t.Run("409 Conflict", testSongConflict(h, http.MethodPut, songPath(data.SongWithUpload, "/audio"), data.SongWithUpload.UUID))
+}
+
 func testDeleteFile(h http.Handler, path string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodDelete, path, nil)

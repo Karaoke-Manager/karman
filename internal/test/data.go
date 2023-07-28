@@ -54,7 +54,6 @@ func NewDataset(db *gorm.DB) *Dataset {
 		Type:     "audio/mpeg",
 		Size:     62352,
 		Checksum: checksum,
-		Bitrate:  128000,
 		Duration: 3 * time.Minute,
 	}
 	db.Save(&data.AudioFile)
@@ -63,7 +62,6 @@ func NewDataset(db *gorm.DB) *Dataset {
 		Type:     "video/mp4",
 		Size:     123151,
 		Checksum: checksum,
-		Bitrate:  5212327,
 		Duration: 2 * time.Second,
 	}
 	db.Save(&data.VideoFile)

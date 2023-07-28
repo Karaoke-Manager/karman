@@ -102,7 +102,7 @@ func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.
 func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := r.Header.Get("Content-Type")
-	file, err := c.mediaSvc.StoreImageFile(r.Context(), mediaType, r.Body)
+	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
@@ -120,13 +120,31 @@ func (c Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 func (c Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := r.Header.Get("Content-Type")
-	file, err := c.mediaSvc.StoreImageFile(r.Context(), mediaType, r.Body)
+	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	song.BackgroundFile = &file
+	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
+// ReplaceAudio implements the PUT /v1/songs/{uuid}/audio endpoint.
+func (c Controller) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
+	song := MustGetSong(r.Context())
+	mediaType := r.Header.Get("Content-Type")
+	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	if err != nil {
+		// TODO: Logging
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	song.AudioFile = &file
 	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return

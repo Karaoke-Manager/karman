@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"io"
 	"strings"
+	"time"
 )
 
 // FakeService is a Service implementation that only uses dummy values for file contents.
@@ -22,12 +23,13 @@ func NewFakeService(placeholder string, db *gorm.DB) Service {
 	return &FakeService{db, placeholder}
 }
 
-// StoreImageFile fully reads r and returns a file with dummy values.
+// StoreFile fully reads r and returns a file with dummy values.
 // file.Type will be set to mediaType.
-func (f *FakeService) StoreImageFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
+func (f *FakeService) StoreFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
 	file.Type = mediaType
 	file.Width = 512
 	file.Height = 1080
+	file.Duration = 3 * time.Minute
 	h := sha256.New()
 	var n int64
 	if n, err = io.Copy(h, r); err != nil {

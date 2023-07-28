@@ -11,6 +11,7 @@ require (
 	github.com/psanford/memfs v0.0.0-20230130182539-4dbf7e3e865e
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
+	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2
 )
@@ -25,7 +26,6 @@ require (
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/tools v0.11.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/sqlite v1.24.0 // indirect
 )
 
 require (

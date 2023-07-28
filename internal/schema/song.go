@@ -29,15 +29,13 @@ const (
 
 // AudioFile contains data about an audio file.
 type AudioFile struct {
-	Type     string        `json:"type"`    // RFC 6838 media type
-	Bitrate  int           `json:"bitrate"` // in bits per second
+	Type     string        `json:"type"` // RFC 6838 media type
 	Duration time.Duration `json:"duration"`
 }
 
 // VideoFile contains data about a video file.
 type VideoFile struct {
-	Type     string        `json:"type"`    // RFC 6838 media type
-	Bitrate  int           `json:"bitrate"` // in bits per second
+	Type     string        `json:"type"` // RFC 6838 media type
 	Duration time.Duration `json:"duration"`
 	Width    int           `json:"width"`  // in pixels
 	Height   int           `json:"height"` // in pixels
@@ -135,14 +133,12 @@ func FromSong(m model.Song) Song {
 	if m.AudioFile != nil {
 		song.Audio = &AudioFile{
 			Type:     m.AudioFile.Type,
-			Bitrate:  m.AudioFile.Bitrate,
 			Duration: m.AudioFile.Duration,
 		}
 	}
 	if m.VideoFile != nil {
 		song.Video = &VideoFile{
 			Type:     m.VideoFile.Type,
-			Bitrate:  m.VideoFile.Bitrate,
 			Duration: m.VideoFile.Duration,
 			Width:    m.VideoFile.Width,
 			Height:   m.VideoFile.Height,

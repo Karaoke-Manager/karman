@@ -14,7 +14,6 @@ func TestService_SongData(t *testing.T) {
 	audio := model.File{
 		Size:     1234,
 		Type:     "audio/mpeg",
-		Bitrate:  592232,
 		Duration: 3 * time.Minute,
 	}
 	audio.ID = 123
@@ -22,7 +21,6 @@ func TestService_SongData(t *testing.T) {
 	video := model.File{
 		Size:     5823,
 		Type:     "video/mp4",
-		Bitrate:  1231241,
 		Duration: 3 * time.Minute,
 	}
 	video.ID = 456

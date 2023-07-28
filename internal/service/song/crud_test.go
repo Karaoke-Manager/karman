@@ -116,7 +116,6 @@ func TestService_GetSong(t *testing.T) {
 	audio := model.File{
 		Size:     1245,
 		Type:     "audio/mpeg",
-		Bitrate:  62372,
 		Duration: 3 * time.Minute,
 	}
 	audio.ID = 123
@@ -146,7 +145,6 @@ func TestService_GetSong(t *testing.T) {
 		assert.Equal(t, uint(123), *song.AudioFileID)
 		require.NotNil(t, song.AudioFile)
 		assert.Equal(t, audio.UUID, song.AudioFile.UUID)
-		assert.Equal(t, audio.Bitrate, song.AudioFile.Bitrate)
 	})
 }
 

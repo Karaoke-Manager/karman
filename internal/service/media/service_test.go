@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"testing"
+	"time"
 )
 
 func setupService(t *testing.T) Service {
@@ -26,7 +27,7 @@ func setupService(t *testing.T) Service {
 	return NewService(db, store)
 }
 
-func TestService_StoreImageFile(t *testing.T) {
+func TestService_StoreFile(t *testing.T) {
 	ctx := context.Background()
 	svc := setupService(t)
 
@@ -34,14 +35,16 @@ func TestService_StoreImageFile(t *testing.T) {
 	cases := map[string]struct {
 		file     string
 		media    string
+		duration time.Duration
 		width    int
 		height   int
 		size     int64
 		Checksum string
 	}{
-		"png":  {"test.png", "image/png", 930, 850, 27139, "2e21529175f51f35be15f3f11bf14b69513e542a56d49133c5809fa77f07fb7f"},
-		"gif":  {"test.gif", "image/gif", 240, 183, 7455, "f1985afbaf6a9be3c1a97c0c870ae3b04f9a653eac067895081849e7306314f3"},
-		"jpeg": {"test.jpg", "image/jpeg", 320, 100, 2078, "8df1ae81c32d3ac74506457a107ddf7120a5af9fd73634e6d224674c8cab3060"},
+		"png":  {"test.png", "image/png", 0, 930, 850, 27139, "2e21529175f51f35be15f3f11bf14b69513e542a56d49133c5809fa77f07fb7f"},
+		"gif":  {"test.gif", "image/gif", 0, 240, 183, 7455, "f1985afbaf6a9be3c1a97c0c870ae3b04f9a653eac067895081849e7306314f3"},
+		"jpeg": {"test.jpg", "image/jpeg", 0, 320, 100, 2078, "8df1ae81c32d3ac74506457a107ddf7120a5af9fd73634e6d224674c8cab3060"},
+		"mp3":  {"test.mp3", "audio/mpeg", 42*time.Second + 83263728*time.Nanosecond, 0, 0, 733645, "9a2270d5964f64981fb1e91dd13e5941262817bdce873cf357c92adbef906b5d"},
 	}
 
 	for name, c := range cases {
@@ -49,8 +52,9 @@ func TestService_StoreImageFile(t *testing.T) {
 			f, err := os.Open("testdata/" + c.file)
 			require.NoErrorf(t, err, "Could not load test image: %s", c.file)
 			defer f.Close()
-			file, err := svc.StoreImageFile(ctx, c.media, f)
+			file, err := svc.StoreFile(ctx, c.media, f)
 			if assert.NoError(t, err) {
+				assert.Equal(t, c.duration, file.Duration, "Duration")
 				assert.Equal(t, c.width, file.Width, "Width")
 				assert.Equal(t, c.height, file.Height, "Height")
 				assert.Equal(t, c.size, file.Size, "Size")

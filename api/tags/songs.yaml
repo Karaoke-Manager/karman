@@ -489,11 +489,6 @@ components:
               example: "audio/mpeg"
               description: |-
                 The format of the audio data.
-            bitrate:
-              type: integer
-              example: 140000
-              description: |-
-                The bitrate of the audio file in **bits per second**.
             duration:
               type: integer
               example: 212000
@@ -513,11 +508,6 @@ components:
               example: "video/mp4"
               description: |-
                 The format of the video data.
-            bitrate:
-              type: integer
-              example: 7200000
-              description: |-
-                The bitrate of the video file in **bits per second**.
             duration:
               type: integer
               example: 212000

@@ -45,6 +45,7 @@ func (c Controller) Router(r chi.Router) {
 			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/background", c.ReplaceBackground)
+			r.With(middleware.RequireContentType("audio/*")).Put("/{uuid}/audio", c.ReplaceAudio)
 		})
 
 		r.Group(func(r chi.Router) {

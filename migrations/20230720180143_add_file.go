@@ -35,7 +35,6 @@ func init() {
 		Checksum []byte `gorm:"type:varbinary"`
 
 		// Audio & Video
-		Bitrate  int
 		Duration time.Duration
 
 		// Videos & Images

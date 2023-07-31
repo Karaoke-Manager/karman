@@ -1,3 +1,5 @@
+// Package json implements a request decoder and a response encoder for JSON data.
+// When this package is imported the encoder and decoder are automatically registered.
 package json
 
 import (

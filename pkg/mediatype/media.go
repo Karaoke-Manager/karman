@@ -8,18 +8,23 @@ import (
 	"strings"
 )
 
-// ErrMissingSubtype indicates that a media type did not provide a subtype.
-var ErrMissingSubtype = errors.New("mediatype: missing subtype")
+// TypeWildcard defines the character that identifies wildcard types and subtypes.
+const TypeWildcard = "*"
 
-const (
-	// TypeWildcard defines the character that identifies wildcard types and subtypes.
-	TypeWildcard = "*"
-	// ParameterQuality is the type parameter identifying the quality value of a media type.
-	ParameterQuality = "q"
-)
+// ParameterQuality is the type parameter identifying the quality value of a media type.
+const ParameterQuality = "q"
 
 // Nil is a special MediaType that indicates "no media type".
+// The nil value for MediaType is Nil.
 // This value is usually accompanied by an error giving the reason why a valid media type could not be constructed.
+//
+// The Nil type has some special semantics:
+//   - The type, subtype and suffix are all empty
+//   - Nil is not contained in any other type, nor does it contain other types
+//   - Nil is incompatible with other types, even "*/*"
+//   - Nil is less specific than all non-Nil types
+//   - Nil has quality 0
+//   - [MediaType.IsNil] returns true
 var Nil = MediaType{}
 
 // The MediaType implements a RFC 6838 media type.
@@ -30,7 +35,7 @@ type MediaType struct {
 	params       map[string]string
 }
 
-// MustParse works like Parse but panics if v cannot be parsed.
+// MustParse works like [Parse] but panics if v cannot be parsed.
 func MustParse(v string) MediaType {
 	t, err := Parse(v)
 	if err != nil {
@@ -53,7 +58,7 @@ func Parse(v string) (t MediaType, err error) {
 	}
 	t.tpe, t.subtype, _ = strings.Cut(t.tpe, "/")
 	if t.subtype == "" {
-		return Nil, ErrMissingSubtype
+		return Nil, errors.New("mediatype: missing subtype")
 	}
 	if t.tpe == TypeWildcard {
 		t.subtype = TypeWildcard

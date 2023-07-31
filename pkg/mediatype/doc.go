@@ -1,4 +1,4 @@
-// Package mediatype provides an implementation of RFC 6838 media types (also known as mime types).
+// Package mediatype provides an implementation of [RFC 6838] media types (also known as mime types).
 // The package offers a type MediaType that can be used to conveniently work with media types.
 // In addition, the mediatype package implements a media type negotiation algorithm
 // that can be used to process a HTTP Accept header.
@@ -16,4 +16,6 @@
 //     For example "application/*+json" matches "application/problem+json" and "application/json", but not "application/problem+xml".
 //     Note that this is the only special case of a wildcard.
 //     Arbitrary wildcards (as in "application/j*n") are not supported.
+//
+// [RFC 6838]: https://www.rfc-editor.org/rfc/rfc6838.html
 package mediatype

@@ -1,3 +1,5 @@
+// Package raw implements a request decoder and a response encoder for raw bytes.
+// When this package is imported the encoder and decoder are automatically registered.
 package raw
 
 import (

@@ -64,17 +64,17 @@ func (b BindError) Unwrap() error {
 
 // Bind decodes a request via the [Decode] function and executes the v.Bind method.
 // If v is a struct, map or slice type and any fields, slice or map values implement the [Binder] interface
-// the [Binder.Bind] methods of those values are called recursively in a bottom-up fashion.
+// the Bind methods of those values are called recursively in a bottom-up fashion.
 // Note however that the recursion stops at the first value that does not implement the [Binder] interface.
 // If you do not need to implement [Binder] yourself but want to give your struct fields the opportunity to perform
-// their [Binder.Bind] operations, use the [NopBinder] type to add a noop [Binder] implementation to your type.
+// their Bind operations, use the [NopBinder] type to add a noop [Binder] implementation to your type.
 //
 // For details on the decoding process see the [Decode] function.
 //
 // There are two main error types returned by this function:
 //   - A [DecodeError] indicates an error during the decoding phase.
 //     This usually corresponds to a 400 status code.
-//   - A [BindError] indicates an error during the invocation of a [Binder.Bind] method
+//   - A [BindError] indicates an error during the invocation of a Bind method
 //     (not necessarily v itself but maybe one of its struct fields).
 //     This usually corresponds to a 422 status code.
 func Bind(r *http.Request, v Binder) error {

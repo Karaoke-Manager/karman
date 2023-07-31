@@ -1,3 +1,5 @@
+// Package xml implements a request decoder and a response necoder for XML data.
+// When this package is imported the encoder and decoder are automatically registered.
 package xml
 
 import (

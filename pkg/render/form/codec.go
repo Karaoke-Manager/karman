@@ -1,3 +1,5 @@
+// Package form implements a request decoder for form data.
+// When this package is imported the decoder is automatically registered.
 package form
 
 import (

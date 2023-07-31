@@ -125,16 +125,6 @@ func (l MediaTypes) GetType(t MediaType) MediaType {
 	return Nil
 }
 
-// GetCompatible returns the first element of l that is compatible with t, or Nil if no such element exists.
-func (l MediaTypes) GetCompatible(t MediaType) MediaType {
-	for _, c := range l {
-		if c.IsCompatibleWith(t) {
-			return c
-		}
-	}
-	return Nil
-}
-
 // Includes determines if any of the types in l include t.
 func (l MediaTypes) Includes(t MediaType) bool {
 	for _, c := range l {

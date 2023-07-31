@@ -45,6 +45,7 @@ func RequireContentType(types ...string) func(next http.Handler) http.Handler {
 				return
 			}
 			if !t.IsConcrete() || !allowed.Includes(t) {
+				// FIXME: Maybe Bad Request for non-concrete types?
 				_ = render.Render(w, r, apierror.UnsupportedMediaType(allowed...))
 				return
 			}

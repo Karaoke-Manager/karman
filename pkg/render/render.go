@@ -65,16 +65,16 @@ func (r RespondError) Unwrap() error {
 
 // Render executes v.Render and then encodes v using the [Respond] function.
 // If v is a struct, map or slice type and any of its fields implement the [Renderer] interface,
-// the [Renderer.Render] methods will be called recursively in a bottom-up fashion.
+// the respective Render methods will be called recursively in a bottom-up fashion.
 // Note however that the recursion stops at the first value that does not implement the [Renderer] interface.
 // If you do not need to implement [Renderer] yourself but want to give your struct fields the opportunity to perform
-// their [Renderer.Render] operations, use the [NopRenderer] type to add a noop [Renderer] implementation to your type.
+// their Render operations, use the [NopRenderer] type to add a noop [Renderer] implementation to your type.
 //
 // For details on the encoding process see the [Respond] function.
 //
 // There are two main error types returned by this function:
 //   - A [RenderError] indicates an error during the rendering phase.
-//     This means that one of the [Renderer.Render] implementations has returned an error.
+//     This means that one of the Render implementations has returned an error.
 //   - A [RespondError] indicates an error during the invocation of the [Respond] function.
 //     This is usually an indication of a network error.
 func Render(w http.ResponseWriter, r *http.Request, v Renderer) error {

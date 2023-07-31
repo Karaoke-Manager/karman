@@ -1,3 +1,5 @@
+// Package html implements a response encoder for HTML data.
+// When this package is imported the encoder is automatically registered.
 package html
 
 import (

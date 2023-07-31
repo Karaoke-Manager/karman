@@ -36,12 +36,16 @@ var (
 // This method should be used with errors generated from the render.Bind function.
 func BindError(err error) *ProblemDetails {
 	switch {
-	case errors.Is(err, render.ErrUnsupportedFormat):
+	case errors.Is(err, render.ErrMissingContentType):
+		return BadRequest("The Content-Type header is required.")
+	case errors.Is(err, render.ErrInvalidContentType):
+		return BadRequest("The specified Content-Type is not correctly formatted.")
+	case errors.Is(err, render.ErrNoMatchingDecoder):
 		return ErrUnsupportedMediaType
 	case errors.As(err, &render.DecodeError{}):
-		uerr := &json.UnmarshalTypeError{}
-		if errors.As(err, &uerr) {
-			return JSONUnmarshalError(uerr)
+		uErr := &json.UnmarshalTypeError{}
+		if errors.As(err, &uErr) {
+			return JSONUnmarshalError(uErr)
 		}
 		// Probably a syntax error
 		return ErrBadRequest

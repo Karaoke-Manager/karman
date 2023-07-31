@@ -2,6 +2,7 @@ package song
 
 import (
 	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -13,14 +14,14 @@ func TestService_SongData(t *testing.T) {
 
 	audio := model.File{
 		Size:     1234,
-		Type:     "audio/mpeg",
+		Type:     mediatype.AudioMPEG,
 		Duration: 3 * time.Minute,
 	}
 	audio.ID = 123
 	audio.UUID = uuid.New()
 	video := model.File{
 		Size:     5823,
-		Type:     "video/mp4",
+		Type:     mediatype.VideoMP4,
 		Duration: 3 * time.Minute,
 	}
 	video.ID = 456

@@ -29,7 +29,7 @@ func TestController_Create(t *testing.T) {
 		require.NoError(t, json.NewDecoder(resp.Body).Decode(&song), "response decode")
 		assert.Equal(t, http.StatusCreated, resp.StatusCode, "status Code")
 		assert.NotEmpty(t, song.UUID)
-		assert.Equal(t, "Oedipus the King", song.Title, "song title")
+		assert.Equal(t, "Nineteen Eighty-Four", song.Title, "song title")
 	})
 	t.Run("400 Bad Request (Body)", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("Foo"))
@@ -39,8 +39,8 @@ func TestController_Create(t *testing.T) {
 			"line": 1,
 		})
 	})
-	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPost, "/", "text/plain"))
-	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPost, "/", "application/json", "text/plain"))
+	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPost, "/", "text/plain", "text/x-ultrastar"))
+	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPost, "/", "application/json", "text/plain", "text/x-ultrastar"))
 }
 
 func TestController_Find(t *testing.T) {
@@ -67,6 +67,7 @@ func TestController_Get(t *testing.T) {
 		resp := test.DoRequest(h, r)
 
 		var song schema.Song
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song), "decode song") {
 			assert.Equal(t, schema.FromSong(data.BasicSong), song, "song data")
 		}

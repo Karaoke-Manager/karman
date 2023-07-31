@@ -38,6 +38,7 @@ func (c Controller) Router(r chi.Router) {
 	// r.Use(middleware.RealIP)
 	// r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
+	r.Use(render.NotAcceptableHandler(c.NotAcceptable))
 	r.Route("/v1", c.v1Controller.Router)
 
 	r.NotFound(c.NotFound)
@@ -55,4 +56,10 @@ func (c Controller) NotFound(w http.ResponseWriter, r *http.Request) {
 func (c Controller) MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
 	// TODO: Include Allow Header: https://github.com/go-chi/chi/issues/446
 	_ = render.Render(w, r, apierror.ErrMethodNotAllowed)
+}
+
+// NotAcceptable is an HTTP endpoint that renders a generic 406 Not Acceptable error.
+// This endpoint is the default 406 endpoint fo the Controller and its sub-controllers.
+func (c Controller) NotAcceptable(w http.ResponseWriter, r *http.Request) {
+	_ = render.Render(w, r, apierror.ErrNotAcceptable)
 }

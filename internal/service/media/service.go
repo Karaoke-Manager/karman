@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
 	"gorm.io/gorm"
 	"image"
@@ -58,7 +59,9 @@ type service struct {
 // StoreFile creates a new model.File in the database and then saves the data from r into the store.
 // Supported media types are analyzed on the fly.
 func (s service) StoreFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
-	file.Type = mediaType
+	if file.Type, err = mediatype.Parse(mediaType); err != nil {
+		return
+	}
 	// We save the file here and at the end of the method to make sure that even
 	// for half-written files an entry in the DB exists.
 	// This makes finding orphaned files much easier.
@@ -176,12 +179,17 @@ func analyzeAudio(r io.Reader, mediaType string, file *model.File) error {
 func analyzeVideo(r io.Reader, mediaType string, file *model.File) error {
 	switch mediaType {
 	case "video/mp4":
-		// FIXME: Do we have to buffer the whole file?
-		buf, err := io.ReadAll(r)
-		if err != nil {
-			return err
+		var rs io.ReadSeeker
+		var ok bool
+		if rs, ok = r.(io.ReadSeeker); !ok {
+			buf, err := io.ReadAll(r)
+			if err != nil {
+				return err
+			}
+			rs = bytes.NewReader(buf)
 		}
-		info, err := mp4.Probe(bytes.NewReader(buf))
+		// FIXME: Do we really have to buffer the whole file?
+		info, err := mp4.Probe(rs)
 		if err != nil {
 			return err
 		}

@@ -3,7 +3,7 @@ module github.com/Karaoke-Manager/karman
 go 1.20
 
 require (
-	codello.dev/ultrastar v0.0.0-20230727073949-61c2034f954f
+	codello.dev/ultrastar v0.0.0-20230728134706-0b582fd4cf11
 	github.com/abema/go-mp4 v0.11.0
 	github.com/brianvoe/gofakeit/v6 v6.23.0
 	github.com/go-chi/chi/v5 v5.0.10

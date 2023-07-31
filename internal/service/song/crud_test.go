@@ -2,6 +2,7 @@ package song
 
 import (
 	"context"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"testing"
 	"time"
 
@@ -65,7 +66,7 @@ func TestService_SaveSong(t *testing.T) {
 	t.Run("update file reference", func(t *testing.T) {
 		song := model.NewSong()
 		require.NoError(t, svc.SaveSong(ctx, &song))
-		file := model.File{Size: 123, Type: "text/plain"}
+		file := model.File{Size: 123, Type: mediatype.TextPlain}
 		require.NoError(t, db.Save(&file).Error)
 		song.CoverFile = &file
 		require.NoError(t, svc.SaveSong(ctx, &song))
@@ -115,7 +116,7 @@ func TestService_GetSong(t *testing.T) {
 
 	audio := model.File{
 		Size:     1245,
-		Type:     "audio/mpeg",
+		Type:     mediatype.AudioMPEG,
 		Duration: 3 * time.Minute,
 	}
 	audio.ID = 123

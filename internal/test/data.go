@@ -3,6 +3,7 @@ package test
 import (
 	"codello.dev/ultrastar"
 	"encoding/hex"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"time"
@@ -42,7 +43,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 
 	checksum, _ := hex.DecodeString("d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26")
 	data.ImageFile = model.File{
-		Type:     "image/png",
+		Type:     mediatype.ImagePNG,
 		Size:     1235,
 		Checksum: checksum,
 		Width:    512,
@@ -51,7 +52,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 	db.Save(&data.ImageFile)
 
 	data.AudioFile = model.File{
-		Type:     "audio/mpeg",
+		Type:     mediatype.AudioMPEG,
 		Size:     62352,
 		Checksum: checksum,
 		Duration: 3 * time.Minute,
@@ -59,7 +60,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 	db.Save(&data.AudioFile)
 
 	data.VideoFile = model.File{
-		Type:     "video/mp4",
+		Type:     mediatype.VideoMP4,
 		Size:     123151,
 		Checksum: checksum,
 		Duration: 2 * time.Second,
@@ -75,28 +76,31 @@ func NewDataset(db *gorm.DB) *Dataset {
 	db.Save(&data.UploadWithSongs)
 
 	data.BasicSong = model.Song{
-		Title:    "Cold",
-		Artist:   "Darrin DuBuque",
-		Genre:    "Latin",
-		Language: "English",
-		Year:     2003,
+		Title:      "Cold",
+		Artist:     "Darrin DuBuque",
+		Genre:      "Latin",
+		Language:   "English",
+		Year:       2003,
+		CalcMedley: true,
 	}
 	db.Save(&data.BasicSong)
 
 	data.SongWithUpload = model.Song{
-		Upload:   &data.UploadWithSongs,
-		Title:    "More",
-		Artist:   "Nobory",
-		Genre:    "Rock",
-		Language: "English",
+		Upload:     &data.UploadWithSongs,
+		Title:      "More",
+		Artist:     "Nobory",
+		Genre:      "Rock",
+		Language:   "English",
+		CalcMedley: true,
 	}
 	db.Save(&data.SongWithUpload)
 
 	data.SongWithCover = model.Song{
-		Title:     "Some",
-		Artist:    "Unimportant",
-		CoverFile: &data.ImageFile,
-		MusicP1:   ultrastar.NewMusic(),
+		Title:      "Some",
+		Artist:     "Unimportant",
+		CoverFile:  &data.ImageFile,
+		CalcMedley: true,
+		MusicP1:    ultrastar.NewMusic(),
 	}
 	db.Save(&data.SongWithCover)
 
@@ -104,20 +108,23 @@ func NewDataset(db *gorm.DB) *Dataset {
 		Title:          "Whatever",
 		Edition:        "SingStar",
 		BackgroundFile: &data.ImageFile,
+		CalcMedley:     true,
 	}
 	db.Save(&data.SongWithBackground)
 
 	data.SongWithAudio = model.Song{
-		Title:     "Whatever",
-		Gap:       1252,
-		AudioFile: &data.AudioFile,
+		Title:      "Whatever",
+		Gap:        1252,
+		AudioFile:  &data.AudioFile,
+		CalcMedley: true,
 	}
 	db.Save(&data.SongWithAudio)
 
 	data.SongWithVideo = model.Song{
-		Title:     "Whatever",
-		Comment:   "useless",
-		VideoFile: &data.VideoFile,
+		Title:      "Whatever",
+		Comment:    "useless",
+		VideoFile:  &data.VideoFile,
+		CalcMedley: true,
 	}
 	db.Save(&data.SongWithVideo)
 

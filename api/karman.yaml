@@ -23,6 +23,12 @@ info:
     If the `Content-Type` header is not supported, a `415 Unsupported Media Type` error will be returned.
     This error is documented here and not explicitly included in every endpoint.
     
+    The Karman API supports and enforces Content-Type negotiation via the Accept header.
+    All requests should include this header specifying the acceptable content types for a response.
+    The Karman API will try to fulfill the request and will return a 406 Not Acceptable response if an endpoint
+    does not support any of the content types listed in the Accept header.
+    This error is documented here and not explicitly included in every endpoint.
+    
     ## Zero-Values
     
     In most cases the API tries to not use `null` values.

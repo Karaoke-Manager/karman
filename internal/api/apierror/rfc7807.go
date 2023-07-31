@@ -2,8 +2,8 @@ package apierror
 
 import (
 	"encoding/json"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"mime"
 	"net/http"
 )
 
@@ -105,21 +105,16 @@ func (p *ProblemDetails) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
-// Response prepares the render package to write p to w.
-// This method does not actually write anything to w but sets appropriate context keys for the render package.
-func (p *ProblemDetails) Response(w http.ResponseWriter, r *http.Request) any {
+// PrepareResponse implements the [render.Responder] interface.
+// This implementation writes the headers of p, sets a status code and negotiates an appropriate content type.
+func (p *ProblemDetails) PrepareResponse(w http.ResponseWriter, r *http.Request) any {
 	for key, values := range p.Headers {
 		for _, value := range values {
 			w.Header().Add(key, value)
 		}
 	}
-	render.Status(r, p.Status)
-	switch render.GetResponseFormat(r) {
-	case render.FormatXML:
-		render.ContentType(r, mime.FormatMediaType("application/problem+xml", map[string]string{"charset": "utf-8"}))
-	default:
-		render.ContentType(r, mime.FormatMediaType("application/problem+json", map[string]string{"charset": "utf-8"}))
-	}
+	render.SetStatus(r, p.Status)
+	render.MustNegotiateContentType(r, mediatype.ApplicationProblemJSON, mediatype.ApplicationProblemXML, mediatype.ApplicationJSON, mediatype.ApplicationXML)
 	return p
 }
 

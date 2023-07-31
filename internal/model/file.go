@@ -1,10 +1,7 @@
 package model
 
 import (
-	"fmt"
-	"gorm.io/gorm"
-	"mime"
-	"strings"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"time"
 )
 
@@ -28,7 +25,7 @@ type File struct {
 	Path     string
 
 	// Media Type of the file.
-	Type string
+	Type mediatype.MediaType
 	// Filesize in bytes.
 	Size int64
 	// Checksum is the Sha256 checksum of this file, uniquely identifying its content.
@@ -45,17 +42,4 @@ type File struct {
 
 func NewFile() File {
 	return File{}
-}
-
-// BeforeSave ensures that f.Type is valid.
-func (f *File) BeforeSave(*gorm.DB) error {
-	t, _, err := mime.ParseMediaType(f.Type)
-	if err != nil {
-		return fmt.Errorf("file: invalid media type: %s", f.Type)
-	}
-	if !strings.Contains(t, "/") {
-		return fmt.Errorf("file: invalid media type: %s", f.Type)
-	}
-	f.Type = t
-	return nil
 }

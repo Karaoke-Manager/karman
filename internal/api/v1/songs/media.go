@@ -84,17 +84,20 @@ func (c Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
 // sendFile sends the file as response to r.
 // This method makes sure that the required headers are set.
 func (c Controller) sendFile(w http.ResponseWriter, r *http.Request, file model.File) {
+	contentType := render.NegotiateContentType(r, file.Type)
+	if contentType.IsNil() {
+		render.NotAcceptable(w, r)
+		return
+	}
 	f, err := c.mediaSvc.ReadFile(r.Context(), file)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	defer f.Close()
-	w.Header().Set("Content-Type", file.Type)
 	w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
+	w.Header().Set("Content-Type", contentType.String())
 	w.WriteHeader(http.StatusOK)
-	// TODO: Logging
-	// The header is already written. We can't send error messages anymore
 	_, _ = io.Copy(w, f)
 }
 

@@ -15,6 +15,7 @@ import (
 // This assertion will NOT fail if additional fields are present in the response.
 func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType string, fields map[string]any) {
 	assert.Equal(t, code, resp.StatusCode, "response status code does not equal expected value")
+	assert.Equal(t, "application/problem+json", resp.Header.Get("Content-Type"), "Content-Type header does not equal expected value.")
 	var err apierror.ProblemDetails
 	if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&err), "response does not fit ProblemDetails schema") {
 		assert.Equal(t, code, err.Status, "problem details status does not equal expected value")

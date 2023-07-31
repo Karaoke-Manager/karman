@@ -4,6 +4,8 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/api/middleware"
 	"github.com/Karaoke-Manager/karman/internal/service/media"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
+	"github.com/Karaoke-Manager/karman/pkg/render"
+	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -20,7 +22,7 @@ func NewController(songSvc song.Service, mediaSvc media.Service) Controller {
 
 // Router sets up the routing for the endpoint.
 func (c Controller) Router(r chi.Router) {
-	r.With(middleware.RequireContentType("text/plain")).Post("/", c.Create)
+	r.With(middleware.RequireContentType("text/plain", "text/x-ultrastar")).Post("/", c.Create)
 	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)
 	r.With(middleware.UUID("uuid")).Delete("/{uuid}", c.Delete)
 
@@ -29,15 +31,15 @@ func (c Controller) Router(r chi.Router) {
 
 		r.Group(func(r chi.Router) {
 			r.Use(c.FetchUpload(true))
-			r.Get("/{uuid}", c.Get)
-			r.Get("/{uuid}/txt", c.GetTxt)
+			r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}", c.Get)
+			r.With(render.ContentTypeNegotiation("text/x-ultrastar", "text/plain")).Get("/{uuid}/txt", c.GetTxt)
 			// r.Get("{uuid}/archive", c.GetArchive)
-			r.Get("/{uuid}/cover", c.GetCover)
-			r.Get("/{uuid}/background", c.GetBackground)
-			r.Get("/{uuid}/audio", c.GetAudio)
-			r.Get("/{uuid}/video", c.GetVideo)
+			r.With(render.ContentTypeNegotiation("image/*")).Get("/{uuid}/cover", c.GetCover)
+			r.With(render.ContentTypeNegotiation("image/*")).Get("/{uuid}/background", c.GetBackground)
+			r.With(render.ContentTypeNegotiation("audio/*")).Get("/{uuid}/audio", c.GetAudio)
+			r.With(render.ContentTypeNegotiation("video/*")).Get("/{uuid}/video", c.GetVideo)
 
-			r.With(c.CheckModify, middleware.RequireContentType("text/plain")).Put("/{uuid}/txt", c.ReplaceTxt)
+			r.With(c.CheckModify, middleware.RequireContentType("text/plain", "text/x-ultrastar"), render.ContentTypeNegotiation("application/json")).Put("/{uuid}/txt", c.ReplaceTxt)
 		})
 
 		r.Group(func(r chi.Router) {

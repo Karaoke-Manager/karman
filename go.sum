@@ -1,5 +1,7 @@
 codello.dev/ultrastar v0.0.0-20230727073949-61c2034f954f h1:7jYSlLNlBFxE2sY7SZBsNjveMDk5/DMZJinRff059h4=
 codello.dev/ultrastar v0.0.0-20230727073949-61c2034f954f/go.mod h1:mAgy4dPx8iy4Ya/JrMUdDDLrFtkALnaOI/aMsArqiFk=
+codello.dev/ultrastar v0.0.0-20230728134706-0b582fd4cf11 h1:Gtl2zg0nJU7dESGPbSXDjg8j4n5Nf3xkfX9JPTCqfks=
+codello.dev/ultrastar v0.0.0-20230728134706-0b582fd4cf11/go.mod h1:mAgy4dPx8iy4Ya/JrMUdDDLrFtkALnaOI/aMsArqiFk=
 github.com/abema/go-mp4 v0.11.0 h1:XJfpSmEdUBMvWnDKIiNznLGZPpeDxJ/qDdN6Ust1ADk=
 github.com/abema/go-mp4 v0.11.0/go.mod h1:vPl9t5ZK7K0x68jh12/+ECWBCXoWuIDtNgPtU2f04ws=
 github.com/ajg/form v1.5.1 h1:t9c7v8JUKu/XxOGBU0yjNpaMloxGEJhUkqFRq0ibGeU=

@@ -27,7 +27,7 @@ func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
-	render.Status(r, http.StatusCreated)
+	render.SetStatus(r, http.StatusCreated)
 	s := schema.FromSong(song)
 	_ = render.Render(w, r, &s)
 }

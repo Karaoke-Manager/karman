@@ -2,6 +2,7 @@ package song
 
 import (
 	"fmt"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"mime"
 
 	"codello.dev/ultrastar"
@@ -106,9 +107,9 @@ func (s service) preferredVideoName(song model.Song) string {
 
 // extensionForType returns the file extension that should be used for the specified media type.
 // The returned extension includes a leading dot.
-func (service) extensionForType(t string) string {
+func (service) extensionForType(t mediatype.MediaType) string {
 	// preferred, known types
-	switch t {
+	switch t.FullType() {
 	case "audio/mpeg":
 		return ".mp3"
 	case "video/mp4":
@@ -116,7 +117,7 @@ func (service) extensionForType(t string) string {
 	case "image/jpeg":
 		return ".jpg"
 	}
-	ext, _ := mime.ExtensionsByType(t)
+	ext, _ := mime.ExtensionsByType(t.FullType())
 	if len(ext) == 0 {
 		return ""
 	}

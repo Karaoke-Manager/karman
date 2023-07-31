@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"gorm.io/gorm"
 	"io"
 	"strings"
@@ -26,7 +27,9 @@ func NewFakeService(placeholder string, db *gorm.DB) Service {
 // StoreFile fully reads r and returns a file with dummy values.
 // file.Type will be set to mediaType.
 func (f *FakeService) StoreFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
-	file.Type = mediaType
+	if file.Type, err = mediatype.Parse(mediaType); err != nil {
+		return
+	}
 	file.Width = 512
 	file.Height = 1080
 	file.Duration = 3 * time.Minute

@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -18,7 +19,7 @@ func TestRequireContentType(t *testing.T) {
 	})
 
 	t.Run("invalid content type", func(t *testing.T) {
-		cases := []string{"abc", "*/a", "*", "/"}
+		cases := []string{"abc", "*", "/", ""}
 		for _, c := range cases {
 			t.Run(c, func(t *testing.T) {
 				assert.Panics(t, func() {

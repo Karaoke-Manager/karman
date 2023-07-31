@@ -2,6 +2,7 @@ package schema
 
 import (
 	"errors"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"net/http"
 	"time"
 
@@ -29,23 +30,23 @@ const (
 
 // AudioFile contains data about an audio file.
 type AudioFile struct {
-	Type     string        `json:"type"` // RFC 6838 media type
-	Duration time.Duration `json:"duration"`
+	Type     mediatype.MediaType `json:"type"` // RFC 6838 media type
+	Duration time.Duration       `json:"duration"`
 }
 
 // VideoFile contains data about a video file.
 type VideoFile struct {
-	Type     string        `json:"type"` // RFC 6838 media type
-	Duration time.Duration `json:"duration"`
-	Width    int           `json:"width"`  // in pixels
-	Height   int           `json:"height"` // in pixels
+	Type     mediatype.MediaType `json:"type"` // RFC 6838 media type
+	Duration time.Duration       `json:"duration"`
+	Width    int                 `json:"width"`  // in pixels
+	Height   int                 `json:"height"` // in pixels
 }
 
 // ImageFile contains data about an image file.
 type ImageFile struct {
-	Type   string `json:"type"`   // RFC 6838 media type
-	Width  int    `json:"width"`  // in pixels
-	Height int    `json:"height"` // in pixels
+	Type   mediatype.MediaType `json:"type"`   // RFC 6838 media type
+	Width  int                 `json:"width"`  // in pixels
+	Height int                 `json:"height"` // in pixels
 }
 
 // SongRW is the main schema for working with songs.

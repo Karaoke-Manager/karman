@@ -6,6 +6,7 @@ import (
 	"github.com/Karaoke-Manager/karman/internal/model"
 	"github.com/Karaoke-Manager/karman/internal/schema"
 	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -45,6 +46,7 @@ func TestController_ReplaceTxt(t *testing.T) {
 		r.Header.Set("Content-Type", "text/plain")
 		resp := test.DoRequest(h, r)
 		var song schema.Song
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song)) {
 			assert.Equal(t, "Foobar", song.Title)
 			assert.Equal(t, "Barfoo", song.Artist)
@@ -60,8 +62,8 @@ func TestController_ReplaceTxt(t *testing.T) {
 			"line": 1,
 		})
 	})
-	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPut, path, "text/plain"))
-	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPut, path, "application/json", "text/plain"))
+	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPut, path, "text/plain", "text/x-ultrastar"))
+	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPut, path, "application/json", "text/plain", "text/x-ultrastar"))
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodPut, songPath(data.AbsentSong, "/txt"), http.StatusNotFound))
 	t.Run("409 Conflict", testSongConflict(h, http.MethodPut, songPath(data.SongWithUpload, "/txt"), data.SongWithUpload.UUID))
 }
@@ -83,7 +85,7 @@ func testGetFile(h http.Handler, path string, file model.File) func(t *testing.T
 		resp := test.DoRequest(h, r)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, strconv.FormatInt(file.Size, 10), resp.Header.Get("Content-Length"))
-		assert.Equal(t, file.Type, resp.Header.Get("Content-Type"))
+		assert.Equal(t, file.Type, mediatype.MustParse(resp.Header.Get("Content-Type")))
 	}
 }
 

@@ -16,8 +16,8 @@ func TestMediaTypes_BestMatch(t *testing.T) {
 		"candidate priorities": {"application/json, application/problem+json", "application/problem+json, application/json;q=0.9", ApplicationProblemJSON},
 		"no match":             {"image/png", "application/json", Nil},
 		"wildcard in list":     {"image/*", "image/*, image/png", ImagePNG},
-		"match wildcard":       {"image/*, text/*, application/json", "video/mp4, font/ttf, image/*;q=0.001", ImageAny},
-		"mixed priorities":     {"application/json, application/problem+json;q=0.5", "application/problem+json, application/json;q=0.999", ApplicationJSON},
+		"match wildcard":       {"image/*, text/*, application/json", "video/mp4, font/ttf, image/*;q=0.001", ImageAny.WithQuality(0.001)},
+		"mixed priorities":     {"application/json, application/problem+json;q=0.5", "application/problem+json, application/json;q=0.999", ApplicationJSON.WithQuality(0.999)},
 		"empty":                {"", "text/plain", TextPlain},
 	}
 	for name, c := range cases {

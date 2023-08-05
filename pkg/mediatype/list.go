@@ -73,20 +73,23 @@ func ParseListStrict(l ...string) (MediaTypes, error) {
 func (l MediaTypes) FindMatches(available ...MediaType) MediaTypes {
 	matches := make(MediaTypes, 0)
 	for _, c := range available {
-		q := c.Quality()
+		if c.Quality() == 0 {
+			continue
+		}
 		if len(l) == 0 {
 			matches = append(matches, c)
 		}
 		for _, t := range l {
 			if c.IsCompatibleWith(t) {
-				tq := t.Quality() * q
-				if tq <= 0 {
+				if t.Quality() <= 0 {
 					continue
 				}
 				if c.IsMoreSpecific(t) {
-					t = c
+					// keep parameters of t
+					t.tpe = c.Type()
+					t.subtype = c.Subtype()
 				}
-				t = t.WithQuality(tq)
+				t.q *= c.Quality()
 				matches = append(matches, t)
 			}
 		}

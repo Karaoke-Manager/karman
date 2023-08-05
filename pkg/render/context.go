@@ -41,7 +41,7 @@ func SetNegotiatedContentType(r *http.Request, t mediatype.MediaType) {
 	p, ok := r.Context().Value(contextKeyNegotiatedMediaType).(*mediatype.MediaType)
 	if ok {
 		// We expect this function to be used multiple times during the request lifecycle.
-		// We avoid unnecessarily stacking contexts.
+		// Instead of stacking contexts we just update a pointer.
 		*p = t
 	} else {
 		*r = *r.WithContext(context.WithValue(r.Context(), contextKeyNegotiatedMediaType, &t))
@@ -64,7 +64,7 @@ func GetNegotiatedContentType(r *http.Request) (t mediatype.MediaType, ok bool) 
 // if no content type negotiation has been performed yet.
 // Use this function if you can be sure that negotiation has been performed (e.g. by a middleware).
 func MustGetNegotiatedContentType(r *http.Request) mediatype.MediaType {
-	return r.Context().Value(contextKeyNegotiatedMediaType).(mediatype.MediaType)
+	return *r.Context().Value(contextKeyNegotiatedMediaType).(*mediatype.MediaType)
 }
 
 // setNotAcceptableHandler sets handler in the context to be used by a [ContentTypeNegotiation] middleware.

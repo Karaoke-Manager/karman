@@ -2,6 +2,8 @@ package mediatype
 
 import (
 	"errors"
+	"fmt"
+	"math"
 	"mime"
 	"reflect"
 	"strconv"
@@ -33,6 +35,7 @@ var Nil = MediaType{}
 type MediaType struct {
 	tpe, subtype string
 	params       map[string]string
+	q            float32
 }
 
 // MustParse works like [Parse] but panics if v cannot be parsed.
@@ -53,9 +56,6 @@ func Parse(v string) (t MediaType, err error) {
 	if err != nil && !errors.Is(err, mime.ErrInvalidMediaParameter) {
 		return Nil, err
 	}
-	if len(t.params) == 0 {
-		t.params = nil
-	}
 	t.tpe, t.subtype, _ = strings.Cut(t.tpe, "/")
 	if t.subtype == "" {
 		return Nil, errors.New("mediatype: missing subtype")
@@ -63,13 +63,28 @@ func Parse(v string) (t MediaType, err error) {
 	if t.tpe == TypeWildcard {
 		t.subtype = TypeWildcard
 	}
-	if t.HasParameter(ParameterQuality) {
-		// normalize quality parameter
-		t = t.WithQuality(t.Quality())
+	t.q = 1
+	if err != nil {
+		// this indicates an invalid parameter.
+		// We do return t in that case without parameters.
+		t.params = nil
+		return t, err
 	}
-	// If err != nil this indicates an invalid parameter.
-	// We do return t in that case without parameters.
-	return t, err
+	var q float64
+	for key, value := range t.params {
+		if key == ParameterQuality {
+			q, err = strconv.ParseFloat(value, 32)
+			if err != nil {
+				return t, fmt.Errorf("mediatype: invalid q value: %w", err)
+			}
+			t.q = quality(float32(q))
+			delete(t.params, ParameterQuality)
+		}
+	}
+	if len(t.params) == 0 {
+		t.params = nil
+	}
+	return
 }
 
 // NewMediaType creates a new media type with the given type, subtype and parameters.
@@ -79,7 +94,6 @@ func Parse(v string) (t MediaType, err error) {
 // The parameters are specified as a sequence of key, value pairs.
 // If an uneven number of parameters is supplied, the last one will be ignored.
 //
-// Known parameter values may be normalized.
 // Types like "*/example" will be converted to "*/*".
 func NewMediaType(tpe, subtype string, params ...string) MediaType {
 	if !isToken(tpe) || !isToken(subtype) {
@@ -93,6 +107,7 @@ func NewMediaType(tpe, subtype string, params ...string) MediaType {
 		tpe:     strings.ToLower(tpe),
 		subtype: strings.ToLower(subtype),
 		params:  nil,
+		q:       1,
 	}
 	if len(params) > 0 {
 		t.params = make(map[string]string, len(params)/2)
@@ -103,11 +118,25 @@ func NewMediaType(tpe, subtype string, params ...string) MediaType {
 		}
 		t.params[strings.ToLower(params[i])] = params[i+1]
 	}
-	if t.HasParameter(ParameterQuality) {
-		// normalize quality parameter
-		t = t.WithQuality(t.Quality())
+	return t
+}
+
+func NewMediaTypeWithQuality(tpe, subtype string, q float32, params ...string) MediaType {
+	t := NewMediaType(tpe, subtype, params...)
+	if !t.IsNil() {
+		t.q = quality(q)
 	}
 	return t
+}
+
+func quality(q float32) float32 {
+	q = float32(math.Round(float64(q)*1000) / 1000)
+	if q > 1 {
+		q = 1
+	} else if q < 0 {
+		q = 0
+	}
+	return q
 }
 
 // Type returns the major type of t ("application" in "application/json").
@@ -239,33 +268,15 @@ func (t MediaType) WithoutParameters(params ...string) MediaType {
 }
 
 // WithQuality returns a new media type that is equivalent to t but has the quality parameter "q" set to q.
-// The value q is truncated to 3 decimal places (as per the spec).
+// The value q is rounded to 3 decimal places (as per the spec).
 // q is not normalized any further, values outside the [0, 1] interval are taken as-is.
 // You can use [MediaType.WithNormalizedQuality] to make sure the quality value is within bounds.
-func (t MediaType) WithQuality(q float64) MediaType {
+func (t MediaType) WithQuality(q float32) MediaType {
 	if t.IsNil() {
 		return t
 	}
-	return t.WithParameters(map[string]string{ParameterQuality: strconv.FormatFloat(q, 'f', 3, 64)})
-}
-
-// WithNormalizedQuality returns a new media type making sure that its quality value q is within 0 <= q <= 1.
-func (t MediaType) WithNormalizedQuality() MediaType {
-	if t.IsNil() {
-		return t
-	}
-	if !t.HasParameter(ParameterQuality) {
-		return t
-	}
-	q := t.Quality()
-	if q < 0 {
-		q = 0
-	} else if q > 1 {
-		q = 1
-	} else {
-		return t
-	}
-	return t.WithQuality(q)
+	t.q = quality(q)
+	return t
 }
 
 // IsWildcardType indicates whether t describes the "*/*" type.
@@ -302,15 +313,11 @@ func (t MediaType) SubtypeSuffix() string {
 // If t does not have a "q" parameter, 1 is returned.
 // If the q-value cannot be parsed, 0 is returned.
 // Nil has quality 0.
-func (t MediaType) Quality() float64 {
+func (t MediaType) Quality() float32 {
 	if t.IsNil() {
 		return 0
 	}
-	if v, ok := t.params[ParameterQuality]; ok {
-		f, _ := strconv.ParseFloat(v, 64)
-		return f
-	}
-	return 1
+	return t.q
 }
 
 // IsNil checks whether t identifies the Nil type (and should thus be considered invalid).
@@ -461,5 +468,13 @@ func (t MediaType) HasLowerPriority(other MediaType) bool {
 // String returns a string representation of the media type.
 // The resulting string conforms to the syntax required by the Content-Type HTTP header.
 func (t MediaType) String() string {
-	return mime.FormatMediaType(t.tpe+"/"+t.subtype, t.params)
+	params := t.params
+	if t.q != 1 {
+		params = make(map[string]string, len(t.params)+1)
+		for k, v := range t.params {
+			params[k] = v
+		}
+		params[ParameterQuality] = strconv.FormatFloat(float64(t.q), 'g', 3, 32)
+	}
+	return mime.FormatMediaType(t.tpe+"/"+t.subtype, params)
 }

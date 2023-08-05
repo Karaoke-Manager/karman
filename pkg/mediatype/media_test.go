@@ -90,12 +90,11 @@ func TestMediaType_SubtypeSuffix(t *testing.T) {
 func TestMediaType_Quality(t *testing.T) {
 	cases := map[string]struct {
 		v    string
-		want float64
+		want float32
 	}{
 		"default":       {"text/plain", 1},
 		"explicit":      {"application/json;q=1", 1},
 		"decimal value": {"text/*; q=0.3", 0.3},
-		"invalid value": {"application/problem+json; q=abc", 0},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {

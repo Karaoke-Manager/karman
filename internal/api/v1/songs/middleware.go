@@ -38,7 +38,7 @@ func MustGetSong(ctx context.Context) model.Song {
 }
 
 // FetchUpload is a middleware that fetches the model.Song instance identified by the request and stores it in the request context.
-func (c Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.Handler {
+func (c *Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			id := middleware.MustGetUUID(r.Context())
@@ -62,7 +62,7 @@ func (c Controller) FetchUpload(includeFiles bool) func(next http.Handler) http.
 }
 
 // CheckModify is a middleware that checks if modifications to the requested resource are allowed.
-func (c Controller) CheckModify(next http.Handler) http.Handler {
+func (c *Controller) CheckModify(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		song := MustGetSong(r.Context())
 		if song.UploadID != nil {

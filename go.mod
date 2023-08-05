@@ -13,6 +13,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
+	golang.org/x/net v0.12.0
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2
 )

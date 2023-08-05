@@ -277,6 +277,11 @@ paths:
       responses:
         200:
           description: Success
+          headers:
+            Pagination-Count: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Count" }
+            Pagination-Offset: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Offset" }
+            Pagination-Limit: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Limit" }
+            Pagination-Total: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Total" }
           content:
             application/json:
               schema:

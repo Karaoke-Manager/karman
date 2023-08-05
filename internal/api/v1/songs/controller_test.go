@@ -21,7 +21,7 @@ import (
 //
 // If withData is true, a test dataset will be created and stored in the DB.
 // Otherwise, data will be nil.
-func setup(t *testing.T, withData bool) (h http.Handler, c Controller, data *test.Dataset) {
+func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *test.Dataset) {
 	db := test.NewDB(t)
 	if withData {
 		data = test.NewDataset(db)

@@ -15,7 +15,7 @@ import (
 )
 
 // Create implements the POST /v1/songs endpoint.
-func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	data, err := txt.ReadSong(r.Body)
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
@@ -33,7 +33,7 @@ func (c Controller) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Find implements the GET /v1/songs endpoint.
-func (c Controller) Find(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	songs, total, err := c.songSvc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
@@ -55,14 +55,14 @@ func (c Controller) Find(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get implements the GET /v1/songs/{uuid} endpoint.
-func (c Controller) Get(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	resp := schema.FromSong(song)
 	_ = render.Render(w, r, &resp)
 }
 
 // Update implements the PATCH /v1/songs/{uuid} endpoint.
-func (c Controller) Update(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	update := schema.FromSong(song)
 	if err := render.Bind(r, &update); err != nil {
@@ -79,7 +79,7 @@ func (c Controller) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete implements the DELETE /v1/songs/{uuid} endpoint.
-func (c Controller) Delete(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
 	if err := c.songSvc.DeleteSongByUUID(r.Context(), id); err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

@@ -14,7 +14,7 @@ import (
 	"github.com/Karaoke-Manager/karman/migrations/db"
 )
 
-// This migration adds the Song model.
+// This migration adds the Song entity.
 func init() {
 	type Model struct {
 		gorm.Model
@@ -23,12 +23,12 @@ func init() {
 
 	type File struct {
 		Model
-		// Minimal model is enough for foreign keys
+		// Minimal entity is enough for foreign keys
 	}
 
 	type Upload struct {
 		Model
-		// Minimal model is enough for foreign keys
+		// Minimal entity is enough for foreign keys
 	}
 
 	type Song struct {
@@ -48,13 +48,11 @@ func init() {
 
 		Gap             time.Duration
 		VideoGap        time.Duration
-		NotesGap        ultrastar.Beat
 		Start           time.Duration
 		End             time.Duration
 		PreviewStart    time.Duration
 		MedleyStartBeat ultrastar.Beat
 		MedleyEndBeat   ultrastar.Beat
-		CalcMedley      bool
 
 		Title    string
 		Artist   string

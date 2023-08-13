@@ -1,35 +1,40 @@
 package test
 
 import (
-	"codello.dev/ultrastar"
 	"encoding/hex"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"time"
 
+	"codello.dev/ultrastar"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+
 	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+
+	"github.com/Karaoke-Manager/karman/internal/entity"
 )
 
 // A Dataset provides named values for the expected content of a testing database.
 type Dataset struct {
 	InvalidUUID string
 
-	ImageFile model.File // may be used by multiple songs
-	AudioFile model.File // may be used by multiple songs
-	VideoFile model.File // may be used by multiple songs
+	TotalSongs int64
 
-	UploadWithSongs model.Upload
+	ImageFile *model.File // may be used by multiple songs
+	AudioFile *model.File // may be used by multiple songs
+	VideoFile *model.File // may be used by multiple songs
 
-	AbsentSongUUID uuid.UUID  // may be a present UUID for other types
-	AbsentSong     model.Song // UUID is AbsentSongUUID
-	BasicSong      model.Song // no media, no upload, no music
+	UploadWithSongs *model.Upload
 
-	SongWithUpload     model.Song
-	SongWithCover      model.Song // may or may not have other media
-	SongWithBackground model.Song // may or may not have other media
-	SongWithAudio      model.Song // may or may not have other media
-	SongWithVideo      model.Song // may or may not have other media
+	AbsentSongUUID uuid.UUID   // may be a present UUID for other types
+	AbsentSong     *model.Song // UUID is AbsentSongUUID
+	BasicSong      *model.Song // no media, no upload, no music
+
+	SongWithUpload     *model.Song
+	SongWithCover      *model.Song // may or may not have other media
+	SongWithBackground *model.Song // may or may not have other media
+	SongWithAudio      *model.Song // may or may not have other media
+	SongWithVideo      *model.Song // may or may not have other media
 }
 
 // NewDataset creates a new Dataset and stores it into the db.
@@ -39,98 +44,104 @@ func NewDataset(db *gorm.DB) *Dataset {
 		AbsentSongUUID: uuid.New(),
 	}
 
-	data.AbsentSong = model.Song{Model: model.Model{UUID: data.AbsentSongUUID}}
+	song := entity.Song{Entity: entity.Entity{UUID: data.AbsentSongUUID}}
+	data.AbsentSong = song.ToModel()
 
 	checksum, _ := hex.DecodeString("d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26")
-	data.ImageFile = model.File{
+	imageFile := entity.File{
 		Type:     mediatype.ImagePNG,
 		Size:     1235,
 		Checksum: checksum,
 		Width:    512,
 		Height:   512,
 	}
-	db.Save(&data.ImageFile)
+	db.Save(&imageFile)
+	data.ImageFile = imageFile.ToModel()
 
-	data.AudioFile = model.File{
+	audioFile := entity.File{
 		Type:     mediatype.AudioMPEG,
 		Size:     62352,
 		Checksum: checksum,
 		Duration: 3 * time.Minute,
 	}
-	db.Save(&data.AudioFile)
+	db.Save(&audioFile)
+	data.AudioFile = audioFile.ToModel()
 
-	data.VideoFile = model.File{
+	videoFile := entity.File{
 		Type:     mediatype.VideoMP4,
 		Size:     123151,
 		Checksum: checksum,
 		Duration: 2 * time.Second,
 	}
-	db.Save(&data.VideoFile)
+	db.Save(&videoFile)
+	data.VideoFile = videoFile.ToModel()
 
-	data.UploadWithSongs = model.Upload{
+	upload := entity.Upload{
 		Open:             false,
 		SongsTotal:       4,
 		SongsProcessed:   3,
 		ProcessingErrors: nil,
 	}
-	db.Save(&data.UploadWithSongs)
+	db.Save(&upload)
+	data.UploadWithSongs = upload.ToModel()
 
-	data.BasicSong = model.Song{
-		Title:      "Cold",
-		Artist:     "Darrin DuBuque",
-		Genre:      "Latin",
-		Language:   "English",
-		Year:       2003,
-		CalcMedley: true,
+	song = entity.Song{
+		Title:    "Cold",
+		Artist:   "Darrin DuBuque",
+		Genre:    "Latin",
+		Language: "English",
+		Year:     2003,
 	}
-	db.Save(&data.BasicSong)
+	db.Save(&song)
+	data.BasicSong = song.ToModel()
 
-	data.SongWithUpload = model.Song{
-		Upload:     &data.UploadWithSongs,
-		Title:      "More",
-		Artist:     "Nobory",
-		Genre:      "Rock",
-		Language:   "English",
-		CalcMedley: true,
+	song = entity.Song{
+		Upload:   &upload,
+		Title:    "More",
+		Artist:   "Nobory",
+		Genre:    "Rock",
+		Language: "English",
 	}
-	db.Save(&data.SongWithUpload)
+	db.Save(&song)
+	data.SongWithUpload = song.ToModel()
 
-	data.SongWithCover = model.Song{
-		Title:      "Some",
-		Artist:     "Unimportant",
-		CoverFile:  &data.ImageFile,
-		CalcMedley: true,
-		MusicP1:    ultrastar.NewMusic(),
+	song = entity.Song{
+		Title:     "Some",
+		Artist:    "Unimportant",
+		CoverFile: &imageFile,
+		MusicP1:   ultrastar.NewMusic(),
 	}
-	db.Save(&data.SongWithCover)
+	db.Save(&song)
+	data.SongWithCover = song.ToModel()
 
-	data.SongWithBackground = model.Song{
+	song = entity.Song{
 		Title:          "Whatever",
 		Edition:        "SingStar",
-		BackgroundFile: &data.ImageFile,
-		CalcMedley:     true,
+		BackgroundFile: &imageFile,
 	}
-	db.Save(&data.SongWithBackground)
+	db.Save(&song)
+	data.SongWithBackground = song.ToModel()
 
-	data.SongWithAudio = model.Song{
-		Title:      "Whatever",
-		Gap:        1252,
-		AudioFile:  &data.AudioFile,
-		CalcMedley: true,
+	song = entity.Song{
+		Title:     "Whatever",
+		Gap:       1252,
+		AudioFile: &audioFile,
 	}
-	db.Save(&data.SongWithAudio)
+	db.Save(&song)
+	data.SongWithAudio = song.ToModel()
 
-	data.SongWithVideo = model.Song{
-		Title:      "Whatever",
-		Comment:    "useless",
-		VideoFile:  &data.VideoFile,
-		CalcMedley: true,
+	song = entity.Song{
+		Title:     "Whatever",
+		Comment:   "useless",
+		VideoFile: &videoFile,
 	}
-	db.Save(&data.SongWithVideo)
+	db.Save(&song)
+	data.SongWithVideo = song.ToModel()
 
-	for i := 0; i < 145; i++ {
+	data.TotalSongs = 150
+	for i := int64(0); i < data.TotalSongs-5; i++ {
 		// Some dummy data
-		song := model.NewSong()
+		song := entity.Song{}
 		db.Save(&song)
 	}
 	return data

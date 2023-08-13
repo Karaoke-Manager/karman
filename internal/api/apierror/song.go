@@ -40,7 +40,7 @@ func InvalidUltraStarTXT(err error) *ProblemDetails {
 }
 
 // UploadSongReadonly generates an error indicating that song cannot be modified because it belongs to an upload.
-func UploadSongReadonly(song model.Song) *ProblemDetails {
+func UploadSongReadonly(song *model.Song) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadSongReadonly,
 		Title:  "Songs in an upload cannot be modified.",
@@ -55,7 +55,7 @@ func UploadSongReadonly(song model.Song) *ProblemDetails {
 // MediaFileNotFound generates an error indicating that the requested song exists
 // but the requested media file does not.
 // media indicates the type of media (cover/background/audio/video).
-func MediaFileNotFound(song model.Song, media string) *ProblemDetails {
+func MediaFileNotFound(song *model.Song, media string) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeMediaFileNotFound,
 		Title:  "Media File Not Found",

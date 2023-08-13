@@ -2,25 +2,22 @@ package media
 
 import (
 	"context"
-	"errors"
-	"github.com/Karaoke-Manager/karman/internal/model"
 	"io"
-)
 
-var (
-	// ErrMissingUUID indicates that a file could not be saved because it does not have a UUID.
-	ErrMissingUUID = errors.New("file has no UUID")
+	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // Store is an interface to an underlying storage system used by Karman.
 type Store interface {
-	// CreateFile opens a writer for the specified file.
+	// CreateFile opens a writer for a file with the specified media type and UUID.
 	// If no writer could be opened, an error will be returned.
 	// It is the caller's responsibility to close the writer after writing the file contents.
-	CreateFile(ctx context.Context, file model.File) (io.WriteCloser, error)
+	CreateFile(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error)
 
-	// ReadFile opens a reader for the contents of the specified file.
+	// OpenFile opens a reader for the contents of the file with the specified media type and UUID.
 	// If no reader could be opened, an error will be returned.
 	// It is the caller's responsibility to close the reader after reading the file contents.
-	ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error)
+	OpenFile(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error)
 }

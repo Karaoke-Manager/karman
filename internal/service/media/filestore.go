@@ -3,11 +3,13 @@ package media
 import (
 	"context"
 	"fmt"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/google/uuid"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+
+	"github.com/google/uuid"
 )
 
 // FileStore is an implementation of the Store interface using a directory in the local filesystem.
@@ -44,24 +46,18 @@ func NewFileStore(root string) (Store, error) {
 
 // CreateFile opens a writer for file.
 // Any necessary intermediate directories are created before this method returns.
-func (s *FileStore) CreateFile(ctx context.Context, file model.File) (io.WriteCloser, error) {
-	if file.UUID == uuid.Nil {
-		return nil, ErrMissingUUID
-	}
-	id := file.UUID.String()
-	path := filepath.Join(s.root, id[:2], id)
+func (s *FileStore) CreateFile(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
+	idStr := id.String()
+	path := filepath.Join(s.root, idStr[:2], idStr)
 	if err := os.MkdirAll(filepath.Dir(path), s.FolderMode); err != nil {
 		return nil, err
 	}
 	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, s.FileMode)
 }
 
-// ReadFile opens a reader for file.
-func (s *FileStore) ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error) {
-	if file.UUID == uuid.Nil {
-		return nil, ErrMissingUUID
-	}
-	id := file.UUID.String()
-	path := filepath.Join(s.root, id[:2], id)
+// OpenFile opens a reader for file.
+func (s *FileStore) OpenFile(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
+	idStr := id.String()
+	path := filepath.Join(s.root, idStr[:2], idStr)
 	return os.Open(path)
 }

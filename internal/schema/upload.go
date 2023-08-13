@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/internal/entity"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
@@ -20,7 +20,7 @@ type Upload struct {
 	Status UploadStatus `json:"status"`
 }
 
-func NewUploadFromModel(m model.Upload) *Upload {
+func NewUploadFromModel(m entity.Upload) *Upload {
 	var status UploadStatus
 	if m.Open {
 		status = UploadStatusCreated

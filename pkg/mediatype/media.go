@@ -27,7 +27,7 @@ const ParameterQuality = "q"
 //   - Nil is less specific than all non-Nil types
 //   - Nil has quality 0
 //   - [MediaType.IsNil] returns true
-var Nil = MediaType{}
+var Nil MediaType
 
 // The MediaType implements a RFC 6838 media type.
 // A media type value is immutable.
@@ -87,7 +87,7 @@ func Parse(v string) (t MediaType, err error) {
 	return
 }
 
-// NewMediaType creates a new media type with the given type, subtype and parameters.
+// New creates a new media type with the given type, subtype and parameters.
 // The type, subtype and parameter keys must be valid tokens as defined in RFC 1521 and RFC 2045.
 // If this is not the case, Nil is returned.
 //
@@ -95,7 +95,7 @@ func Parse(v string) (t MediaType, err error) {
 // If an uneven number of parameters is supplied, the last one will be ignored.
 //
 // Types like "*/example" will be converted to "*/*".
-func NewMediaType(tpe, subtype string, params ...string) MediaType {
+func New(tpe, subtype string, params ...string) MediaType {
 	if !isToken(tpe) || !isToken(subtype) {
 		return Nil
 	}
@@ -121,8 +121,8 @@ func NewMediaType(tpe, subtype string, params ...string) MediaType {
 	return t
 }
 
-func NewMediaTypeWithQuality(tpe, subtype string, q float32, params ...string) MediaType {
-	t := NewMediaType(tpe, subtype, params...)
+func NewWithQuality(tpe, subtype string, q float32, params ...string) MediaType {
+	t := New(tpe, subtype, params...)
 	if !t.IsNil() {
 		t.q = quality(q)
 	}

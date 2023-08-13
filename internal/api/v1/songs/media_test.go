@@ -2,18 +2,20 @@ package songs
 
 import (
 	"encoding/json"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/internal/test"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/internal/schema"
+	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 func TestController_GetTxt(t *testing.T) {
@@ -68,7 +70,7 @@ func TestController_ReplaceTxt(t *testing.T) {
 	t.Run("409 Conflict", testSongConflict(h, http.MethodPut, songPath(data.SongWithUpload, "/txt"), data.SongWithUpload.UUID))
 }
 
-func testMediaNotFound(h http.Handler, song model.Song, media string) func(t *testing.T) {
+func testMediaNotFound(h http.Handler, song *model.Song, media string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, songPath(song, "/"+media), nil)
 		resp := test.DoRequest(h, r)
@@ -79,7 +81,7 @@ func testMediaNotFound(h http.Handler, song model.Song, media string) func(t *te
 	}
 }
 
-func testGetFile(h http.Handler, path string, file model.File) func(t *testing.T) {
+func testGetFile(h http.Handler, path string, file *model.File) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, path, nil)
 		resp := test.DoRequest(h, r)

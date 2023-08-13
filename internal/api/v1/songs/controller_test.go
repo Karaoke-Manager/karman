@@ -1,17 +1,20 @@
 package songs
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/karman/internal/model"
+
+	"github.com/google/uuid"
+
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Karaoke-Manager/karman/internal/service/media"
 	"github.com/Karaoke-Manager/karman/internal/service/song"
 	"github.com/Karaoke-Manager/karman/internal/test"
-	"github.com/go-chi/chi/v5"
 )
 
 // setup prepares a test instance of the songs.Controller.
@@ -34,7 +37,7 @@ func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *te
 	return r, c, data
 }
 
-func songPath(song model.Song, suffix string) string {
+func songPath(song *model.Song, suffix string) string {
 	return "/" + song.UUID.String() + suffix
 }
 

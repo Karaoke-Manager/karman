@@ -2,7 +2,7 @@ package apierror
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/internal/entity"
 	"net/http"
 )
 
@@ -19,7 +19,7 @@ const (
 )
 
 // UploadClosed generates an error indicating that the upload has been marked for processing and cannot be modified.
-func UploadClosed(upload model.Upload) *ProblemDetails {
+func UploadClosed(upload entity.Upload) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadClosed,
 		Title:  "Upload Closed",
@@ -32,7 +32,7 @@ func UploadClosed(upload model.Upload) *ProblemDetails {
 }
 
 // UploadFileNotFound generates an error indicating that a requested file within an upload was not found.
-func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
+func UploadFileNotFound(upload entity.Upload, path string) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadFileNotFound,
 		Title:  "File not Found",

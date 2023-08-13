@@ -1,13 +1,8 @@
 package model
 
-import "gorm.io/gorm"
-
 type UploadProcessingError struct {
-	gorm.Model
-
-	UploadID uint
-	File     string
-	Message  string
+	File    string
+	Message string
 }
 
 type Upload struct {
@@ -17,13 +12,5 @@ type Upload struct {
 	SongsTotal     int
 	SongsProcessed int
 
-	ProcessingErrors []UploadProcessingError `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-}
-
-func NewUpload() Upload {
-	return Upload{
-		Open:           true,
-		SongsTotal:     -1,
-		SongsProcessed: -1,
-	}
+	ProcessingErrors []UploadProcessingError
 }

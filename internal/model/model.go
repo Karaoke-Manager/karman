@@ -1,36 +1,25 @@
 package model
 
 import (
-	"errors"
+	"time"
+
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
-// Model is the base type for most Karman models.
-// Karman identifies its entities via UUID.
-// This type implements the corresponding field.
+// Model is a base type that contains shared fields for all model types.
+// Usually you don't need to interact with this type directly.
 type Model struct {
-	gorm.Model
-	UUID uuid.UUID `gorm:"type:uuid,uniqueIndex"`
+	// The unique identifier for this instance.
+	UUID uuid.UUID
+
+	// These dates will only be set to non-zero values if the instance has been created or soft-deleted respectively.
+	// These fields can be set manually, but should be considered read-only in most cases.
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
 
-// Deleted indicates whether m is soft-deleted.
+// Deleted indicates whether this instance is currently soft-deleted.
 func (m *Model) Deleted() bool {
-	return m.DeletedAt.Valid
-}
-
-// BeforeCreate ensures that m.UUID is set to a valid value.
-func (m *Model) BeforeCreate(tx *gorm.DB) error {
-	if m.UUID == uuid.Nil {
-		m.UUID = uuid.New()
-	}
-	return nil
-}
-
-// BeforeUpdate checks that m.UUID does not change.
-func (m *Model) BeforeUpdate(tx *gorm.DB) error {
-	if tx.Statement.Changed("UUID") {
-		return errors.New("UUID not allowed to change")
-	}
-	return nil
+	return !m.DeletedAt.IsZero()
 }

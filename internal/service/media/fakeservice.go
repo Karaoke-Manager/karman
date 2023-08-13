@@ -3,12 +3,15 @@ package media
 import (
 	"context"
 	"crypto/sha256"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"gorm.io/gorm"
 	"io"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
+
+	"github.com/Karaoke-Manager/karman/internal/entity"
+	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // FakeService is a Service implementation that only uses dummy values for file contents.
@@ -26,27 +29,29 @@ func NewFakeService(placeholder string, db *gorm.DB) Service {
 
 // StoreFile fully reads r and returns a file with dummy values.
 // file.Type will be set to mediaType.
-func (f *FakeService) StoreFile(ctx context.Context, mediaType string, r io.Reader) (file model.File, err error) {
-	if file.Type, err = mediatype.Parse(mediaType); err != nil {
-		return
-	}
-	file.Width = 512
-	file.Height = 1080
-	file.Duration = 3 * time.Minute
+func (f *FakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (*model.File, error) {
 	h := sha256.New()
-	var n int64
-	if n, err = io.Copy(h, r); err != nil {
-		return
+	n, err := io.Copy(h, r)
+	if err != nil {
+		return nil, err
 	}
-	file.Checksum = h.Sum(nil)
-	file.Size = n
+	file := entity.File{
+		Type: mediaType,
+
+		Width:    512,
+		Height:   1080,
+		Duration: 3 * time.Minute,
+
+		Size:     n,
+		Checksum: h.Sum(nil),
+	}
 	if err = f.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return
+		return nil, err
 	}
-	return
+	return file.ToModel(), nil
 }
 
-// ReadFile returns a reader reading the static string of f.Placeholder.
-func (f *FakeService) ReadFile(ctx context.Context, file model.File) (io.ReadCloser, error) {
+// OpenFile returns a reader reading the static string of f.Placeholder.
+func (f *FakeService) OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(f.Placeholder)), nil
 }

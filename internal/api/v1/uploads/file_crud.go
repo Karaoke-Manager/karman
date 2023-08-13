@@ -3,7 +3,7 @@ package uploads
 import (
 	"errors"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/internal/entity"
 	uploadSvc "github.com/Karaoke-Manager/karman/internal/service/upload"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/google/uuid"
@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload model.Upload, path string, err error) {
+func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload entity.Upload, path string, err error) {
 	var details *apierror.ProblemDetails
 	switch {
 	case errors.Is(err, uploadSvc.ErrUploadClosed):

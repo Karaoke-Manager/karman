@@ -14,7 +14,7 @@ import (
 
 func TestController_FetchUpload(t *testing.T) {
 	_, c, data := setup(t, true)
-	h := c.FetchUpload(true)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := c.FetchUpload(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetSong(r.Context())
 		assert.True(t, ok, "Did not find a song in the context.")
 	}))

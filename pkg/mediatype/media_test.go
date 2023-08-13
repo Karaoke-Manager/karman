@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 		"full wildcard":    {"*/*", Any, false},
 		"no type":          {"/plain", Nil, true},
 		"no subtype":       {"text/", Nil, true},
-		"no slash":         {"text", NewMediaType("text", ""), false},
+		"no slash":         {"text", Nil, true},
 		"parameter":        {"text/plain;q=0.5", TextPlain.WithQuality(0.5), false},
 	}
 	for name, c := range cases {
@@ -24,6 +24,8 @@ func TestParse(t *testing.T) {
 			result, err := Parse(c.v)
 			if c.wantErr {
 				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 			assert.Equal(t, c.expected, result)
 		})

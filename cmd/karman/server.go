@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/internal/api"
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
-	"net/http"
+
+	"github.com/Karaoke-Manager/karman/internal/api"
+	"github.com/Karaoke-Manager/karman/internal/service/media"
+	"github.com/Karaoke-Manager/karman/internal/service/song"
 )
 
 func init() {
@@ -37,7 +40,9 @@ var defaultConfig = &Config{
 func runServer(cmd *cobra.Command, args []string) {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	db, err := gorm.Open(sqlite.Open("test.db"))
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+		NowFunc: func() time.Time { return time.Now().UTC() },
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}

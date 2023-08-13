@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// This migration adds the File model.
+// This migration adds the File entity.
 func init() {
 	type Model struct {
 		gorm.Model
@@ -20,7 +20,7 @@ func init() {
 
 	type Upload struct {
 		Model
-		// Minimal model is enough for foreign keys.
+		// Minimal entity is enough for foreign keys.
 	}
 
 	type File struct {

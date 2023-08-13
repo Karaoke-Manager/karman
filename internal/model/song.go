@@ -1,73 +1,23 @@
 package model
 
 import (
-	"time"
-
 	"codello.dev/ultrastar"
 )
 
-// Song is the model for songs.
+// Song is the base model of Karman.
+// A Song instance represents a single, singable UltraStar song.
 type Song struct {
 	Model
 
-	// UploadID will be set if this song belongs to an upload.
-	// Depending on the associations loaded Upload will also be set.
-	UploadID *uint
-	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
+	ultrastar.Song
 
-	// The File references of the Song are only set if the corresponding file exists.
-	// The *ID fields indicate whether a corresponding file exists.
-	// The *File fields may or may not be set, depending on whether they have been loaded.
-	AudioFileID      *uint
-	AudioFile        *File `gorm:"constraint:OnDelete:SET NULL"`
-	VideoFileID      *uint
-	VideoFile        *File `gorm:"constraint:OnDelete:SET NULL"`
-	CoverFileID      *uint
-	CoverFile        *File `gorm:"constraint:OnDelete:SET NULL"`
-	BackgroundFileID *uint
-	BackgroundFile   *File `gorm:"constraint:OnDelete:SET NULL"`
+	// InUpload indicates whether this song belongs to an upload.
+	InUpload bool // read only
 
-	// Song Metadata
-	Gap             time.Duration
-	VideoGap        time.Duration
-	NotesGap        ultrastar.Beat
-	Start           time.Duration
-	End             time.Duration
-	PreviewStart    time.Duration
-	MedleyStartBeat ultrastar.Beat
-	MedleyEndBeat   ultrastar.Beat
-	CalcMedley      bool
-
-	// Song Metadata
-	Title    string
-	Artist   string
-	Genre    string
-	Edition  string
-	Creator  string
-	Language string
-	Year     int
-	Comment  string
-
-	DuetSinger1 string
-	DuetSinger2 string
-	Extra       map[string]string `gorm:"type:json;serializer:json"`
-
-	// FIXME: Should we use foreign keys here?
-	// Music of the Song
-	MusicP1 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
-	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
-}
-
-// NewSong creates a new blank Song instance.
-func NewSong() Song {
-	return Song{
-		CalcMedley: true,
-		Extra:      map[string]string{},
-		MusicP1:    ultrastar.NewMusic(),
-	}
-}
-
-// IsDuet indicates whether s is a duet.
-func (s *Song) IsDuet() bool {
-	return s.MusicP2 != nil
+	// Changes to File references of a song will not be updated when the song is updated.
+	// The same goes for the Song.*FileName fields.
+	AudioFile      *File // read only
+	CoverFile      *File // read only
+	VideoFile      *File // read only
+	BackgroundFile *File // read only
 }

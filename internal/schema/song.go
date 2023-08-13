@@ -2,14 +2,14 @@ package schema
 
 import (
 	"errors"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"net/http"
 	"time"
 
+	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+
 	"codello.dev/ultrastar"
 	"github.com/google/uuid"
-
-	"github.com/Karaoke-Manager/karman/internal/model"
 )
 
 // MedleyMode indicates how a song's medley is to be calculated.
@@ -94,7 +94,7 @@ type Song struct {
 }
 
 // FromSong converts m into a schema instance representing the current state of m.
-func FromSong(m model.Song) Song {
+func FromSong(m *model.Song) Song {
 	song := Song{
 		UUID: m.UUID,
 		SongRW: SongRW{
@@ -109,11 +109,10 @@ func FromSong(m model.Song) Song {
 
 			DuetSinger1: m.DuetSinger1,
 			DuetSinger2: m.DuetSinger2,
-			Extra:       m.Extra,
+			Extra:       m.CustomTags,
 
 			Gap:          m.Gap,
 			VideoGap:     m.VideoGap,
-			NotesGap:     m.NotesGap,
 			Start:        m.Start,
 			End:          m.End,
 			PreviewStart: m.PreviewStart,
@@ -121,7 +120,7 @@ func FromSong(m model.Song) Song {
 		Duet: m.IsDuet(),
 	}
 
-	if !m.CalcMedley {
+	if m.NoAutoMedley {
 		song.Medley.Mode = MedleyModeOff
 	} else if m.MedleyStartBeat != 0 && m.MedleyEndBeat != 0 {
 		song.Medley.Mode = MedleyModeManual
@@ -175,25 +174,25 @@ func (s *SongRW) Apply(m *model.Song) {
 
 	m.DuetSinger1 = s.DuetSinger1
 	m.DuetSinger2 = s.DuetSinger2
-	m.Extra = s.Extra
+	m.CustomTags = s.Extra
 
 	m.Gap = s.Gap
 	m.VideoGap = s.VideoGap
-	m.NotesGap = s.NotesGap
 	m.Start = s.Start
 	m.End = s.End
 	m.PreviewStart = s.PreviewStart
 
 	switch s.Medley.Mode {
 	case MedleyModeAuto:
-		m.CalcMedley = true
+		m.NoAutoMedley = false
 		m.MedleyStartBeat = 0
 		m.MedleyEndBeat = 0
 	case MedleyModeManual:
+		m.NoAutoMedley = true
 		m.MedleyStartBeat = s.Medley.MedleyStartBeat
 		m.MedleyEndBeat = s.Medley.MedleyEndBeat
 	case MedleyModeOff:
-		m.CalcMedley = false
+		m.NoAutoMedley = true
 	}
 }
 

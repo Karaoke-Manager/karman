@@ -21,9 +21,8 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	song := model.NewSong()
-	c.songSvc.UpdateSongFromData(&song, data)
-	if err = c.songSvc.SaveSong(r.Context(), &song); err != nil {
+	song := &model.Song{Song: *data}
+	if err = c.songSvc.CreateSong(r.Context(), song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -69,8 +68,8 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.BindError(err))
 		return
 	}
-	update.Apply(&song)
-	if err := c.songSvc.SaveSong(r.Context(), &song); err != nil {
+	update.Apply(song)
+	if err := c.songSvc.UpdateSongData(r.Context(), song); err != nil {
 		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -81,7 +80,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 // Delete implements the DELETE /v1/songs/{uuid} endpoint.
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
-	if err := c.songSvc.DeleteSongByUUID(r.Context(), id); err != nil {
+	if err := c.songSvc.DeleteSong(r.Context(), id); err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			_ = render.Render(w, r, apierror.DBError(err))
 			return

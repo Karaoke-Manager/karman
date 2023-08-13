@@ -3,7 +3,7 @@ package uploads
 import (
 	"context"
 	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/karman/internal/entity"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/go-chi/chi/v5"
 	"io/fs"
@@ -17,17 +17,17 @@ const (
 	contextKeyInstance
 )
 
-func SetUpload(ctx context.Context, upload model.Upload) context.Context {
+func SetUpload(ctx context.Context, upload entity.Upload) context.Context {
 	return context.WithValue(ctx, contextKeyInstance, upload)
 }
 
-func GetUpload(ctx context.Context) (model.Upload, bool) {
-	u, ok := ctx.Value(contextKeyInstance).(model.Upload)
+func GetUpload(ctx context.Context) (entity.Upload, bool) {
+	u, ok := ctx.Value(contextKeyInstance).(entity.Upload)
 	return u, ok
 }
 
-func MustGetUpload(ctx context.Context) model.Upload {
-	return ctx.Value(contextKeyInstance).(model.Upload)
+func MustGetUpload(ctx context.Context) entity.Upload {
+	return ctx.Value(contextKeyInstance).(entity.Upload)
 }
 
 func (c *Controller) fetchUpload(next http.Handler) http.Handler {

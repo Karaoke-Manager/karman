@@ -20,7 +20,14 @@ jobs:
     name: Test
     uses: codello/.github/.github/workflows/go-test.yml@v0
     with:
-      test-on: ubuntu-latest,ubuntu-20.04,windows-latest,macos-latest
+      test-on: ubuntu-latest,ubuntu-20.04,macos-latest
+
+  test2:
+    name: Test Windows
+    uses: codello/.github/.github/workflows/go-test.yml@v0
+    with:
+      packages: ./...
+      test-on: windows-latest
 
   build:
     name: Build

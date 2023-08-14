@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 
 	"codello.dev/ultrastar"
 	"github.com/google/uuid"

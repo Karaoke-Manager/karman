@@ -1,4 +1,4 @@
-module github.com/Karaoke-Manager/karman
+module github.com/Karaoke-Manager/server
 
 go 1.21
 

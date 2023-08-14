@@ -1,12 +1,13 @@
 package uploads
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/api/middleware"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/go-chi/chi/v5"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/api/middleware"
+	"github.com/Karaoke-Manager/server/internal/schema"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/go-chi/chi/v5"
 )
 
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {

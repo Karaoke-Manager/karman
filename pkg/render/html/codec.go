@@ -4,9 +4,10 @@ package html
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/pkg/render"
 	"io"
 	"reflect"
+
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 func init() {

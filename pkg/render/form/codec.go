@@ -3,10 +3,11 @@
 package form
 
 import (
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/ajg/form"
 	"io"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/ajg/form"
 )
 
 func init() {

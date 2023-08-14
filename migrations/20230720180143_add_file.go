@@ -3,12 +3,13 @@ package migrations
 import (
 	"context"
 	"database/sql"
-	"github.com/Karaoke-Manager/karman/migrations/db"
+	"runtime"
+	"time"
+
+	"github.com/Karaoke-Manager/server/migrations/db"
 	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
 	"gorm.io/gorm"
-	"runtime"
-	"time"
 )
 
 // This migration adds the File entity.

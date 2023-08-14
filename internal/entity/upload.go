@@ -3,7 +3,7 @@ package entity
 import (
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/model"
 )
 
 type UploadProcessingError struct {

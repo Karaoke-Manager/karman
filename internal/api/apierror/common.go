@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"gorm.io/gorm"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"gorm.io/gorm"
 )
 
 // ProblemTypeDomain is the base domain for all custom problem types.

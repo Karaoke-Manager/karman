@@ -3,9 +3,10 @@ package upload
 import (
 	"context"
 	"errors"
-	"github.com/Karaoke-Manager/karman/internal/entity"
 	"io"
 	"io/fs"
+
+	"github.com/Karaoke-Manager/server/internal/entity"
 )
 
 var (

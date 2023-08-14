@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/schema"
+	"github.com/Karaoke-Manager/server/internal/test"
 )
 
 //go:generate go run ../../../../tools/gensong -output testdata/valid-song.txt

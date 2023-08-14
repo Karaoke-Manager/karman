@@ -1,15 +1,16 @@
 package main
 
 import (
+	"log"
+
 	"github.com/pressly/goose/v3"
 	"github.com/psanford/memfs"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
 
-	_ "github.com/Karaoke-Manager/karman/migrations"
-	gormdb "github.com/Karaoke-Manager/karman/migrations/db"
+	_ "github.com/Karaoke-Manager/server/migrations"
+	gormdb "github.com/Karaoke-Manager/server/migrations/db"
 )
 
 func init() {

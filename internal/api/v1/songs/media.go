@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 
 	"codello.dev/ultrastar/txt"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/pkg/render"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/schema"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 // GetTxt implements the GET /v1/songs/{uuid}/txt endpoint.

@@ -2,12 +2,13 @@ package uploads
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/go-chi/chi/v5"
 	"io/fs"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/go-chi/chi/v5"
 )
 
 type contextKey int

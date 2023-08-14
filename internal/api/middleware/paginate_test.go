@@ -2,12 +2,13 @@ package middleware
 
 import (
 	"encoding/json"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPaginate(t *testing.T) {

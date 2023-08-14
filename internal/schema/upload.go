@@ -1,8 +1,8 @@
 package schema
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	"github.com/Karaoke-Manager/karman/pkg/render"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 type UploadStatus string

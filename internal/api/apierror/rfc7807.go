@@ -2,9 +2,10 @@ package apierror
 
 import (
 	"encoding/json"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/pkg/render"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 // ProblemDetails implements [RFC 7807] "Problem Details for HTTP APIs".

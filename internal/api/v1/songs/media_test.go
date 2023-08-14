@@ -11,11 +11,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/internal/test"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/internal/schema"
+	"github.com/Karaoke-Manager/server/internal/test"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 func TestController_GetTxt(t *testing.T) {

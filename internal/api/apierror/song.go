@@ -6,7 +6,7 @@ import (
 
 	"codello.dev/ultrastar/txt"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/model"
 )
 
 const (

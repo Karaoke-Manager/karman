@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/api/middleware"
-	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/api/middleware"
+	"github.com/Karaoke-Manager/server/internal/test"
 )
 
 func TestController_FetchUpload(t *testing.T) {

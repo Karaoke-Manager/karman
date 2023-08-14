@@ -1,9 +1,10 @@
 package schema
 
 import (
-	"github.com/Karaoke-Manager/karman/pkg/render"
 	"net/http"
 	"strconv"
+
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 // List is a generic schema type for list responses.

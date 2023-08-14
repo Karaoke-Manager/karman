@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // Store is an interface to an underlying storage system used by Karman.

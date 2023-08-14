@@ -2,12 +2,13 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/stretchr/testify/assert"
 )
 
 // AssertProblemDetails validates that resp encodes a problem details instance with the specified values.

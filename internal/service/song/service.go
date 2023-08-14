@@ -3,7 +3,7 @@ package song
 import (
 	"context"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/model"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

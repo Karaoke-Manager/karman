@@ -2,9 +2,10 @@ package render
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"io"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // EncodeFunc is the signature of encoder functions that can be registered via [RegisterEncoder].

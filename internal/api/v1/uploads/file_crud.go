@@ -2,13 +2,14 @@ package uploads
 
 import (
 	"errors"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	uploadSvc "github.com/Karaoke-Manager/karman/internal/service/upload"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/google/uuid"
 	"io/fs"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	uploadSvc "github.com/Karaoke-Manager/server/internal/service/upload"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/google/uuid"
 )
 
 func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload entity.Upload, path string, err error) {

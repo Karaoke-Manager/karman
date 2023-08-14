@@ -3,9 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/pkg/render"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 // ContentTypeJSON is an instance of the RequireContentType middleware for the common application of JSON requests.

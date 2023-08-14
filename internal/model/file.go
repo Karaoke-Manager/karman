@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // File represents a single media file that can be used by songs.

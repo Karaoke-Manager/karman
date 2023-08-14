@@ -16,11 +16,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/pkg/streamio"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/streamio"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
+	"github.com/Karaoke-Manager/server/internal/entity"
 
 	// AV Libraries.
 	"github.com/abema/go-mp4"

@@ -1,16 +1,17 @@
 package api
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 
-	"github.com/Karaoke-Manager/karman/internal/api/v1"
-	"github.com/Karaoke-Manager/karman/internal/service/upload"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/service/media"
+	"github.com/Karaoke-Manager/server/internal/service/song"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/Karaoke-Manager/server/internal/api/v1"
+	"github.com/Karaoke-Manager/server/internal/service/upload"
 )
 
 // Controller is the main API controller.

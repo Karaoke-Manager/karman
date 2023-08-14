@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/model"
 )
 
 // Entity is the base type for most Karman models.

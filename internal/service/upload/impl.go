@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
+	"github.com/Karaoke-Manager/server/internal/entity"
 )
 
 type FS interface {

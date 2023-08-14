@@ -1,7 +1,7 @@
 package uploads
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/service/upload"
+	"github.com/Karaoke-Manager/server/internal/service/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

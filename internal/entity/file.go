@@ -1,9 +1,10 @@
 package entity
 
 import (
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"time"
+
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // File is a entity that represents a media file of a song.

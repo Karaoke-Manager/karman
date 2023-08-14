@@ -3,11 +3,11 @@ package songs
 import (
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Karaoke-Manager/karman/internal/api/middleware"
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
+	"github.com/Karaoke-Manager/server/internal/api/middleware"
+	"github.com/Karaoke-Manager/server/internal/service/media"
+	"github.com/Karaoke-Manager/server/internal/service/song"
+	"github.com/Karaoke-Manager/server/pkg/render"
+	_ "github.com/Karaoke-Manager/server/pkg/render/json"
 )
 
 // Controller implements the /v1/songs endpoint.

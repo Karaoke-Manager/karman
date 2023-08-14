@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/pkg/render"
 	"net/http"
 	"strconv"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 const (

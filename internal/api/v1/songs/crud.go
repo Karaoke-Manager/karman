@@ -7,11 +7,11 @@ import (
 	"codello.dev/ultrastar/txt"
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/api/middleware"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/internal/schema"
-	"github.com/Karaoke-Manager/karman/pkg/render"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/api/middleware"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/internal/schema"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 // Create implements the POST /v1/songs endpoint.

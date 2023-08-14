@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/pkg/render"
+	"net/http"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/pkg/render"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"net/http"
 )
 
 // UUID is a simple middleware that fetches a UUID value from a request parameter named param.

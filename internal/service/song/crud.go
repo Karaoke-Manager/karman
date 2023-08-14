@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	"github.com/Karaoke-Manager/server/internal/model"
 )
 
 // FindSongs fetches a page of songs from the database.

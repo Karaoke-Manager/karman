@@ -1,8 +1,9 @@
 package apierror
 
 import (
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 const (

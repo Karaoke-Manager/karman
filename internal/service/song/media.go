@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"mime"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	"github.com/Karaoke-Manager/karman/internal/model"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	"github.com/Karaoke-Manager/server/internal/model"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // ReplaceCover sets song.CoverFile to file and persists the change in the database.

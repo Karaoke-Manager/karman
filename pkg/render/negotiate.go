@@ -2,10 +2,11 @@ package render
 
 import (
 	"context"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"net/http"
 	"sort"
 	"strings"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 )
 
 // NotAcceptableHandler returns a middleware that registers h as a handler for failed content type negotiation.

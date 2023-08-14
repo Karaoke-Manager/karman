@@ -5,16 +5,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/model"
 
 	"github.com/google/uuid"
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/internal/test"
+	"github.com/Karaoke-Manager/server/internal/service/media"
+	"github.com/Karaoke-Manager/server/internal/service/song"
+	"github.com/Karaoke-Manager/server/internal/test"
 )
 
 // setup prepares a test instance of the songs.Controller.

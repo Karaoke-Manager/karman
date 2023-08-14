@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/Karaoke-Manager/karman/internal/model"
+	"github.com/Karaoke-Manager/server/internal/model"
 
 	"codello.dev/ultrastar"
 )

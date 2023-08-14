@@ -3,11 +3,11 @@ package v1
 import (
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Karaoke-Manager/karman/internal/api/v1/songs"
-	"github.com/Karaoke-Manager/karman/internal/api/v1/uploads"
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
-	"github.com/Karaoke-Manager/karman/internal/service/upload"
+	"github.com/Karaoke-Manager/server/internal/api/v1/songs"
+	"github.com/Karaoke-Manager/server/internal/api/v1/uploads"
+	"github.com/Karaoke-Manager/server/internal/service/media"
+	"github.com/Karaoke-Manager/server/internal/service/song"
+	"github.com/Karaoke-Manager/server/internal/service/upload"
 )
 
 // Controller implements the /v1 API namespace.

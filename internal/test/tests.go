@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
 )
 
 // InvalidPagination returns a test that runs a request against h with invalid pagination request parameters

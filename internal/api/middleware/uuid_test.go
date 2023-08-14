@@ -3,14 +3,15 @@ package middleware
 import (
 	"context"
 	"encoding/json"
-	"github.com/Karaoke-Manager/karman/internal/api/apierror"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/Karaoke-Manager/server/internal/api/apierror"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestUUID(t *testing.T) {

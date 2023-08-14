@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/pkg/render"
 	"io"
+
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/pkg/render"
 )
 
 func init() {

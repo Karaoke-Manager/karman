@@ -2,8 +2,9 @@ package apierror
 
 import (
 	"fmt"
-	"github.com/Karaoke-Manager/karman/internal/entity"
 	"net/http"
+
+	"github.com/Karaoke-Manager/server/internal/entity"
 )
 
 // These constants identify known problem types related to uploads.

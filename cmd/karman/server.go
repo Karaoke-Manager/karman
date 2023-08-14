@@ -11,9 +11,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/api"
-	"github.com/Karaoke-Manager/karman/internal/service/media"
-	"github.com/Karaoke-Manager/karman/internal/service/song"
+	"github.com/Karaoke-Manager/server/internal/api"
+	"github.com/Karaoke-Manager/server/internal/service/media"
+	"github.com/Karaoke-Manager/server/internal/service/song"
 )
 
 func init() {

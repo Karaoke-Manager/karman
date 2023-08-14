@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/server/internal/entity"
+	"github.com/Karaoke-Manager/server/pkg/mediatype"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

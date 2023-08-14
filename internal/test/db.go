@@ -8,7 +8,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/karman/internal/entity"
+	"github.com/Karaoke-Manager/server/internal/entity"
 )
 
 // NewDB creates a new database for testing purposes.

@@ -28,7 +28,7 @@ func TestService_CreateSong(t *testing.T) {
 	svc, _ := setupService(t, false)
 
 	t.Run("uuid generation", func(t *testing.T) {
-		song := &model.Song{}
+		song := &model.Song{Song: ultrastar.NewSong()}
 		err := svc.CreateSong(ctx, song)
 		require.NoError(t, err)
 		assert.NotEmpty(t, song.UUID)

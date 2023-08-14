@@ -7,7 +7,7 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/Karaoke-Manager/server/pkg/render"
+	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
 func init() {

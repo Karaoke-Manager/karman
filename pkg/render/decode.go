@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // DecodeFunc is the signature of a decoding function that can be registered via [RegisterDecoder].

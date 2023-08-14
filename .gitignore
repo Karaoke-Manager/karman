@@ -22,6 +22,7 @@ go.work
 
 # Compiled Binaries
 build/
+karman
 
 # Testing files
 tmp/

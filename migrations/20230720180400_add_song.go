@@ -11,7 +11,7 @@ import (
 	"github.com/pressly/goose/v3"
 	"gorm.io/gorm"
 
-	"github.com/Karaoke-Manager/server/migrations/db"
+	"github.com/Karaoke-Manager/karman/migrations/db"
 )
 
 // This migration adds the Song entity.

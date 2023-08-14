@@ -1,4 +1,4 @@
-module github.com/Karaoke-Manager/server
+module github.com/Karaoke-Manager/karman
 
 go 1.21
 
@@ -14,7 +14,6 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
-	golang.org/x/net v0.14.0
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.3
 )
@@ -27,6 +26,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

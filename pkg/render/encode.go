@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // EncodeFunc is the signature of encoder functions that can be registered via [RegisterEncoder].

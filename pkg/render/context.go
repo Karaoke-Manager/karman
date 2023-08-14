@@ -6,7 +6,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Karaoke-Manager/server/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // contextKey is a value for use with context.WithValue. It's used as

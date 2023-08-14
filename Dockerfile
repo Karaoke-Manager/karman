@@ -11,4 +11,4 @@ COPY --chmod=755 build/${TARGETOS}/${TARGETARCH}/karman /karman
 USER nonroot:nonroot
 
 EXPOSE 8080
-ENTRYPOINT ["/karman"]
+ENTRYPOINT ["/karman", "server"]

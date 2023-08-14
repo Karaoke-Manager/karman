@@ -9,8 +9,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	_ "github.com/Karaoke-Manager/server/migrations"
-	gormdb "github.com/Karaoke-Manager/server/migrations/db"
+	_ "github.com/Karaoke-Manager/karman/migrations"
+	gormdb "github.com/Karaoke-Manager/karman/migrations/db"
 )
 
 func init() {

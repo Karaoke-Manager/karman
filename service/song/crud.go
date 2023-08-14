@@ -10,7 +10,7 @@ import (
 )
 
 // FindSongs fetches a page of songs from the database.
-func (s *service) FindSongs(ctx context.Context, limit, offset int) ([]*model.Song, int64, error) {
+func (s *service) FindSongs(ctx context.Context, limit int, offset int64) ([]*model.Song, int64, error) {
 	var total int64
 	var es []entity.Song
 	if err := s.db.WithContext(ctx).Model(&entity.Song{}).Where("upload_id IS NULL").Count(&total).Error; err != nil {
@@ -21,7 +21,7 @@ func (s *service) FindSongs(ctx context.Context, limit, offset int) ([]*model.So
 		Joins("VideoFile").
 		Joins("CoverFile").
 		Joins("BackgroundFile").
-		Where("songs.upload_id IS NULL").Limit(limit).Offset(offset).
+		Where("songs.upload_id IS NULL").Limit(limit).Offset(int(offset)).
 		Find(&es).Error; err != nil {
 		return nil, total, err
 	}

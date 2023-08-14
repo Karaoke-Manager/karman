@@ -37,11 +37,11 @@ func (s *service) GetUpload(ctx context.Context, uuid string) (upload *model.Upl
 	return
 }
 
-func (s *service) FindUploads(ctx context.Context, limit int, offset int) (uploads []*model.Upload, total int64, err error) {
+func (s *service) FindUploads(ctx context.Context, limit int, offset int64) (uploads []*model.Upload, total int64, err error) {
 	if err = s.db.WithContext(ctx).Find(&uploads).Count(&total).Error; err != nil {
 		return
 	}
-	if err = s.db.WithContext(ctx).Find(&uploads).Limit(limit).Offset(offset).Error; err != nil {
+	if err = s.db.WithContext(ctx).Find(&uploads).Limit(limit).Offset(int(offset)).Error; err != nil {
 		return
 	}
 	return

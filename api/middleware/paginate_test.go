@@ -23,7 +23,7 @@ func TestPaginate(t *testing.T) {
 		expErr               bool
 		expectedRequestLimit int
 		expectedLimit        int
-		expectedOffset       int
+		expectedOffset       int64
 	}{
 		"standard":        {100, 25, false, "10", false, "0", false, 10, 10, 0},
 		"default":         {100, 25, true, "", true, "", false, 25, 25, 0},

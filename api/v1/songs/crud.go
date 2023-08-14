@@ -21,7 +21,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	song := &model.Song{Song: *data}
+	song := &model.Song{Song: data}
 	if err = c.songSvc.CreateSong(r.Context(), song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return

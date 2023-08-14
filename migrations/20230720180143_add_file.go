@@ -3,6 +3,7 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"path"
 	"runtime"
 	"time"
 
@@ -45,15 +46,20 @@ func init() {
 	}
 
 	up := func(ctx context.Context, _ *sql.DB) error {
-		err := db.Get().WithContext(ctx).Migrator().CreateTable(&File{})
-		return err
+		if err := db.Get().WithContext(ctx).Migrator().CreateTable(&File{}); err != nil {
+			return err
+		}
+		return db.Get().WithContext(ctx).Migrator().CreateTable(&Upload{})
 	}
 
 	down := func(ctx context.Context, _ *sql.DB) error {
-		err := db.Get().WithContext(ctx).Migrator().DropTable(&File{})
-		return err
+		if err := db.Get().WithContext(ctx).Migrator().DropTable(&File{}); err != nil {
+			return err
+		}
+		return db.Get().WithContext(ctx).Migrator().DropTable(&Upload{})
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
-	goose.AddNamedMigrationNoTxContext(filename, up, down)
+	_ = db.FS.WriteFile(path.Base(filename), []byte(""), 0444)
+	goose.AddMigrationNoTxContext(up, down)
 }

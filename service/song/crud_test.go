@@ -28,14 +28,14 @@ func TestService_CreateSong(t *testing.T) {
 	svc, _ := setupService(t, false)
 
 	t.Run("uuid generation", func(t *testing.T) {
-		song := &model.Song{}
+		song := &model.Song{Song: ultrastar.NewSong()}
 		err := svc.CreateSong(ctx, song)
 		require.NoError(t, err)
 		assert.NotEmpty(t, song.UUID)
 	})
 	t.Run("music encoding", func(t *testing.T) {
 		song := &model.Song{
-			Song: *ultrastar.NewSongWithBPM(120),
+			Song: ultrastar.NewSongWithBPM(120),
 		}
 		song.MusicP1.AddNote(ultrastar.Note{
 			Type:     ultrastar.NoteTypeRegular,
@@ -77,13 +77,13 @@ func TestService_FindSongs(t *testing.T) {
 
 	cases := map[string]struct {
 		limit          int
-		offset         int
+		offset         int64
 		expectedLength int
 	}{
 		"no offset":     {25, 0, 25},
 		"with offset":   {10, 17, 10},
-		"cutoff offset": {40, int(data.TotalSongs) - 20, 20},
-		"past end":      {8, int(data.TotalSongs) + 10, 0},
+		"cutoff offset": {40, data.TotalSongs - 20, 20},
+		"past end":      {8, data.TotalSongs + 10, 0},
 	}
 
 	for name, c := range cases {

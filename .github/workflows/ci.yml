@@ -24,6 +24,7 @@ jobs:
     name: Build
     uses: codello/.github/.github/workflows/go-build.yml@v0
     with:
+      packages: ./cmd/karman
       platforms: linux/amd64,linux/arm64,linux/arm,linux/386
       ldflags: -w -s -X "main.Version=${{ github.ref_type == 'tag' && github.ref_name || '' }}"
 

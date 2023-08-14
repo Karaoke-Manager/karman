@@ -114,6 +114,14 @@ func TestService_GetSong(t *testing.T) {
 			assert.Equal(t, data.SongWithAudio.AudioFile.Duration, song.AudioFile.Duration)
 		}
 	})
+
+	t.Run("file names", func(t *testing.T) {
+		song, err := svc.GetSong(ctx, data.SongWithVideo.UUID)
+		if assert.NoError(t, err) {
+			assert.Empty(t, song.CoverFileName)
+			assert.NotEmpty(t, song.VideoFileName)
+		}
+	})
 }
 
 func TestService_DeleteSong(t *testing.T) {

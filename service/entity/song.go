@@ -89,7 +89,7 @@ func (s *Song) ToModel() *model.Song {
 	}
 	return &model.Song{
 		Model: s.Entity.ToModel(),
-		Song: ultrastar.Song{
+		Song: &ultrastar.Song{
 			Gap:             s.Gap,
 			VideoGap:        s.VideoGap,
 			Start:           s.Start,

@@ -25,6 +25,9 @@ type bufReader struct {
 // Advancing the reader will first return up to size bytes from the internal buffer
 // before the next read operation is passed on to r.
 func NewBufferedReadSeeker(r io.Reader, size int) io.ReadSeeker {
+	if rs, ok := r.(io.ReadSeeker); ok {
+		return rs
+	}
 	return &bufReader{
 		r:   r,
 		buf: make([]byte, size),

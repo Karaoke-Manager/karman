@@ -65,6 +65,7 @@ func (s *service) ReplaceBackground(ctx context.Context, song *model.Song, file 
 // ensureFilenames sets the different file name fields of song.Song.
 // If song does not have a file, the respective field is not modified.
 func (s *service) ensureFilenames(song *model.Song) {
+	song.TxtFileName = fmt.Sprintf("%s - %s.txt", song.Artist, song.Title)
 	if song.AudioFile != nil {
 		song.AudioFileName = fmt.Sprintf("%s - %s [AUDIO]%s", song.Artist, song.Title, s.extensionForType(song.AudioFile.Type))
 	}
@@ -84,7 +85,7 @@ func (s *service) ensureFilenames(song *model.Song) {
 func (*service) extensionForType(t mediatype.MediaType) string {
 	// preferred, known types
 	switch t.FullType() {
-	case "audio/mpeg":
+	case "audio/mpeg", "audio/mp3":
 		return ".mp3"
 	case "video/mp4":
 		return ".mp4"

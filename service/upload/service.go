@@ -16,7 +16,7 @@ var (
 type Service interface {
 	CreateUpload(ctx context.Context) (*model.Upload, error)
 	GetUpload(ctx context.Context, uuid string) (*model.Upload, error)
-	FindUploads(ctx context.Context, limit int, offset int) ([]*model.Upload, int64, error)
+	FindUploads(ctx context.Context, limit int, offset int64) ([]*model.Upload, int64, error)
 	DeleteUploadByUUID(ctx context.Context, uuid string) error
 
 	CreateFile(ctx context.Context, upload *model.Upload, path string, r io.Reader) error

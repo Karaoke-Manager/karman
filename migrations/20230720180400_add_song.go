@@ -3,6 +3,7 @@ package migrations
 import (
 	"context"
 	"database/sql"
+	"path"
 	"runtime"
 	"time"
 
@@ -82,5 +83,6 @@ func init() {
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
-	goose.AddNamedMigrationNoTxContext(filename, up, down)
+	_ = db.FS.WriteFile(path.Base(filename), []byte(""), 0444)
+	goose.AddMigrationNoTxContext(up, down)
 }

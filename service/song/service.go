@@ -18,8 +18,9 @@ type Service interface {
 	UpdateSongData(ctx context.Context, song *model.Song) error
 
 	// FindSongs retrieves a paginated view of songs from the persistence layer.
+	// If limit = -1, all songs are returned.
 	// This method returns the page contents, the total number of songs and an error (if one occurred).
-	FindSongs(ctx context.Context, limit, offset int) ([]*model.Song, int64, error)
+	FindSongs(ctx context.Context, limit int, offset int64) ([]*model.Song, int64, error)
 
 	// GetSong retrieves the song with the specified UUID from the persistence layer.
 	// If an error occurs (such as the song not being found), the return value will indicate as much.

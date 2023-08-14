@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/psanford/memfs"
 	"gorm.io/gorm"
 )
 
@@ -13,3 +14,5 @@ func Set(v *gorm.DB) {
 func Get() *gorm.DB {
 	return db
 }
+
+var FS = memfs.New()

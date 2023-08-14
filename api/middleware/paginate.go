@@ -28,7 +28,7 @@ type Pagination struct {
 
 	// The sanitized pagination offset.
 	// The Offset is non-negative but otherwise unbounded.
-	Offset int
+	Offset int64
 }
 
 // Paginate is a middleware that processes paginated queries and provides sanitized parameters via the request context.
@@ -61,9 +61,9 @@ func Paginate(defaultLimit int, maxLimit int) func(next http.Handler) http.Handl
 				limit = maxLimit
 			}
 			rawOffset := query.Get(PaginationOffsetKey)
-			offset := 0
+			offset := int64(0)
 			if rawOffset != "" {
-				if offset, err = strconv.Atoi(rawOffset); err != nil {
+				if offset, err = strconv.ParseInt(rawOffset, 10, 64); err != nil {
 					_ = render.Render(w, r, apierror.ErrBadRequest)
 					return
 				}

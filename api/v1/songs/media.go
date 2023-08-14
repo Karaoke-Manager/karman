@@ -24,18 +24,18 @@ func (c *Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", t.String())
 	w.WriteHeader(http.StatusOK)
-	_ = txt.WriteSong(w, &song.Song)
+	_ = txt.WriteSong(w, song.Song)
 }
 
 // ReplaceTxt implements the PUT /v1/songs/{uuid}/txt endpoint.
 func (c *Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
+	var err error
 	song := MustGetSong(r.Context())
-	usSong, err := txt.ReadSong(r.Body)
+	song.Song, err = txt.ReadSong(r.Body)
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	song.Song = *usSong
 	err = c.songSvc.UpdateSongData(r.Context(), song)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)

@@ -15,7 +15,7 @@ type List[T render.Renderer] struct {
 	Count int
 
 	// The Offset of this list within the underlying collection.
-	Offset int
+	Offset int64
 
 	// The Limit from the request. Greater or equal to Count.
 	Limit int
@@ -38,7 +38,7 @@ func (l *List[T]) Render(http.ResponseWriter, *http.Request) error {
 // This method also sets pagination headers.
 func (l *List[T]) PrepareResponse(w http.ResponseWriter, r *http.Request) any {
 	w.Header().Set("Pagination-Count", strconv.Itoa(l.Count))
-	w.Header().Set("Pagination-Offset", strconv.Itoa(l.Offset))
+	w.Header().Set("Pagination-Offset", strconv.FormatInt(l.Offset, 10))
 	w.Header().Set("Pagination-Limit", strconv.Itoa(l.Limit))
 	w.Header().Set("Pagination-Total", strconv.FormatInt(l.Total, 10))
 	return l.Items

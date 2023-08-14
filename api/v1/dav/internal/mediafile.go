@@ -1,4 +1,4 @@
-package dav
+package internal
 
 import (
 	"context"
@@ -15,8 +15,9 @@ import (
 	"github.com/Karaoke-Manager/karman/service/song"
 )
 
+// mediaNode is a node representing a media file.
 type mediaNode struct {
-	name string
+	name string // name of the file
 	file *model.File
 }
 
@@ -72,10 +73,11 @@ func (n *mediaNode) Open(ctx context.Context, _ song.Service, mediaSvc media.Ser
 	}, nil
 }
 
+// mediaFile implements a mediaNode that has been opened for reading.
 type mediaFile struct {
 	info *mediaNode
-	rd   io.ReadCloser
-	r    io.ReadSeeker
+	rd   io.ReadCloser // underlying reader
+	r    io.ReadSeeker // seekable version of rd
 }
 
 func (f *mediaFile) Close() error {

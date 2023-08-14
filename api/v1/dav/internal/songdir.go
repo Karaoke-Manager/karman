@@ -1,4 +1,4 @@
-package dav
+package internal
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/song"
 )
 
+// songNode represents the directory for a song.
 type songNode model.Song
 
 func (n *songNode) Stat() (fs.FileInfo, error) {
@@ -55,6 +56,7 @@ func (n *songNode) Open(_ context.Context, _ song.Service, _ media.Service, flag
 	}, nil
 }
 
+// songDir represents a songNode that has been opened for reading.
 type songDir struct {
 	pos  int64
 	song *model.Song
@@ -68,7 +70,7 @@ func (*songDir) Read([]byte) (int, error) {
 	return 0, fs.ErrInvalid
 }
 
-func (*songDir) Write(p []byte) (n int, err error) {
+func (*songDir) Write([]byte) (n int, err error) {
 	return 0, fs.ErrInvalid
 }
 

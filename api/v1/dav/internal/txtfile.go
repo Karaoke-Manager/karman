@@ -1,4 +1,4 @@
-package dav
+package internal
 
 import (
 	"bytes"
@@ -16,6 +16,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/song"
 )
 
+// txtNode represents the TXT file for a song.
 type txtNode model.Song
 
 func (n *txtNode) Stat() (fs.FileInfo, error) {
@@ -51,8 +52,8 @@ func (n *txtNode) Sys() any {
 	return nil
 }
 
-func (n *txtNode) ContentType(ctx context.Context) (string, error) {
-	return "text/plain;charset=utf-8", nil
+func (n *txtNode) ContentType(context.Context) (string, error) {
+	return "text/plain; charset=utf-8", nil
 }
 
 func (n *txtNode) Open(_ context.Context, _ song.Service, _ media.Service, flag int) (webdav.File, error) {
@@ -67,6 +68,7 @@ func (n *txtNode) Open(_ context.Context, _ song.Service, _ media.Service, flag 
 	}, nil
 }
 
+// txtFile represents a txtNode that has been opened for reading.
 type txtFile struct {
 	song *model.Song
 	r    *bytes.Reader
@@ -84,11 +86,11 @@ func (f *txtFile) Seek(offset int64, whence int) (int64, error) {
 	return f.r.Seek(offset, whence)
 }
 
-func (f *txtFile) Write(p []byte) (n int, err error) {
+func (f *txtFile) Write([]byte) (n int, err error) {
 	return 0, fs.ErrPermission
 }
 
-func (f *txtFile) Readdir(count int) ([]fs.FileInfo, error) {
+func (f *txtFile) Readdir(int) ([]fs.FileInfo, error) {
 	return nil, fs.ErrInvalid
 }
 

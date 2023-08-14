@@ -1,4 +1,4 @@
-package dav
+package internal
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	songsvc "github.com/Karaoke-Manager/karman/service/song"
 )
 
+// rootNode represents the root directory of a flatFS.
 type rootNode struct{}
 
 func (n rootNode) Stat() (fs.FileInfo, error) {
@@ -51,6 +52,7 @@ func (rootNode) Open(ctx context.Context, songSvc songsvc.Service, _ media.Servi
 	return &rootDir{ctx: ctx, songSvc: songSvc}, nil
 }
 
+// rootDir is a rootNode that has been opened for reading.
 type rootDir struct {
 	ctx     context.Context
 	pos     int64
@@ -98,6 +100,7 @@ func (f *rootDir) Readdir(count int) ([]fs.FileInfo, error) {
 	if count <= 0 {
 		count = -1
 	}
+	// FIXME: We should probably paginate database request for large databases or provide a more hierarchical FS
 	songs, total, err := f.songSvc.FindSongs(f.ctx, count, f.pos)
 	infos := make([]fs.FileInfo, len(songs))
 	for i, song := range songs {

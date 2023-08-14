@@ -1,4 +1,4 @@
-package dav
+package internal
 
 import (
 	"context"
@@ -13,35 +13,38 @@ import (
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
+	songsvc "github.com/Karaoke-Manager/karman/service/song"
 )
 
-type node interface {
-	Stat() (fs.FileInfo, error)
-	Open(ctx context.Context, songSvc song.Service, mediaSvc media.Service, flag int) (webdav.File, error)
-}
-
+// flatFS implements a [webdav.FileSystem] that serves songs in a flat hierarchy:
+// Each song is contained in a folder that contains the TXT file and the media files.
 type flatFS struct {
-	songSvc  song.Service
+	songSvc  songsvc.Service
 	mediaSvc media.Service
 }
 
-func NewFlatFS(songSvc song.Service, mediaSvc media.Service) webdav.FileSystem {
+// NewFlatFS creates a new [webdav.FileSystem] that serves songs in a flat hierarchy:
+// The root directory contains a folder for each song which in turn contains all the song's files.
+func NewFlatFS(songSvc songsvc.Service, mediaSvc media.Service) webdav.FileSystem {
 	return &flatFS{songSvc, mediaSvc}
 }
 
+// Mkdir is not allowed.
 func (s *flatFS) Mkdir(_ context.Context, _ string, _ fs.FileMode) error {
 	return fs.ErrPermission
 }
 
+// RemoveAll is not allowed.
 func (s *flatFS) RemoveAll(_ context.Context, _ string) error {
 	return fs.ErrPermission
 }
 
+// Rename is not allowed.
 func (s *flatFS) Rename(_ context.Context, _, _ string) error {
 	return fs.ErrPermission
 }
 
+// find returns a node value for the specified name, or (nil, fs.ErrNotExist) if no such file exists in s.
 func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	name = strings.TrimSuffix(name, "/")
 	if name == "" {
@@ -98,6 +101,7 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	return nil, fs.ErrNotExist
 }
 
+// Stat returns a [fs.FileInfo] for the specified file name, or an error.
 func (s *flatFS) Stat(ctx context.Context, name string) (fs.FileInfo, error) {
 	ref, err := s.find(ctx, name)
 	if err != nil {
@@ -106,7 +110,9 @@ func (s *flatFS) Stat(ctx context.Context, name string) (fs.FileInfo, error) {
 	return ref.Stat()
 }
 
-func (s *flatFS) OpenFile(ctx context.Context, name string, flag int, perm fs.FileMode) (webdav.File, error) {
+// OpenFile opens the named file and returns it, or an error.
+// As writing files is not allowed, any write flag will cause an error to be returned.
+func (s *flatFS) OpenFile(ctx context.Context, name string, flag int, _ fs.FileMode) (webdav.File, error) {
 	ref, err := s.find(ctx, name)
 	if errors.Is(err, fs.ErrNotExist) && (flag&(os.O_RDWR|os.O_WRONLY) != 0) {
 		return nil, fs.ErrPermission
@@ -115,4 +121,13 @@ func (s *flatFS) OpenFile(ctx context.Context, name string, flag int, perm fs.Fi
 		return nil, err
 	}
 	return ref.Open(ctx, s.songSvc, s.mediaSvc, flag)
+}
+
+// node represents a single, existing file in the virtual file system.
+type node interface {
+	// Stat returns a fs.FileInfo for the node, or an error.
+	// Usually a node implements [fs.FileInfo] and just returns itself here.
+	Stat() (fs.FileInfo, error)
+	// Open attempts to open the node using the specified services and flag.
+	Open(ctx context.Context, songSvc songsvc.Service, mediaSvc media.Service, flag int) (webdav.File, error)
 }

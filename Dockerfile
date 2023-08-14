@@ -1,9 +1,14 @@
-FROM gcr.io/distroless/static
+ARG TARGETPLATFORM=linux/amd64
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+FROM --platform=$TARGETPLATFORM gcr.io/distroless/static
 
-LABEL maintainer="codello"
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 
+COPY --chmod=755 build/${TARGETOS}/${TARGETARCH}/karman /karman
 USER nonroot:nonroot
 
-COPY build/karman build/migrate /usr/local/bin/
-
-ENTRYPOINT ["karman"]
+EXPOSE 8080
+ENTRYPOINT ["/karman"]

@@ -1,29 +1,40 @@
-on: [push, pull_request]
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+    tags: [ "*" ]
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
-      - name: Vet Code
-        run: go vet ./...
-      - name: Check Formatting
-        run: gofmt -l .
-      # TODO: Maybe use more advanced linting via golangci-lint
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: codello/.github/.github/workflows/go-lint.yml@v0
+
   test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: go.mod
-      - name: Fetch Dependencies
-        run: go mod download
-      - name: Run Tests
-        run: go test ./...
+    name: Test
+    uses: codello/.github/.github/workflows/go-test.yml@v0
+
+  build:
+    name: Build
+    uses: codello/.github/.github/workflows/go-build.yml@v0
+    with:
+      platforms: linux/amd64,linux/arm64,linux/arm,linux/386
+      ldflags: -w -s -X "main.Version=${{ github.ref_type == 'tag' && github.ref_name || '' }}"
+
+  publish:
+    name: Publish
+    if: ${{ github.event_name == 'push' }}
+    needs: [ test, build ]
+    permissions:
+      contents: read
+      packages: write
+    uses: codello/.github/.github/workflows/docker-publish.yml@v0
+    with:
+      image: ${{ github.repository_owner }}/server
+      platforms: linux/amd64,linux/arm64,linux/arm,linux/386

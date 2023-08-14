@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/api"
@@ -40,7 +40,7 @@ var defaultConfig = &Config{
 func runServer(cmd *cobra.Command, args []string) {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open("test.db?_pragma=foreign_keys(1)"), &gorm.Config{
 		NowFunc: func() time.Time { return time.Now().UTC() },
 	})
 	if err != nil {

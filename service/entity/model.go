@@ -18,8 +18,8 @@ type Entity struct {
 	UUID uuid.UUID `gorm:"type:uuid,uniqueIndex"`
 }
 
-// FromModel creates a new Entity with data from m.
-func FromModel(m model.Model) Entity {
+// fromModel creates a new Entity with data from m.
+func fromModel(m model.Model) Entity {
 	e := Entity{
 		Model: gorm.Model{
 			CreatedAt: m.CreatedAt,
@@ -36,7 +36,10 @@ func FromModel(m model.Model) Entity {
 	return e
 }
 
-func (e *Entity) ToModel() model.Model {
+// toModel converts e into a model instance.
+// In contrast to other toModel methods in this package this does not return a pointer.
+// This makes it a little simpler to use in other toModel methods.
+func (e *Entity) toModel() model.Model {
 	deletedAt := time.Time{}
 	if e.DeletedAt.Valid {
 		deletedAt = e.DeletedAt.Time

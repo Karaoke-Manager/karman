@@ -15,7 +15,7 @@ type Song struct {
 	// UploadID will be set if this song belongs to an upload.
 	// Depending on the associations loaded Upload will also be set.
 	UploadID *uint
-	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
+	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
 
 	// The File references of the Song are only set if the corresponding file exists.
 	// The *ID fields indicate whether a corresponding file exists.
@@ -59,7 +59,7 @@ type Song struct {
 
 func SongFromModel(song *model.Song) Song {
 	return Song{
-		Entity:          FromModel(song.Model),
+		Entity:          fromModel(song.Model),
 		Gap:             song.Gap,
 		VideoGap:        song.VideoGap,
 		Start:           song.Start,
@@ -88,7 +88,7 @@ func (s *Song) ToModel() *model.Song {
 		return nil
 	}
 	return &model.Song{
-		Model: s.Entity.ToModel(),
+		Model: s.Entity.toModel(),
 		Song: &ultrastar.Song{
 			Gap:             s.Gap,
 			VideoGap:        s.VideoGap,

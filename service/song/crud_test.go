@@ -5,12 +5,11 @@ import (
 	"testing"
 
 	"codello.dev/ultrastar"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/service/common"
 	"github.com/Karaoke-Manager/karman/test"
 )
 
@@ -102,7 +101,7 @@ func TestService_GetSong(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		_, err := svc.GetSong(ctx, data.AbsentSongUUID)
-		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		assert.ErrorIs(t, err, common.ErrNotFound)
 	})
 
 	t.Run("read", func(t *testing.T) {
@@ -132,11 +131,11 @@ func TestService_DeleteSong(t *testing.T) {
 		err := svc.DeleteSong(ctx, data.BasicSong.UUID)
 		assert.NoError(t, err)
 		_, err = svc.GetSong(ctx, data.BasicSong.UUID)
-		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.ErrorIs(t, err, common.ErrNotFound)
 	})
 
 	t.Run("already absent", func(t *testing.T) {
-		err := svc.DeleteSong(ctx, uuid.New())
+		err := svc.DeleteSong(ctx, data.AbsentSongUUID)
 		assert.NoError(t, err)
 	})
 }

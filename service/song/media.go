@@ -7,6 +7,7 @@ import (
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/service/common"
 	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
@@ -20,7 +21,7 @@ func (s *service) ReplaceCover(ctx context.Context, song *model.Song, file *mode
 	if err == nil {
 		song.CoverFile = file
 	}
-	return err
+	return common.DBError(err)
 }
 
 // ReplaceAudio sets song.AudioFile to file and persists the change in the database.
@@ -33,7 +34,7 @@ func (s *service) ReplaceAudio(ctx context.Context, song *model.Song, file *mode
 	if err == nil {
 		song.AudioFile = file
 	}
-	return err
+	return common.DBError(err)
 }
 
 // ReplaceVideo sets song.VideoFile to file and persists the change in the database.
@@ -46,7 +47,7 @@ func (s *service) ReplaceVideo(ctx context.Context, song *model.Song, file *mode
 	if err == nil {
 		song.VideoFile = file
 	}
-	return err
+	return common.DBError(err)
 }
 
 // ReplaceBackground sets song.BackgroundFile to file and persists the change in the database.
@@ -59,7 +60,7 @@ func (s *service) ReplaceBackground(ctx context.Context, song *model.Song, file 
 	if err == nil {
 		song.BackgroundFile = file
 	}
-	return err
+	return common.DBError(err)
 }
 
 // ensureFilenames sets the different file name fields of song.Song.

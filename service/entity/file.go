@@ -23,7 +23,7 @@ type File struct {
 	// If this File does not belong to an Upload, the Path should be ignored.
 	// If this is unset, the file will be at the canonical place in the file store.
 	UploadID *uint
-	Upload   *Upload `gorm:"constraint:OnDelete:RESTRICT"`
+	Upload   *Upload `gorm:"constraint:OnDelete:CASCADE"`
 	Path     string
 
 	// Media Type of the file.
@@ -44,7 +44,7 @@ type File struct {
 
 func FileFromModel(file *model.File) File {
 	f := File{
-		Entity:   FromModel(file.Model),
+		Entity:   fromModel(file.Model),
 		Type:     file.Type,
 		Size:     file.Size,
 		Checksum: file.Checksum,
@@ -60,7 +60,7 @@ func (f *File) ToModel() *model.File {
 		return nil
 	}
 	return &model.File{
-		Model:    f.Entity.ToModel(),
+		Model:    f.Entity.toModel(),
 		Type:     f.Type,
 		Size:     f.Size,
 		Checksum: f.Checksum,

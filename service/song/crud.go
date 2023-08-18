@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/service/common"
 	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
@@ -14,7 +15,7 @@ func (s *service) FindSongs(ctx context.Context, limit int, offset int64) ([]*mo
 	var total int64
 	var es []entity.Song
 	if err := s.db.WithContext(ctx).Model(&entity.Song{}).Where("upload_id IS NULL").Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, common.DBError(err)
 	}
 	if err := s.db.WithContext(ctx).Model(&entity.Song{}).
 		Joins("AudioFile").
@@ -23,7 +24,7 @@ func (s *service) FindSongs(ctx context.Context, limit int, offset int64) ([]*mo
 		Joins("BackgroundFile").
 		Where("songs.upload_id IS NULL").Limit(limit).Offset(int(offset)).
 		Find(&es).Error; err != nil {
-		return nil, total, err
+		return nil, total, common.DBError(err)
 	}
 	songs := make([]*model.Song, len(es))
 	for i, e := range es {
@@ -42,7 +43,7 @@ func (s *service) GetSong(ctx context.Context, id uuid.UUID) (*model.Song, error
 		Joins("CoverFile").
 		Joins("BackgroundFile").
 		First(&e, "songs.uuid = ?", id).Error; err != nil {
-		return nil, err
+		return nil, common.DBError(err)
 	}
 	song := e.ToModel()
 	s.ensureFilenames(song)
@@ -57,14 +58,14 @@ func (s *service) CreateSong(ctx context.Context, song *model.Song) error {
 	song.UUID = e.UUID
 	song.CreatedAt = e.CreatedAt
 	song.UpdatedAt = e.UpdatedAt
-	return err
+	return common.DBError(err)
 }
 
 // UpdateSongData updates song in the database.
 // song must already have been persisted before.
 func (s *service) UpdateSongData(ctx context.Context, song *model.Song) error {
 	e := entity.SongFromModel(song)
-	return s.db.WithContext(ctx).Model(&e).
+	err := s.db.WithContext(ctx).Model(&e).
 		Where("uuid = ?", song.UUID).
 		Select("*").Omit(
 		"ID", "UUID",
@@ -76,9 +77,11 @@ func (s *service) UpdateSongData(ctx context.Context, song *model.Song) error {
 		"CoverFileID",
 		"BackgroundFileID").
 		Updates(&e).Error
+	return common.DBError(err)
 }
 
 // DeleteSong deletes the song with the specified UUID from the database.
 func (s *service) DeleteSong(ctx context.Context, id uuid.UUID) error {
-	return s.db.WithContext(ctx).Where("uuid = ?", id).Delete(&entity.Song{}).Error
+	err := s.db.WithContext(ctx).Where("uuid = ?", id).Delete(&entity.Song{}).Error
+	return common.DBError(err)
 }

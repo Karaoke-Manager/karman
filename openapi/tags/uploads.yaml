@@ -74,7 +74,8 @@ paths:
           content:
             application/json:
               example:
-                status: open
+                uuid: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+                status: "open"
               schema: { $ref: '#/components/schemas/Upload' }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}:
@@ -405,15 +406,16 @@ components:
         - $ref: "#/components/schemas/PendingUpload"
         - $ref: "#/components/schemas/ProcessingUpload"
         - $ref: "#/components/schemas/DoneUpload"
+    OpenUpload:
+      type: object
+      required: [ uuid, status ]
       properties:
         uuid:
           type: string
           format: uuid
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
-    OpenUpload:
-      type: object
-      required: [ status ]
-      properties:
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "open" ]
           description: |-
@@ -421,8 +423,14 @@ components:
             An upload in this status will not be processed automatically.
     PendingUpload:
       type: object
-      required: [ status ]
+      required: [ uuid, status ]
       properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "pending" ]
           description: |-
@@ -430,8 +438,14 @@ components:
             An upload in this status will not accept file uploads.
     ProcessingUpload:
       type: object
-      required: [ status, songsTotal, songsProcessed ]
+      required: [ uuid, status, songsTotal, songsProcessed ]
       properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "processing" ]
           description: |-
@@ -462,8 +476,14 @@ components:
             The number of errors that occurred during processing (e.g. invalid file formats).
     DoneUpload:
       type: object
-      required: [ status ]
+      required: [ uuid, status, songsTotal ]
       properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "done" ]
           description: |-

@@ -25,18 +25,28 @@ type Upload struct {
 }
 
 func (u *Upload) ToModel() *model.Upload {
-	errors := make([]model.UploadProcessingError, len(u.ProcessingErrors))
+	m := &model.Upload{
+		Model:          u.Entity.toModel(),
+		SongsTotal:     u.SongsTotal,
+		SongsProcessed: u.SongsProcessed,
+	}
+
+	if u.Open {
+		m.State = model.UploadStateOpen
+	} else if u.SongsTotal < 0 && u.SongsProcessed < 0 {
+		m.State = model.UploadStatePending
+	} else if u.SongsTotal != u.SongsProcessed {
+		m.State = model.UploadStateProcessing
+	} else {
+		m.State = model.UploadStateDone
+	}
+
+	m.ProcessingErrors = make([]model.UploadProcessingError, len(u.ProcessingErrors))
 	for i, err := range u.ProcessingErrors {
-		errors[i] = model.UploadProcessingError{
+		m.ProcessingErrors[i] = model.UploadProcessingError{
 			File:    err.File,
 			Message: err.Message,
 		}
 	}
-	return &model.Upload{
-		Model:            u.Entity.ToModel(),
-		Open:             u.Open,
-		SongsTotal:       u.SongsTotal,
-		SongsProcessed:   u.SongsProcessed,
-		ProcessingErrors: errors,
-	}
+	return m
 }

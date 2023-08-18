@@ -43,6 +43,11 @@ func (c *Controller) Router(r chi.Router) {
 				r.With(middleware.RequireContentType("application/octet-stream")).Put("/{uuid}/files", c.PutFile)
 				r.Delete("/{uuid}/files", c.DeleteFile)
 			})
+
+			r.Group(func(r chi.Router) {
+				r.Use(UploadState(model.UploadStateProcessing, model.UploadStateDone))
+				r.With(middleware.Paginate(100, 1000), render.ContentTypeNegotiation("application/json")).Get("/{uuid}/errors", c.GetErrors)
+			})
 		})
 	})
 

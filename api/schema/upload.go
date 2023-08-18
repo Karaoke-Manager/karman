@@ -125,3 +125,18 @@ func (e UploadDirEntry) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(data)
 }
+
+// UploadProcessingError describes an item in an error listing for uploads.
+type UploadProcessingError struct {
+	render.NopRenderer
+	File    string `json:"file"`
+	Message string `json:"message"`
+}
+
+// FromUploadProcessingError creates an UploadProcessingError describing err.
+func FromUploadProcessingError(err *model.UploadProcessingError) UploadProcessingError {
+	return UploadProcessingError{
+		File:    err.File,
+		Message: err.Message,
+	}
+}

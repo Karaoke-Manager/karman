@@ -61,10 +61,15 @@ func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *te
 	return r, c, data
 }
 
+// uploadPath generates a request path for upload.
+// The suffix is the local request part after the {uuid} part.
+// suffix must start with a slash.
 func uploadPath(upload *model.Upload, suffix string) string {
 	return "/" + upload.UUID.String() + suffix
 }
 
+// testInvalidPath is a test, that performs a request using the specified method and request path.
+// It then asserts that the response indicates an invalid file path that contains the path value.
 func testInvalidPath(h http.Handler, method string, reqPath string, path string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, reqPath, nil)
@@ -76,6 +81,8 @@ func testInvalidPath(h http.Handler, method string, reqPath string, path string)
 	}
 }
 
+// testInvalidState is a test that performs a request using the specified method and path.
+// It then asserts that the response indicates an invalid upload state and contains the specified UUID.
 func testInvalidState(h http.Handler, method string, path string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)

@@ -6,14 +6,24 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Karaoke-Manager/karman/service/common"
 )
 
 func TestService_CreateFile(t *testing.T) {
 	ctx := context.Background()
 	svc, data := setupService(t, true)
-	w, err := svc.CreateFile(ctx, data.OpenUpload, "foobar.txt")
-	assert.NoError(t, err)
-	assert.NoError(t, w.Close())
+
+	t.Run("regular", func(t *testing.T) {
+		w, err := svc.CreateFile(ctx, data.OpenUpload, "foobar.txt")
+		assert.NoError(t, err)
+		assert.NoError(t, w.Close())
+	})
+
+	t.Run("missing upload", func(t *testing.T) {
+		_, err := svc.CreateFile(ctx, data.AbsentUpload, "foobar.txt")
+		assert.ErrorIs(t, err, common.ErrNotFound)
+	})
 }
 
 func TestService_StatFile(t *testing.T) {

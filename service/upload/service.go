@@ -30,6 +30,7 @@ type Service interface {
 	DeleteUpload(ctx context.Context, id uuid.UUID) error
 
 	// CreateFile creates a file in an upload, overwriting existing files at the same path.
+	// If the upload for the file does not exist, common.ErrNotFound is returned.
 	CreateFile(ctx context.Context, upload *model.Upload, path string) (io.WriteCloser, error)
 
 	// StatFile gets information about the file at path.

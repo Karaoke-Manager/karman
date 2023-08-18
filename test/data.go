@@ -24,7 +24,8 @@ type Dataset struct {
 	AudioFile *model.File // may be used by multiple songs
 	VideoFile *model.File // may be used by multiple songs
 
-	AbsentUploadUUID uuid.UUID     // may be a present UUID for other types
+	AbsentUploadUUID uuid.UUID // may be a present UUID for other types
+	AbsentUpload     *model.Upload
 	OpenUpload       *model.Upload // files can be uploaded
 	PendingUpload    *model.Upload // enqueued for processing
 	ProcessingUpload *model.Upload // currently being processed
@@ -83,7 +84,10 @@ func NewDataset(db *gorm.DB) *Dataset {
 	db.Save(&videoFile)
 	data.VideoFile = videoFile.ToModel()
 
-	upload := entity.Upload{
+	upload := entity.Upload{Entity: entity.Entity{UUID: data.AbsentSongUUID}}
+	data.AbsentUpload = upload.ToModel(0)
+
+	upload = entity.Upload{
 		Open:           true,
 		SongsTotal:     -1,
 		SongsProcessed: -1,

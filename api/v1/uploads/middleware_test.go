@@ -11,6 +11,7 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/test"
 )
 
@@ -35,8 +36,7 @@ func TestController_FetchUpload(t *testing.T) {
 }
 
 func TestController_ValidateFilePath(t *testing.T) {
-	_, c, _ := setup(t, false)
-	h := c.ValidateFilePath(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := ValidateFilePath(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetFilePath(r.Context())
 		assert.True(t, ok, "Did not find an upload in the context.")
 	}))
@@ -56,6 +56,25 @@ func TestController_ValidateFilePath(t *testing.T) {
 		resp := test.DoRequest(h, r)
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUploadPath, map[string]any{
 			"path": "some//invalid path",
+		})
+	})
+}
+
+func TestController_UploadState(t *testing.T) {
+	data := test.NewDataset(test.NewDB(t))
+	h := UploadState(model.UploadStateOpen)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+
+	t.Run("OK", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(SetUpload(r.Context(), data.OpenUpload))
+		test.DoRequest(h, r)
+	})
+	t.Run("409 Conflict", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r = r.WithContext(SetUpload(r.Context(), data.ProcessingUpload))
+		resp := test.DoRequest(h, r)
+		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadState, map[string]any{
+			"uuid": data.ProcessingUpload.UUID.String(),
 		})
 	})
 }

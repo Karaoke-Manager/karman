@@ -66,7 +66,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
-        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        415: { $ref: "../common/problem-details.yaml#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteSongCover
@@ -127,7 +127,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
-        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        415: { $ref: "../common/problem-details.yaml#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteSongBackground
@@ -188,7 +188,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
-        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        415: { $ref: "../common/problem-details.yaml#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteSongVideo
@@ -249,7 +249,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "songs.yaml#/components/responses/SongNotFound" }
         409: { $ref: "songs.yaml#/components/responses/UploadSongCannotBeModified" }
-        415: { $ref: "#/components/responses/UnsupportedMediaType" }
+        415: { $ref: "../common/problem-details.yaml#/components/responses/UnsupportedMediaType" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
     delete:
       operationId: deleteSongAudio
@@ -340,16 +340,3 @@ components:
             type: string
             format: uri
             example: "https://bucket.example.com/some-file?X-AMZ-Algorithm=..."
-    UnsupportedMediaType:
-      x-summary: Unsupported Media Type
-      description: |-
-        This error indicates that the specified `Content-Type` is not supported for this media field.
-      content:
-        application/problem+json:
-          schema:
-            example:
-              title: "Unsupported Media Type"
-              status: 415
-              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
-            allOf:
-              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"

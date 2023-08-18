@@ -7,12 +7,17 @@ import (
 	"io/fs"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/service/common"
+	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
 // CreateFile creates a file in an upload.
 func (s *service) CreateFile(ctx context.Context, upload *model.Upload, path string) (io.WriteCloser, error) {
 	if path == "" || path == "." {
 		return nil, fs.ErrInvalid
+	}
+	if err := s.db.WithContext(ctx).Where("uuid = ?", upload.UUID).First(&entity.Upload{}).Error; err != nil {
+		return nil, common.DBError(err)
 	}
 	return s.store.Create(ctx, upload.UUID, path)
 }

@@ -178,7 +178,7 @@ paths:
           The name of the file is derived from the request `path`.
         required: true
         content:
-          "*/*":
+          "application/octet-stream":
             schema:
               type: string
               format: binary
@@ -470,10 +470,11 @@ components:
               description: |-
                 The requested UUID for which no upload was found.
     UploadStateError:
-      title: Upload Closed
+      title: Invalid Upload State
       example:
         type: "codello.dev/karman/problems/upload-state"
-        title: "Upload Closed"
+        title: "Invalid Upload State"
+        detail: "This action cannot be performed in the current upload state."
         status: 409
         uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
       allOf:

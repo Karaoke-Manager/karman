@@ -1,5 +1,34 @@
 package uploads
 
+import (
+	"io"
+	"net/http"
+
+	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/pkg/render"
+)
+
+func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
+	upload := MustGetUpload(r.Context())
+	path := MustGetFilePath(r.Context())
+	f, err := c.svc.CreateFile(r.Context(), upload, path)
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_, err = io.Copy(f, r.Body)
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	err = f.Close()
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_ = render.NoContent(w, r)
+}
+
 /*
 func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload *model.Upload, path string, err error) {
 	var details *apierror.ProblemDetails

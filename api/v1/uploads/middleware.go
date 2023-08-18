@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/fs"
 	"net/http"
+	"slices"
 
 	"github.com/go-chi/chi/v5"
 
@@ -73,10 +74,13 @@ func MustGetFilePath(ctx context.Context) string {
 }
 
 // ValidateFilePath is a middleware that validates the file path within an upload syntactically.
-func (c *Controller) ValidateFilePath(next http.Handler) http.Handler {
+func ValidateFilePath(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		path := chi.URLParam(r, "*")
-		if !fs.ValidPath(path) || path == "." {
+		if path == "" {
+			path = "."
+		}
+		if !fs.ValidPath(path) {
 			_ = render.Render(w, r, apierror.InvalidUploadPath(path))
 			return
 		}
@@ -84,4 +88,19 @@ func (c *Controller) ValidateFilePath(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+// UploadState is a middleware that checks if the upload is in one of the allowed states.
+func UploadState(states ...model.UploadState) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			upload := MustGetUpload(r.Context())
+			if !slices.Contains(states, upload.State) {
+				_ = render.Render(w, r, apierror.UploadState(upload))
+				return
+			}
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
 }

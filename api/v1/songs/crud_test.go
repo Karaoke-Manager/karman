@@ -40,7 +40,7 @@ func TestController_Create(t *testing.T) {
 		})
 	})
 	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPost, "/", "text/plain", "text/x-ultrastar"))
-	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPost, "/", "application/json", "text/plain", "text/x-ultrastar"))
+	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPost, "/", "application/json", "text/plain", "text/x-ultrastar"))
 }
 
 func TestController_Find(t *testing.T) {
@@ -98,7 +98,7 @@ func TestController_Update(t *testing.T) {
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, "", nil)
 	})
 	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPatch, path, "application/json"))
-	t.Run("400 Bad Request (Invalid Content-Type)", test.InvalidContentType(h, http.MethodPatch, path, "text/plain", "application/json"))
+	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPatch, path, "text/plain", "application/json"))
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodPatch, "/"+data.AbsentSongUUID.String(), http.StatusNotFound))
 	t.Run("409 Conflict", testSongConflict(h, http.MethodPatch, "/"+data.SongWithUpload.UUID.String(), data.SongWithUpload.UUID))
 	t.Run("422 Unprocessable Entity", func(t *testing.T) {

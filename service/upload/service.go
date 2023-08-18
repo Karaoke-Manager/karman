@@ -2,16 +2,13 @@ package upload
 
 import (
 	"context"
-	"errors"
+	"io"
+	"io/fs"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/model"
-)
-
-var (
-	ErrUploadClosed = errors.New("upload closed")
 )
 
 type Service interface {
@@ -20,19 +17,17 @@ type Service interface {
 	FindUploads(ctx context.Context, limit int, offset int64) ([]*model.Upload, int64, error)
 	DeleteUpload(ctx context.Context, id uuid.UUID) error
 
-	/*CreateFile(ctx context.Context, upload *model.Upload, path string, r io.Reader) error
+	CreateFile(ctx context.Context, upload *model.Upload, path string) (io.WriteCloser, error)
 	StatFile(ctx context.Context, upload *model.Upload, path string) (fs.FileInfo, error)
-	ReadDir(ctx context.Context, upload *model.Upload, path string) ([]fs.DirEntry, error)
-	DeleteFile(ctx context.Context, upload *model.Upload, path string) error*/
+	OpenDir(ctx context.Context, upload *model.Upload, path string) (Dir, error)
+	DeleteFile(ctx context.Context, upload *model.Upload, path string) error
 }
 
-type FS interface {
+func NewService(db *gorm.DB, store Store) Service {
+	return &service{db, store}
 }
 
 type service struct {
-	db *gorm.DB
-}
-
-func NewService(db *gorm.DB) Service {
-	return &service{db}
+	db    *gorm.DB
+	store Store
 }

@@ -17,7 +17,8 @@ func setupService(t *testing.T, withData bool) (svc Service, data *test.Dataset)
 	if withData {
 		data = test.NewDataset(db)
 	}
-	svc = NewService(db)
+	store, _ := fileStore(t)
+	svc = NewService(db, store)
 	return
 }
 

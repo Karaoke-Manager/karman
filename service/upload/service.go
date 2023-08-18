@@ -21,6 +21,8 @@ type Service interface {
 	StatFile(ctx context.Context, upload *model.Upload, path string) (fs.FileInfo, error)
 	OpenDir(ctx context.Context, upload *model.Upload, path string) (Dir, error)
 	DeleteFile(ctx context.Context, upload *model.Upload, path string) error
+
+	GetErrors(ctx context.Context, upload *model.Upload, limit int, offset int64) ([]*model.UploadProcessingError, int64, error)
 }
 
 func NewService(db *gorm.DB, store Store) Service {

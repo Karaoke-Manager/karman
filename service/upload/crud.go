@@ -20,16 +20,21 @@ func (s *service) CreateUpload(ctx context.Context) (*model.Upload, error) {
 	if err := db.Create(&e).Error; err != nil {
 		return nil, common.DBError(err)
 	}
-	return e.ToModel(), nil
+	return e.ToModel(0), nil
 }
 
 func (s *service) GetUpload(ctx context.Context, id uuid.UUID) (*model.Upload, error) {
 	var e entity.Upload
-	err := s.db.WithContext(ctx).Preload("ProcessingErrors").First(&e, "uuid = ?", id).Error
+	err := s.db.WithContext(ctx).First(&e, "uuid = ?", id).Error
 	if err != nil {
 		return nil, common.DBError(err)
 	}
-	return e.ToModel(), nil
+
+	var total int64
+	if err = s.db.WithContext(ctx).Model(&entity.UploadProcessingError{}).Where("upload_id = ?", e.ID).Count(&total).Error; err != nil {
+		return nil, common.DBError(err)
+	}
+	return e.ToModel(int(total)), nil
 }
 
 func (s *service) FindUploads(ctx context.Context, limit int, offset int64) ([]*model.Upload, int64, error) {
@@ -38,12 +43,16 @@ func (s *service) FindUploads(ctx context.Context, limit int, offset int64) ([]*
 	if err := s.db.WithContext(ctx).Model(&entity.Upload{}).Count(&total).Error; err != nil {
 		return nil, total, common.DBError(err)
 	}
-	if err := s.db.WithContext(ctx).Preload("ProcessingErrors").Find(&es).Limit(limit).Offset(int(offset)).Error; err != nil {
+	if err := s.db.WithContext(ctx).Find(&es).Limit(limit).Offset(int(offset)).Error; err != nil {
 		return nil, total, common.DBError(err)
 	}
 	uploads := make([]*model.Upload, len(es))
 	for i, e := range es {
-		uploads[i] = e.ToModel()
+		var errors int64
+		if err := s.db.WithContext(ctx).Model(&entity.UploadProcessingError{}).Where("upload_id = ?", e.ID).Count(&errors).Error; err != nil {
+			return nil, 0, common.DBError(err)
+		}
+		uploads[i] = e.ToModel(int(errors))
 	}
 	return uploads, total, nil
 }

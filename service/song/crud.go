@@ -53,7 +53,7 @@ func (s *service) GetSong(ctx context.Context, id uuid.UUID) (*model.Song, error
 // CreateSong persists a new song into the database.
 // If song already exists in the database, an error is returned.
 func (s *service) CreateSong(ctx context.Context, song *model.Song) error {
-	e := entity.SongFromModel(song)
+	e := entity.FromSong(song)
 	err := s.db.WithContext(ctx).Create(&e).Error
 	song.UUID = e.UUID
 	song.CreatedAt = e.CreatedAt
@@ -64,7 +64,7 @@ func (s *service) CreateSong(ctx context.Context, song *model.Song) error {
 // UpdateSongData updates song in the database.
 // song must already have been persisted before.
 func (s *service) UpdateSongData(ctx context.Context, song *model.Song) error {
-	e := entity.SongFromModel(song)
+	e := entity.FromSong(song)
 	err := s.db.WithContext(ctx).Model(&e).
 		Where("uuid = ?", song.UUID).
 		Select("*").Omit(

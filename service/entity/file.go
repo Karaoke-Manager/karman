@@ -42,7 +42,7 @@ type File struct {
 	Height int // in pixels
 }
 
-func FileFromModel(file *model.File) File {
+func FromFile(file *model.File) File {
 	f := File{
 		Entity:   fromModel(file.Model),
 		Type:     file.Type,

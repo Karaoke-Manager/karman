@@ -89,7 +89,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 		SongsProcessed: -1,
 	}
 	db.Save(&upload)
-	data.OpenUpload = upload.ToModel()
+	data.OpenUpload = upload.ToModel(0)
 
 	upload = entity.Upload{
 		Open:           false,
@@ -97,7 +97,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 		SongsProcessed: -1,
 	}
 	db.Save(&upload)
-	data.PendingUpload = upload.ToModel()
+	data.PendingUpload = upload.ToModel(0)
 
 	upload = entity.Upload{
 		Open:           false,
@@ -105,28 +105,26 @@ func NewDataset(db *gorm.DB) *Dataset {
 		SongsProcessed: 0,
 	}
 	db.Save(&upload)
-	data.ProcessingUpload = upload.ToModel()
+	data.ProcessingUpload = upload.ToModel(0)
 
 	upload = entity.Upload{
 		Open:           false,
 		SongsTotal:     0,
 		SongsProcessed: 0,
-		ProcessingErrors: []entity.UploadProcessingError{
-			{File: "file1.txt", Message: "could not parse"},
-			{File: "file2.txt", Message: "could not read"},
-		},
 	}
 	db.Save(&upload)
-	data.UploadWithErrors = upload.ToModel()
+	data.UploadWithErrors = upload.ToModel(2)
+
+	db.Save(&entity.UploadProcessingError{Upload: upload, File: "file1.txt", Message: "could not parse"})
+	db.Save(&entity.UploadProcessingError{Upload: upload, File: "file2.txt", Message: "could not read"})
 
 	uploadWithSongs := entity.Upload{
-		Open:             false,
-		SongsTotal:       4,
-		SongsProcessed:   4,
-		ProcessingErrors: nil,
+		Open:           false,
+		SongsTotal:     4,
+		SongsProcessed: 4,
 	}
 	db.Save(&uploadWithSongs)
-	data.UploadWithSongs = uploadWithSongs.ToModel()
+	data.UploadWithSongs = uploadWithSongs.ToModel(0)
 
 	song = entity.Song{
 		Title:    "Cold",

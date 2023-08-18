@@ -64,7 +64,7 @@ func TestService_GetUpload(t *testing.T) {
 	t.Run("errors", func(t *testing.T) {
 		upload, err := svc.GetUpload(ctx, data.UploadWithErrors.UUID)
 		if assert.NoError(t, err) {
-			assert.NotEmpty(t, upload.ProcessingErrors)
+			assert.Equal(t, 2, upload.Errors)
 		}
 	})
 }

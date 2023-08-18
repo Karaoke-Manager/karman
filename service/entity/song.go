@@ -57,7 +57,7 @@ type Song struct {
 	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 }
 
-func SongFromModel(song *model.Song) Song {
+func FromSong(song *model.Song) Song {
 	return Song{
 		Entity:          fromModel(song.Model),
 		Gap:             song.Gap,

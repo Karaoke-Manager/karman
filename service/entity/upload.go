@@ -6,29 +6,30 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 )
 
-type UploadProcessingError struct {
-	gorm.Model
-
-	UploadID uint
-	File     string
-	Message  string
-}
-
 type Upload struct {
 	Entity
 
 	Open           bool
 	SongsTotal     int
 	SongsProcessed int
-
-	ProcessingErrors []UploadProcessingError `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
-func (u *Upload) ToModel() *model.Upload {
+func FromUpload(upload *model.Upload) Upload {
+	u := Upload{
+		Entity:         fromModel(upload.Model),
+		Open:           upload.State == model.UploadStateOpen,
+		SongsTotal:     upload.SongsTotal,
+		SongsProcessed: upload.SongsProcessed,
+	}
+	return u
+}
+
+func (u *Upload) ToModel(errors int) *model.Upload {
 	m := &model.Upload{
 		Model:          u.Entity.toModel(),
 		SongsTotal:     u.SongsTotal,
 		SongsProcessed: u.SongsProcessed,
+		Errors:         errors,
 	}
 
 	if u.Open {
@@ -40,13 +41,21 @@ func (u *Upload) ToModel() *model.Upload {
 	} else {
 		m.State = model.UploadStateDone
 	}
-
-	m.ProcessingErrors = make([]model.UploadProcessingError, len(u.ProcessingErrors))
-	for i, err := range u.ProcessingErrors {
-		m.ProcessingErrors[i] = model.UploadProcessingError{
-			File:    err.File,
-			Message: err.Message,
-		}
-	}
 	return m
+}
+
+type UploadProcessingError struct {
+	gorm.Model
+
+	UploadID uint
+	Upload   Upload `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	File     string
+	Message  string
+}
+
+func (err *UploadProcessingError) ToModel() *model.UploadProcessingError {
+	return &model.UploadProcessingError{
+		File:    err.File,
+		Message: err.Message,
+	}
 }

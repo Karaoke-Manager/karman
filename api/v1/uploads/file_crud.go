@@ -2,6 +2,7 @@ package uploads
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -14,6 +15,11 @@ import (
 func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
+	fmt.Printf("Put file at %q\n", path)
+	if path == "." {
+		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
+		return
+	}
 	f, err := c.svc.CreateFile(r.Context(), upload, path)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
@@ -62,32 +68,20 @@ func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 			marker = dir.Marker()
 		}
 	}
-	s := schema.FromUploadFileStat(stat, children, marker)
+	s := schema.FromUploadFileStat(stat, children, marker, path == ".")
 	_ = render.Render(w, r, s)
-}
-
-/*
-func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload *model.Upload, path string, err error) {
-	var details *apierror.ProblemDetails
-	switch {
-	case errors.Is(err, uploadSvc.ErrUploadClosed):
-		details = apierror.UploadClosed(upload)
-	case errors.Is(err, fs.ErrNotExist):
-		details = apierror.UploadFileNotFound(upload, path)
-	default:
-		details = apierror.ErrInternalServerError
-	}
-	_ = render.Render(w, r, details)
 }
 
 func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
-
-	if err := c.Service.DeleteFile(r.Context(), upload, path); err != nil {
-		c.handleFileError(w, r, upload, path, err)
+	if path == "." {
+		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
+		return
+	}
+	if err := c.svc.DeleteFile(r.Context(), upload, path); err != nil {
+		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
 	_ = render.NoContent(w, r)
 }
-*/

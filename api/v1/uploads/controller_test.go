@@ -68,6 +68,7 @@ func uploadPath(upload *model.Upload, suffix string) string {
 func testInvalidPath(h http.Handler, method string, reqPath string, path string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, reqPath, nil)
+		r.Header.Set("Content-Type", "application/octet-stream")
 		resp := test.DoRequest(h, r)
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUploadPath, map[string]any{
 			"path": path,

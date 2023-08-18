@@ -45,25 +45,27 @@ func (u *Upload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
-func FromUploadFileStat(stat fs.FileInfo, children []fs.FileInfo, nextMarker string) UploadFileStat {
-	var entries []UploadDirEntry
+func FromUploadFileStat(stat fs.FileInfo, children []fs.FileInfo, nextMarker string, root bool) UploadFileStat {
+	s := UploadFileStat{
+		Name:       stat.Name(),
+		Size:       stat.Size(),
+		Dir:        stat.IsDir(),
+		NextMarker: nextMarker,
+	}
+	if root {
+		s.Name = ""
+	}
 	if stat.IsDir() {
-		entries = make([]UploadDirEntry, len(children))
+		s.Children = make([]UploadDirEntry, len(children))
 		for i, c := range children {
-			entries[i] = UploadDirEntry{
+			s.Children[i] = UploadDirEntry{
 				Name: c.Name(),
 				Dir:  c.IsDir(),
 				Size: c.Size(),
 			}
 		}
 	}
-	return UploadFileStat{
-		Name:       stat.Name(),
-		Size:       stat.Size(),
-		Dir:        stat.IsDir(),
-		Children:   entries,
-		NextMarker: nextMarker,
-	}
+	return s
 }
 
 type UploadFileStat struct {
@@ -77,8 +79,10 @@ type UploadFileStat struct {
 
 func (s UploadFileStat) MarshalJSON() ([]byte, error) {
 	data := map[string]any{
-		"name": s.Name,
-		"dir":  s.Dir,
+		"dir": s.Dir,
+	}
+	if s.Name != "" {
+		data["name"] = s.Name
 	}
 	if s.Dir {
 		data["children"] = s.Children

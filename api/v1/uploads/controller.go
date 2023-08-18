@@ -32,34 +32,29 @@ func (c *Controller) Router(r chi.Router) {
 
 			r.Group(func(r chi.Router) {
 				r.Use(ValidateFilePath, UploadState(model.UploadStateOpen))
-				r.With(middleware.RequireContentType("application/octet-stream"), render.ContentTypeNegotiation("application/json")).Put("/{uuid}/files/*", c.PutFile)
+				r.With(middleware.RequireContentType("application/octet-stream")).Put("/{uuid}/files/*", c.PutFile)
 				r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}/files/*", c.GetFile)
+				r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}/files", c.GetFile)
+				r.Delete("/{uuid}/files/*", c.DeleteFile)
+				// the following routes always return an error but are included for API consistency
+				r.With(middleware.RequireContentType("application/octet-stream")).Put("/{uuid}/files", c.PutFile)
+				r.Delete("/{uuid}/files", c.DeleteFile)
 			})
 		})
 	})
 
-	r.Group(func(r chi.Router) {
-		r.Group(func(r chi.Router) {
-			// r.Use(c.ValidateFilePath)
+	// POST /{uuid}/beginProcessing
 
-			// r.Get("/{uuid}/files/*", c.GetFile)
-			// r.With(middleware.AllowContentType("application/octet-stream")).Put("/{uuid}/files/*", c.PutFile)
-			// r.Delete("/{uuid}/files/*", c.DeleteFile)
-		})
+	// GET /{uuid}/songs
 
-		// POST /{uuid}/beginProcessing
+	// OPTION 1:
+	// GET /{uuid}/songs/{id2}
+	// DELETE /{uuid}/songs{id2}
+	// POST /{uuid}/import
 
-		// GET /{uuid}/songs
-
-		// OPTION 1:
-		// GET /{uuid}/songs/{id2}
-		// DELETE /{uuid}/songs{id2}
-		// POST /{uuid}/import
-
-		// OPTION 2:
-		// GET /{uuid}/songs
-		// GET /songs/...
-		// DELETE /songs/...
-		// POST /{uuid}/import (with the songs to import)
-	})
+	// OPTION 2:
+	// GET /{uuid}/songs
+	// GET /songs/...
+	// DELETE /songs/...
+	// POST /{uuid}/import (with the songs to import)
 }

@@ -1,18 +1,6 @@
 package uploads
 
-import (
-	"errors"
-	"io/fs"
-	"net/http"
-
-	"github.com/google/uuid"
-
-	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/pkg/render"
-	uploadSvc "github.com/Karaoke-Manager/karman/service/upload"
-)
-
+/*
 func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload *model.Upload, path string, err error) {
 	var details *apierror.ProblemDetails
 	switch {
@@ -103,3 +91,4 @@ func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = render.NoContent(w, r)
 }
+*/

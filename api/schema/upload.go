@@ -1,38 +1,50 @@
 package schema
 
 import (
+	"net/http"
+
+	"github.com/google/uuid"
+
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
-type UploadStatus string
-
-const (
-	UploadStatusCreated    UploadStatus = "created"
-	UploadStatusPending    UploadStatus = "pending"
-	UploadStatusProcessing UploadStatus = "processing"
-	UploadStatusReady      UploadStatus = "ready"
-)
-
 type Upload struct {
 	render.NopRenderer
-	UUID   string       `json:"id"`
-	Status UploadStatus `json:"status"`
+	UUID   uuid.UUID         `json:"id"`
+	Status model.UploadState `json:"status"`
+
+	SongsTotal     int `json:"songsTotal"`
+	SongsProcessed int `json:"songsProcessed"`
+	Errors         int `json:"errors"`
 }
 
-func NewUploadFromModel(m *model.Upload) *Upload {
-	var status UploadStatus
-	if m.Open {
-		status = UploadStatusCreated
-	} else if m.SongsProcessed == -1 {
-		status = UploadStatusPending
-	} else if m.SongsProcessed != m.SongsTotal {
-		status = UploadStatusProcessing
-	} else {
-		status = UploadStatusReady
+func FromUpload(m *model.Upload) Upload {
+	return Upload{
+		UUID:           m.UUID,
+		Status:         m.State,
+		SongsTotal:     m.SongsTotal,
+		SongsProcessed: m.SongsProcessed,
+		Errors:         m.Errors,
 	}
-	return &Upload{
-		UUID:   m.UUID.String(),
-		Status: status,
+}
+
+func (u *Upload) PrepareResponse(w http.ResponseWriter, r *http.Request) any {
+	switch u.Status {
+	case model.UploadStateOpen, model.UploadStatePending:
+		return map[string]any{
+			"uuid":   u.UUID,
+			"status": u.Status,
+		}
+	case model.UploadStateProcessing:
+		return u
+	case model.UploadStateDone:
+		return map[string]any{
+			"uuid":       u.UUID,
+			"status":     u.Status,
+			"songsTotal": u.SongsTotal,
+			"errors":     u.Errors,
+		}
 	}
+	return u
 }

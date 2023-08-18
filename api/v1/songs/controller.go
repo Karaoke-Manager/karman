@@ -23,15 +23,15 @@ func NewController(songSvc song.Service, mediaSvc media.Service) *Controller {
 
 // Router sets up the routing for the endpoint.
 func (c *Controller) Router(r chi.Router) {
-	r.With(middleware.RequireContentType("text/plain", "text/x-ultrastar")).Post("/", c.Create)
-	r.With(middleware.Paginate(25, 100)).Get("/", c.Find)
-	r.With(middleware.UUID("uuid")).Delete("/{uuid}", c.Delete)
+	r.With(middleware.RequireContentType("text/plain", "text/x-ultrastar"), render.ContentTypeNegotiation("application/json")).Post("/", c.Create)
+	r.With(middleware.Paginate(25, 100), render.ContentTypeNegotiation("application/json")).Get("/", c.Find)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.UUID("uuid"))
+		r.Delete("/{uuid}", c.Delete)
 
 		r.Group(func(r chi.Router) {
-			r.Use(c.FetchUpload)
+			r.Use(c.FetchSong)
 			r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}", c.Get)
 			r.With(render.ContentTypeNegotiation("text/x-ultrastar", "text/plain")).Get("/{uuid}/txt", c.GetTxt)
 			// r.Get("{uuid}/archive", c.GetArchive)
@@ -48,7 +48,7 @@ func (c *Controller) Router(r chi.Router) {
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(c.FetchUpload, c.CheckModify)
+			r.Use(c.FetchSong, c.CheckModify)
 			r.With(middleware.ContentTypeJSON).Patch("/{uuid}", c.Update)
 			r.With(middleware.RequireContentType("text/plain", "text/x-ultrastar"), render.ContentTypeNegotiation("application/json")).Put("/{uuid}/txt", c.ReplaceTxt)
 			r.With(middleware.RequireContentType("image/*")).Put("/{uuid}/cover", c.ReplaceCover)

@@ -9,18 +9,7 @@ import (
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/service/common"
-	"github.com/Karaoke-Manager/karman/test"
 )
-
-func setupService(t *testing.T, withData bool) (svc Service, data *test.Dataset) {
-	db := test.NewDB(t)
-	if withData {
-		data = test.NewDataset(db)
-	}
-	store, _ := fileStore(t)
-	svc = NewService(db, store)
-	return
-}
 
 func TestService_CreateUpload(t *testing.T) {
 	ctx := context.Background()

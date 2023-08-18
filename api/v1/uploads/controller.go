@@ -2,13 +2,14 @@ package uploads
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 type Controller struct {
-	upload.Service
+	svc upload.Service
 }
 
 func NewController(svc upload.Service) *Controller {
@@ -17,23 +18,28 @@ func NewController(svc upload.Service) *Controller {
 }
 
 func (c *Controller) Router(r chi.Router) {
-	r.Get("/", c.Find)
-	r.Post("/", c.Create)
-	r.Delete("/{uuid}", c.Delete)
+	r.With(render.ContentTypeNegotiation("application/json")).Post("/", c.Create)
+	r.With(middleware.Paginate(25, 100), render.ContentTypeNegotiation("application/json")).Get("/", c.Find)
 
 	r.Group(func(r chi.Router) {
-		r.Use(c.fetchUpload)
-
-		r.Get("/{uuid}", c.Get)
+		r.Use(middleware.UUID("uuid"))
+		r.Delete("/{uuid}", c.Delete)
 
 		r.Group(func(r chi.Router) {
-			r.Use(c.validateFilePath)
+			r.Use(c.FetchUpload)
+			r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}", c.Get)
+		})
+	})
 
-			r.Get("/{uuid}/files/*", c.GetFile)
+	r.Group(func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			// r.Use(c.ValidateFilePath)
+
+			// r.Get("/{uuid}/files/*", c.GetFile)
 			// FIXME: Stacking allow content type middleware like that does not work.
 			// FIXME: The response by this middleware does not fit our error types.
-			r.With(middleware.AllowContentType("application/octet-stream")).Put("/{uuid}/files/*", c.PutFile)
-			r.Delete("/{uuid}/files/*", c.DeleteFile)
+			// r.With(middleware.AllowContentType("application/octet-stream")).Put("/{uuid}/files/*", c.PutFile)
+			// r.Delete("/{uuid}/files/*", c.DeleteFile)
 		})
 
 		// POST /{uuid}/beginProcessing

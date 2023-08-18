@@ -74,6 +74,10 @@ func MustGetFilePath(ctx context.Context) string {
 }
 
 // ValidateFilePath is a middleware that validates the file path within an upload syntactically.
+// If this middleware passes it is not guaranteed that the path actually exists.
+// It is also not guaranteed that the path is allowed for a specific endpoint.
+//
+// The root directory is normalized to ".".
 func ValidateFilePath(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		path := chi.URLParam(r, "*")

@@ -10,7 +10,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/song"
 )
 
-// Controller implements the /v1/songs endpoint.
+// Controller implements the /v1/songs endpoints.
 type Controller struct {
 	songSvc  song.Service
 	mediaSvc media.Service

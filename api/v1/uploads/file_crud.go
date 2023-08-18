@@ -12,6 +12,7 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
+// PutFile implements the PUT /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
@@ -38,6 +39,7 @@ func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+// GetFile implements the GET /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
@@ -68,10 +70,15 @@ func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 			marker = dir.Marker()
 		}
 	}
-	s := schema.FromUploadFileStat(stat, children, marker, path == ".")
+	s := schema.FromUploadFileStat(stat, children, marker)
+	if path == "." {
+		// Do not include root dir name
+		s.Name = ""
+	}
 	_ = render.Render(w, r, s)
 }
 
+// DeleteFile implements the DELETE /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())

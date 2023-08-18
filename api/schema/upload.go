@@ -10,6 +10,9 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
+// Upload is the response schema for model.Upload.
+// The struct contains JSON tags for completeness.
+// These however, are not used during marshalling.
 type Upload struct {
 	render.NopRenderer
 	UUID   uuid.UUID         `json:"uuid"`
@@ -20,6 +23,7 @@ type Upload struct {
 	Errors         int `json:"errors"`
 }
 
+// FromUpload generates a response schema, describing m.
 func FromUpload(m *model.Upload) Upload {
 	return Upload{
 		UUID:           m.UUID,
@@ -30,6 +34,8 @@ func FromUpload(m *model.Upload) Upload {
 	}
 }
 
+// MarshalJSON marshals u into a JSON string.
+// The fields included depend on the upload status.
 func (u *Upload) MarshalJSON() ([]byte, error) {
 	data := map[string]any{
 		"uuid":   u.UUID,
@@ -45,15 +51,14 @@ func (u *Upload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
-func FromUploadFileStat(stat fs.FileInfo, children []fs.FileInfo, nextMarker string, root bool) UploadFileStat {
+// FromUploadFileStat creates an UploadFileStat from the specified file infos.
+// If nextMarker is not empty, it will also be included.
+func FromUploadFileStat(stat fs.FileInfo, children []fs.FileInfo, nextMarker string) UploadFileStat {
 	s := UploadFileStat{
 		Name:       stat.Name(),
 		Size:       stat.Size(),
 		Dir:        stat.IsDir(),
 		NextMarker: nextMarker,
-	}
-	if root {
-		s.Name = ""
 	}
 	if stat.IsDir() {
 		s.Children = make([]UploadDirEntry, len(children))
@@ -68,6 +73,7 @@ func FromUploadFileStat(stat fs.FileInfo, children []fs.FileInfo, nextMarker str
 	return s
 }
 
+// UploadFileStat describes the response schema for a file listing in an upload.
 type UploadFileStat struct {
 	render.NopRenderer
 	Name       string           `json:"name"`
@@ -77,6 +83,8 @@ type UploadFileStat struct {
 	NextMarker string           `json:"nextMarker,omitempty"`
 }
 
+// MarshalJSON marshals s into JSON data.
+// The included fields mainly depend on whether s is a directory or a file.
 func (s UploadFileStat) MarshalJSON() ([]byte, error) {
 	data := map[string]any{
 		"dir": s.Dir,
@@ -95,12 +103,18 @@ func (s UploadFileStat) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
+// UploadDirEntry describes the subschema for files in a directory in an upload.
+// This schema should be used only with UploadFileStat.
+//
+// It differs from UploadFileStat mostly in the fact, that folders do not list their children recursively.
 type UploadDirEntry struct {
 	Name string `json:"name"`
 	Dir  bool   `json:"dir"`
 	Size int64  `json:"size"`
 }
 
+// MarshalJSON marshals e into a JSON string.
+// The file size is only included for files.
 func (e UploadDirEntry) MarshalJSON() ([]byte, error) {
 	data := map[string]any{
 		"name": e.Name,

@@ -9,15 +9,18 @@ import (
 	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
+// Controller implements the /v1/uploads endpoints.
 type Controller struct {
 	svc upload.Service
 }
 
+// NewController creates a new Controller instance using the specified service.
 func NewController(svc upload.Service) *Controller {
 	s := &Controller{svc}
 	return s
 }
 
+// Router sets up the routing for the endpoint.
 func (c *Controller) Router(r chi.Router) {
 	r.With(render.ContentTypeNegotiation("application/json")).Post("/", c.Create)
 	r.With(middleware.Paginate(25, 100), render.ContentTypeNegotiation("application/json")).Get("/", c.Find)

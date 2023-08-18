@@ -46,6 +46,7 @@ type UploadProcessingError struct {
 	Message string
 }
 
+// Error returns the error message of the error.
 func (err *UploadProcessingError) Error() string {
 	return err.Message
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
+// GetErrors lists processing errors for an upload with pagination.
 func (s *service) GetErrors(ctx context.Context, upload *model.Upload, limit int, offset int64) ([]*model.UploadProcessingError, int64, error) {
 	var e entity.Upload
 	if err := s.db.WithContext(ctx).Where("uuid = ?", upload.UUID).First(&e).Error; err != nil {

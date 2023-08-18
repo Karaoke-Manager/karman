@@ -9,6 +9,7 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 )
 
+// CreateFile creates a file in an upload.
 func (s *service) CreateFile(ctx context.Context, upload *model.Upload, path string) (io.WriteCloser, error) {
 	if path == "" || path == "." {
 		return nil, fs.ErrInvalid
@@ -16,10 +17,12 @@ func (s *service) CreateFile(ctx context.Context, upload *model.Upload, path str
 	return s.store.Create(ctx, upload.UUID, path)
 }
 
+// StatFile returns information about the file at path.
 func (s *service) StatFile(ctx context.Context, upload *model.Upload, path string) (fs.FileInfo, error) {
 	return s.store.Stat(ctx, upload.UUID, path)
 }
 
+// OpenDir opens a directory for listing its contents.
 func (s *service) OpenDir(ctx context.Context, upload *model.Upload, path string) (Dir, error) {
 	f, err := s.store.Open(ctx, upload.UUID, path)
 	if err != nil {
@@ -32,6 +35,7 @@ func (s *service) OpenDir(ctx context.Context, upload *model.Upload, path string
 	return dir, nil
 }
 
+// DeleteFile recursively deletes a file or directory in the upload.
 func (s *service) DeleteFile(ctx context.Context, upload *model.Upload, path string) error {
 	if path == "" || path == "." {
 		return fs.ErrInvalid

@@ -6,6 +6,7 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 )
 
+// Upload is the database entity for uploads.
 type Upload struct {
 	Entity
 
@@ -14,16 +15,8 @@ type Upload struct {
 	SongsProcessed int
 }
 
-func FromUpload(upload *model.Upload) Upload {
-	u := Upload{
-		Entity:         fromModel(upload.Model),
-		Open:           upload.State == model.UploadStateOpen,
-		SongsTotal:     upload.SongsTotal,
-		SongsProcessed: upload.SongsProcessed,
-	}
-	return u
-}
-
+// ToModel converts u into an equivalent model.Upload instance.
+// The errors specify the number of errors for the upload.
 func (u *Upload) ToModel(errors int) *model.Upload {
 	m := &model.Upload{
 		Model:          u.Entity.toModel(),
@@ -44,15 +37,21 @@ func (u *Upload) ToModel(errors int) *model.Upload {
 	return m
 }
 
+// An UploadProcessingError indicates an error that occurred during processing of an upload.
+// Each error value is associated with a single upload.
 type UploadProcessingError struct {
 	gorm.Model
 
 	UploadID uint
 	Upload   Upload `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	File     string
-	Message  string
+
+	// File is the path of the file that caused the error.
+	File string
+	// Message is an error message.
+	Message string
 }
 
+// ToModel converts err into an equivalent model.UploadProcessingError instance.
 func (err *UploadProcessingError) ToModel() *model.UploadProcessingError {
 	return &model.UploadProcessingError{
 		File:    err.File,

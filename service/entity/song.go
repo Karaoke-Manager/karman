@@ -57,6 +57,8 @@ type Song struct {
 	MusicP2 *ultrastar.Music `gorm:"type:blob;serializer:nilGob"`
 }
 
+// FromSong converts the specified song into a Song value containing the same metadata.
+// This is usually used when updating fields of a song.
 func FromSong(song *model.Song) Song {
 	return Song{
 		Entity:          fromModel(song.Model),
@@ -83,6 +85,7 @@ func FromSong(song *model.Song) Song {
 	}
 }
 
+// ToModel converts s into an equivalent model.Song instance.
 func (s *Song) ToModel() *model.Song {
 	if s == nil {
 		return nil

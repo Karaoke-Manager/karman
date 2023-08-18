@@ -42,19 +42,7 @@ type File struct {
 	Height int // in pixels
 }
 
-func FromFile(file *model.File) File {
-	f := File{
-		Entity:   fromModel(file.Model),
-		Type:     file.Type,
-		Size:     file.Size,
-		Checksum: file.Checksum,
-		Duration: file.Duration,
-		Width:    file.Width,
-		Height:   file.Height,
-	}
-	return f
-}
-
+// ToModel converts f into an equivalent model.File.
 func (f *File) ToModel() *model.File {
 	if f == nil {
 		return nil

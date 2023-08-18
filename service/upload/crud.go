@@ -10,6 +10,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
+// CreateUpload creates a new upload in the database.
 func (s *service) CreateUpload(ctx context.Context) (*model.Upload, error) {
 	db := s.db.WithContext(ctx)
 	e := entity.Upload{
@@ -23,6 +24,7 @@ func (s *service) CreateUpload(ctx context.Context) (*model.Upload, error) {
 	return e.ToModel(0), nil
 }
 
+// GetUpload fetches an upload from the database.
 func (s *service) GetUpload(ctx context.Context, id uuid.UUID) (*model.Upload, error) {
 	var e entity.Upload
 	err := s.db.WithContext(ctx).First(&e, "uuid = ?", id).Error
@@ -37,6 +39,7 @@ func (s *service) GetUpload(ctx context.Context, id uuid.UUID) (*model.Upload, e
 	return e.ToModel(int(total)), nil
 }
 
+// FindUploads lists uploads with pagination.
 func (s *service) FindUploads(ctx context.Context, limit int, offset int64) ([]*model.Upload, int64, error) {
 	var total int64
 	var es []entity.Upload
@@ -57,6 +60,9 @@ func (s *service) FindUploads(ctx context.Context, limit int, offset int64) ([]*
 	return uploads, total, nil
 }
 
+// DeleteUpload deletes the upload with the specified UUID.
+// This is only a soft-deletion.
+// Hard-deleting and removing files is done in a background job.
 func (s *service) DeleteUpload(ctx context.Context, id uuid.UUID) error {
 	// TODO: Stop processing
 	err := s.db.WithContext(ctx).Where("uuid = ?", id).Delete(&entity.Upload{}).Error

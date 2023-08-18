@@ -29,7 +29,7 @@ type Dataset struct {
 	PendingUpload    *model.Upload // enqueued for processing
 	ProcessingUpload *model.Upload // currently being processed
 	UploadWithSongs  *model.Upload // done processing
-	UploadWithErrors *model.Upload
+	UploadWithErrors *model.Upload // has 2 errors
 
 	AbsentSongUUID uuid.UUID   // may be a present UUID for other types
 	AbsentSong     *model.Song // UUID is AbsentSongUUID

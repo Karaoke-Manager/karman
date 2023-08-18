@@ -281,6 +281,8 @@ paths:
   /v1/uploads/{uuid}/songs:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
+      - $ref: "../common/pagination.yaml#/components/parameters/limit"
+      - $ref: "../common/pagination.yaml#/components/parameters/offset"
     get:
       operationId: getUploadSongs
       summary: List all Songs in an Upload
@@ -307,7 +309,39 @@ paths:
                 description: |-
                   An array of `Song` resources.
                 items:
-                  $ref: 'songs.yaml#/components/schemas/Song'
+                  $ref: "songs.yaml#/components/schemas/Song"
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/uploads/{uuid}/errors:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
+      - $ref: "../common/pagination.yaml#/components/parameters/limit"
+      - $ref: "../common/pagination.yaml#/components/parameters/offset"
+    get:
+      operationId: getUploadErrors
+      summary: Get Processing Errors
+      tags: [ upload ]
+      description: |-
+        Fetch a paginated list of errors that occurred during processing of the upload.
+        The result might be empty.
+      responses:
+        200:
+          description: Success
+          headers:
+            Pagination-Count: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Count" }
+            Pagination-Offset: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Offset" }
+            Pagination-Limit: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Limit" }
+            Pagination-Total: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Total" }
+          content:
+            application/json:
+              schema:
+                type: array
+                description:
+                  An array of `UploadError` resources.
+                items:
+                  $ref: "#/components/schemas/UploadError"
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
@@ -421,6 +455,11 @@ components:
             Usually the number of songs processed only increases.
             It is however possible that due to unexpected server behavior a upload might need to be re-processed
             causing the number of total and processed songs to reset.
+        errors:
+          type: integer
+          example: 2
+          description: |-
+            The number of errors that occurred during processing (e.g. invalid file formats).
     DoneUpload:
       type: object
       required: [ status ]
@@ -434,24 +473,27 @@ components:
           example: 125
           description: |-
             The total number of song files discovered in the uploaded files.
-        processingErrors:
-          type: array
+        errors:
+          type: integer
+          example: 5
           description: |-
-            A list of errors that occurred during processing of the upload.
-          items:
-            type: object
-            properties:
-              file:
-                type: string
-                example: "folder/file.txt"
-                description: |-
-                  The file that caused the error, relative to the root of the upload.
-              message:
-                type: string
-                example: "could not parse"
-                description: |-
-                  A message describing the cause of the error.
-      # TODO: information about processing errors
+            The number of errors that occurred during processing (e.g. invalid file formats).
+    UploadError:
+      type: object
+      description: |-
+        This resource describes an error that occurred during processing of an upload.
+      required: [ file, message ]
+      properties:
+        file:
+          type: string
+          example: "folder/file.txt"
+          description: |-
+            The file that caused the error, relative to the root of the upload.
+        message:
+          type: string
+          example: "could not parse"
+          description: |-
+            A message describing the cause of the error.
     File:
       type: object
       description: |-

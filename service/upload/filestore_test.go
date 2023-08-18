@@ -232,7 +232,7 @@ func TestFolderDir_Marker(t *testing.T) {
 	dir := f.(Dir)
 
 	assert.Equal(t, "", dir.Marker())
-	_, err = dir.ReadDir(2)
+	_, err = dir.Readdir(2)
 	assert.NoError(t, err)
 	assert.Equal(t, "dir2", dir.Marker())
 }
@@ -274,7 +274,7 @@ func TestFolderDir_ReadDir(t *testing.T) {
 			dir := f.(Dir)
 
 			assert.NoError(t, dir.SkipTo(c.marker))
-			entries, err := dir.ReadDir(c.n)
+			entries, err := dir.Readdir(c.n)
 			assert.NoError(t, err)
 			assert.Len(t, entries, c.len)
 			assert.Equal(t, c.newMarker, dir.Marker())

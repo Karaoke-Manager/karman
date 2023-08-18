@@ -1,6 +1,8 @@
 package uploads
 
 import (
+	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -39,6 +41,20 @@ func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *te
 	require.NoError(t, err)
 
 	svc := upload.NewService(db, store)
+	if withData {
+		ctx := context.Background()
+		w, err := svc.CreateFile(ctx, data.OpenUpload, "foo/bar.txt")
+		require.NoError(t, err)
+		_, err = io.WriteString(w, "Hello World")
+		require.NoError(t, err)
+		require.NoError(t, w.Close())
+		w, err = svc.CreateFile(ctx, data.OpenUpload, "test.txt")
+		require.NoError(t, err)
+		_, err = io.WriteString(w, "Foobar")
+		require.NoError(t, err)
+		require.NoError(t, w.Close())
+	}
+
 	c = NewController(svc)
 	r := chi.NewRouter()
 	r.Route("/", c.Router)
@@ -49,7 +65,7 @@ func uploadPath(upload *model.Upload, suffix string) string {
 	return "/" + upload.UUID.String() + suffix
 }
 
-func testInvalidPath(h http.Handler, method string, reqPath string, id uuid.UUID, path string) func(t *testing.T) {
+func testInvalidPath(h http.Handler, method string, reqPath string, path string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, reqPath, nil)
 		resp := test.DoRequest(h, r)

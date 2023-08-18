@@ -33,6 +33,7 @@ func (c *Controller) Router(r chi.Router) {
 			r.Group(func(r chi.Router) {
 				r.Use(ValidateFilePath, UploadState(model.UploadStateOpen))
 				r.With(middleware.RequireContentType("application/octet-stream"), render.ContentTypeNegotiation("application/json")).Put("/{uuid}/files/*", c.PutFile)
+				r.With(render.ContentTypeNegotiation("application/json")).Get("/{uuid}/files/*", c.GetFile)
 			})
 		})
 	})

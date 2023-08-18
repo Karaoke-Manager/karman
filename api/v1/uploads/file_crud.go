@@ -1,10 +1,13 @@
 package uploads
 
 import (
+	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/api/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
@@ -29,6 +32,40 @@ func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	_ = render.NoContent(w, r)
 }
 
+func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
+	upload := MustGetUpload(r.Context())
+	path := MustGetFilePath(r.Context())
+	marker := r.URL.Query().Get("marker")
+
+	stat, err := c.svc.StatFile(r.Context(), upload, path)
+	if errors.Is(err, fs.ErrNotExist) {
+		_ = render.Render(w, r, apierror.UploadFileNotFound(upload, path))
+		return
+	}
+	var children []fs.FileInfo
+	if stat.IsDir() {
+		dir, err := c.svc.OpenDir(r.Context(), upload, path)
+		if err != nil {
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
+		}
+		if err = dir.SkipTo(marker); err != nil {
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
+			return
+		}
+		children, err = dir.Readdir(500)
+		if errors.Is(err, io.EOF) {
+			marker = ""
+		} else if err != nil {
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
+			return
+		} else {
+			marker = dir.Marker()
+		}
+	}
+	s := schema.FromUploadFileStat(stat, children, marker)
+	_ = render.Render(w, r, s)
+}
+
 /*
 func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload *model.Upload, path string, err error) {
 	var details *apierror.ProblemDetails
@@ -41,73 +78,6 @@ func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upl
 		details = apierror.ErrInternalServerError
 	}
 	_ = render.Render(w, r, details)
-}
-
-func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
-	upload := MustGetUpload(r.Context())
-	path := MustGetFilePath(r.Context())
-
-	if err := c.Service.CreateFile(r.Context(), upload, path, r.Body); err != nil {
-		c.handleFileError(w, r, upload, path, err)
-		return
-	}
-
-	_ = render.NoContent(w, r)
-}
-
-func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
-	type FileSchema struct {
-		render.NopRenderer
-		Name  string `json:"name"`
-		Size  int64  `json:"size"`
-		IsDir bool   `json:"directory"`
-	}
-
-	type ResponseSchema struct {
-		render.NopRenderer
-		UploadUUID uuid.UUID    `json:"upload"`
-		File       FileSchema   `json:"file"`
-		Children   []FileSchema `json:"children,omitempty"`
-	}
-
-	upload := MustGetUpload(r.Context())
-	path := MustGetFilePath(r.Context())
-
-	stat, err := c.Service.StatFile(r.Context(), upload, path)
-	if err != nil {
-		c.handleFileError(w, r, upload, path, err)
-		return
-	}
-	resp := ResponseSchema{
-		UploadUUID: upload.UUID,
-		File: FileSchema{
-			Name:  stat.Name(),
-			Size:  stat.Size(),
-			IsDir: stat.IsDir(),
-		},
-	}
-	if stat.IsDir() {
-		entries, err := c.Service.ReadDir(r.Context(), upload, path+"/"+stat.Name())
-		if err != nil {
-			_ = render.Render(w, r, apierror.ErrInternalServerError)
-			return
-		}
-		children := make([]FileSchema, len(entries))
-		for i, entry := range entries {
-			info, err := entry.Info()
-			if err != nil {
-				_ = render.Render(w, r, apierror.ErrInternalServerError)
-				return
-			}
-			children[i] = FileSchema{
-				Name:  entry.Name(),
-				Size:  info.Size(),
-				IsDir: entry.IsDir(),
-			}
-		}
-		resp.Children = children
-	}
-	_ = render.Render(w, r, resp)
 }
 
 func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {

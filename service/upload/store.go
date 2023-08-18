@@ -60,9 +60,13 @@ type Store interface {
 //
 // After a ReadDir call has returned, you can inspect the current marker using the Marker method.
 type Dir interface {
-	// ReadDirFile provides the interface for reading directory contents.
-	// The ReadDir method must return items in alphabetical order.
-	fs.ReadDirFile
+	fs.File
+
+	// Readdir provides the interface for reading directory contents.
+	// In general this method works like os.Readdir, with the following exceptions:
+	//   - The ReadDir method must return items in alphabetical order.
+	//   - ReadDir is influenced by SkipTo.
+	Readdir(n int) ([]fs.FileInfo, error)
 
 	// Marker returns the current marker.
 	Marker() string

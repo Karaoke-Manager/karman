@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -107,7 +108,7 @@ func (s *FileStore) Delete(_ context.Context, upload uuid.UUID, name string) err
 type folderDir struct {
 	*os.File // underlying file
 
-	entries []fs.DirEntry // cached entries
+	entries []fs.FileInfo // cached entries
 	marker  string        // current marker
 }
 
@@ -125,18 +126,19 @@ func (d *folderDir) SkipTo(marker string) error {
 	return nil
 }
 
-// ReadDir reads n entries from the current marker.
+// Readdir reads n entries from the current marker.
 // If n <= 0, all remaining entries are read and a nil error will be returned.
 // If n > 0 an io.EOF error indicates that all entries have been read.
 //
-// A first call to ReadDir will read the entire directory contents into memory.
+// A first call to Readdir will read the entire directory contents into memory.
 // All subsequent operations only operate on the in-memory data.
-func (d *folderDir) ReadDir(n int) ([]fs.DirEntry, error) {
+func (d *folderDir) Readdir(n int) ([]fs.FileInfo, error) {
 	if d.entries == nil {
-		entries, err := os.ReadDir(d.File.Name())
+		entries, err := d.File.Readdir(0)
 		if err != nil {
 			return nil, err
 		}
+		sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
 		d.entries = entries
 	}
 

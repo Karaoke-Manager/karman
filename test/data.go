@@ -113,8 +113,8 @@ func NewDataset(db *gorm.DB) *Dataset {
 
 	upload = entity.Upload{
 		Open:           false,
-		SongsTotal:     0,
-		SongsProcessed: 0,
+		SongsTotal:     4,
+		SongsProcessed: 4,
 	}
 	db.Save(&upload)
 	data.UploadWithErrors = upload.ToModel(2)

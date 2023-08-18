@@ -65,7 +65,7 @@ func TestService_OpenDir(t *testing.T) {
 		if !assert.NoError(t, err) {
 			return
 		}
-		entries, err := dir.ReadDir(0)
+		entries, err := dir.Readdir(0)
 		assert.NoError(t, err)
 		assert.Len(t, entries, 1)
 	})

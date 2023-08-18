@@ -40,8 +40,8 @@ func UploadFileNotFound(upload *model.Upload, path string) *ProblemDetails {
 		Status: http.StatusNotFound,
 		Detail: fmt.Sprintf("The file at %q cannot be found in upload %s", path, upload.UUID.String()),
 		Fields: map[string]any{
-			"upload": upload.UUID.String(),
-			"path":   path,
+			"uuid": upload.UUID.String(),
+			"path": path,
 		},
 	}
 }

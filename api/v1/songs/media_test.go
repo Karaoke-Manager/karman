@@ -108,6 +108,7 @@ func TestController_GetBackground(t *testing.T) {
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/background"), http.StatusNotFound))
 	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "background"))
 }
+
 func TestController_GetAudio(t *testing.T) {
 	h, _, data := setup(t, true)
 
@@ -116,6 +117,7 @@ func TestController_GetAudio(t *testing.T) {
 	t.Run("404 Not Found (Song)", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/audio"), http.StatusNotFound))
 	t.Run("404 Not Found (Media)", testMediaNotFound(h, data.BasicSong, "audio"))
 }
+
 func TestController_GetVideo(t *testing.T) {
 	h, _, data := setup(t, true)
 

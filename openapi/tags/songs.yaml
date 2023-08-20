@@ -11,6 +11,87 @@ tags:
     description: |-
       Songs are a core resource of the Karman API.
       The following endpoints allow querying information about songs as well as manipulating the song database.
+      
+      ## Search Queries
+      
+      Songs can be searched and filtered at different points throughout the API.
+      Searching for songs is done through a special query syntax that is inspired by the queries used to filter GitHub issues.
+      
+      ### Basic Structure of a Search Query
+      
+      A search query is a sequence of space-separate query fields.
+      Each of those query fields corresponds to a restriction imposed on the list of search results.
+      All of those restrictions are then ANDed together, so a song must meed all criteria to be included in the search results.
+      The empty string is a valid query that matches all songs.
+      
+      A query field can have multiple forms:
+      
+      - A search term consisting of a single word (`value`) or a quoted string (`"another value"`).
+        A Song can meet this restriction if it contains the word or string.
+        The fields in which the song must contain the value can be configured using the `in:` filter.
+        By default the fields title, artist, lyrics and comment are considered.
+      - A filter consisting of a key and a value, separated by a colon (and no spaces).
+        The value can be a single word (`key:value`) or a quoted string (`key:"another value"`).
+        The key must not be quoted.
+        The restriction imposed by a filter depends on the filter key.
+        See below for a list of available filters.
+      - Filters can contain unary operators such as `>`, `>=`, `<`, `<=`, and `=`.
+        The operator precedes the value, e.g. `year:<2000` or `artist:="The Who"`.
+        Additionally there is a binary range operator `..` that can be used like `year:1990..1999`. 
+        Which operators are allowed depends on the filter.
+        The exact meaning of operators also depends on the filter.
+      - Any field can be prefixed with `-` to negate its effect.
+        For example the query `-hello -key:value` matches songs that do not contain the word `hello`
+        and for which the filter `key:value` is not met.
+      
+      The behavior for invalid queries is undefined.
+      Sometimes the list of results may be empty and sometimes there can be some results.
+      Currently there is no escaping within search queries, so searching or filtering for values containing quotes is not possible.
+      
+      ### The `in` filter
+      The `in` filter determines in which parts of a song the search terms must appear.
+      
+      The value for this filter is a comma-separated list of fields that are consulted to match the search terms.
+      The default value is `title,artist,comment,lyrics`.
+      
+      If the `in` filter appears multiple times in a query, each occurrence is evaluated separately.
+      For example the query `foo in:title in:artist` requires the word `foo` to appear in the title and artist field.
+      whereas `foo in:title,artist` requires the word to appear in the title or artist field.
+      
+      ### Metadata Filters
+      You can apply filters to various metadata fields, including custom fields.
+      The filter key corresponds to the name of the field and the value defines a string that must be contained within that field.
+      
+      For example the query `title:Hello` matches songs that have `Hello` in their title.
+      Matches are performed in a case-insensitive manner.
+      Multiple occurrences of the same metadata filter are independent of each other.
+      `title:Hello title:World` requires both `Hello` and `World` to be present in the title of a song.
+      
+      By default string fields match if the value is contained within the field.
+      You can use the `=` operator to filter for exact matches.
+      However, matches are always case insensitive.
+      Numeric and date fields are matched exactly, even if no `=` operator is specified.
+      
+      ### Numeric and Date Filters
+      Metadata fields that contain numeric or date values have additional filter options available.
+      You can use `>`, `>=`, `<` and `<=` to search for values that are
+      greater than, greater than or equal to, less than, and less than or equal to another value
+      For example `year:>=2000` would return songs published in the year 2000 or later.
+      
+      Additionally you can perform range queries using a `n..m` value.
+      For example you could search for songs from the 90s with the query `year:1990..1999`.
+      
+      Dates must be formatted according to [ISO8601](http://en.wikipedia.org/wiki/ISO_8601).
+      
+      ### The `is` and `has` filters
+      The filters `is` and `has` can filter by certain boolean properties of a song.
+      Currently the following filters are valid:
+      
+      - `is:duet`: Filters songs by their duet status.
+      - `has:cover`: Filters songs with covers
+      - `has:audio`: Filters songs with audio
+      - `has:video`: Filters songs with video
+      - `has:background`: Filters songs with background
 paths:
   /v1/songs:
     post:
@@ -62,6 +143,7 @@ paths:
       parameters:
         - $ref: "../common/pagination.yaml#/components/parameters/limit"
         - $ref: "../common/pagination.yaml#/components/parameters/offset"
+        - $ref: "#/components/parameters/query"
       description: |-
         List all songs in the database.
       # TODO: Add filter and sort options
@@ -308,6 +390,16 @@ paths:
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 components:
   parameters:
+    query:
+      in: query
+      name: query
+      required: false
+      schema:
+        type: string
+      example: "Never Gonna artist:Rick"
+      description: |-
+        A query used for filtering and searching results.
+        The syntax and semantics are described in [Search Queries](#tag/song/Search-Queries).
     songUUID:
       in: path
       name: uuid

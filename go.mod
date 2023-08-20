@@ -16,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	golang.org/x/net v0.14.0
-	gorm.io/gorm v1.25.3
+	gorm.io/gorm v1.25.4
 )
 
 require (

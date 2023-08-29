@@ -136,7 +136,10 @@ paths:
         - name: marker
           in: query
           description: |-
-            The name of a hypothetical file indicating where to start when listing the children of a folder.
+            A file name that indicates where to start when listing the children of a folder.
+            The file name indicated by the marker does not need to actually exist in the folder.
+            The file indicated by the marker will not be included in the results, even if such a file exists.
+            
             If a folder has many children and needs to be truncated, a `nextMarker` field will be present.
             Use that value to get the next batch of children from that folder.
             
@@ -549,7 +552,7 @@ components:
             This field is only non-`null` for folders, for regular files this field will `null` or absent.
             If a folder does not contain any children, this field will be an empty array.
             
-            If a folder contains very many children, the results may be truncated.
+            If a folder contains a lot of children, the results may be truncated.
             In that case a `nextMarker` will be included in the response that can be used as value for the `marker` parameter
             to get the next batch of children.
             

@@ -6,10 +6,10 @@ require (
 	codello.dev/ultrastar v0.0.0-20230813142446-c40f9d3c8388
 	github.com/abema/go-mp4 v0.13.0
 	github.com/ajg/form v1.5.1
-	github.com/brianvoe/gofakeit/v6 v6.23.1
+	github.com/brianvoe/gofakeit/v6 v6.23.2
 	github.com/glebarez/sqlite v1.9.0
 	github.com/go-chi/chi/v5 v5.0.10
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/pressly/goose/v3 v3.15.0
 	github.com/psanford/memfs v0.0.0-20230130182539-4dbf7e3e865e
 	github.com/spf13/cobra v1.7.0

@@ -284,6 +284,7 @@ paths:
       - $ref: "#/components/parameters/uploadUUID"
       - $ref: "../common/pagination.yaml#/components/parameters/limit"
       - $ref: "../common/pagination.yaml#/components/parameters/offset"
+      - $ref: "./songs.yaml#/components/parameters/query"
     get:
       operationId: getUploadSongs
       summary: List all Songs in an Upload

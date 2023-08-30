@@ -4,27 +4,27 @@ import (
 	"context"
 	"crypto/sha256"
 	"io"
+	"io/fs"
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
+	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
 // FakeService is a Service implementation that only uses dummy values for file contents.
 // This type is intended for testing purposes only.
 type FakeService struct {
-	db          *gorm.DB
-	Placeholder string // The dummy content for all files
+	Placeholder string                    // The dummy content for all files
+	files       map[uuid.UUID]*model.File // stored files
 }
 
 // NewFakeService creates a new FakeService instance and returns it.
 // The placeholder will be the content of all "files".
-func NewFakeService(placeholder string, db *gorm.DB) Service {
-	return &FakeService{db, placeholder}
+func NewFakeService(placeholder string) Service {
+	return &FakeService{placeholder, make(map[uuid.UUID]*model.File)}
 }
 
 // StoreFile fully reads r and returns a file with dummy values.
@@ -35,23 +35,28 @@ func (f *FakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaTy
 	if err != nil {
 		return nil, err
 	}
-	file := entity.File{
-		Type: mediaType,
-
-		Width:    512,
-		Height:   1080,
-		Duration: 3 * time.Minute,
-
+	now := time.Now()
+	file := &model.File{
+		Model: model.Model{
+			UUID:      uuid.New(),
+			CreatedAt: now,
+			UpdatedAt: now,
+		},
+		Type:     mediaType,
 		Size:     n,
 		Checksum: h.Sum(nil),
+		Duration: 3 * time.Minute,
+		Width:    512,
+		Height:   1089,
 	}
-	if err = f.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return nil, err
-	}
-	return file.ToModel(), nil
+	f.files[file.UUID] = file
+	return file, nil
 }
 
 // OpenFile returns a reader reading the static string of f.Placeholder.
 func (f *FakeService) OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error) {
+	if _, ok := f.files[file.UUID]; !ok {
+		return nil, fs.ErrNotExist
+	}
 	return io.NopCloser(strings.NewReader(f.Placeholder)), nil
 }

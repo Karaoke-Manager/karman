@@ -36,7 +36,7 @@ func (c *Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	err = c.songSvc.UpdateSongData(r.Context(), song)
+	err = c.songSvc.SaveSong(r.Context(), song)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return

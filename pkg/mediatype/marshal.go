@@ -50,11 +50,6 @@ func (t MediaType) Value() (driver.Value, error) {
 	return t.String(), nil
 }
 
-// GormDataType returns the preferred GORM data type for MediaType.
-func (MediaType) GormDataType() string {
-	return "text"
-}
-
 // Scan implements sql.Scanner so MediaTypes can be read from databases transparently.
 // Currently, only database types that map to string are supported.
 // Please consult database-specific driver documentation for matching types.
@@ -76,9 +71,4 @@ func (l *MediaTypes) Scan(value any) error {
 // Please consult database-specific driver documentation for matching types.
 func (l MediaTypes) Value() (driver.Value, error) {
 	return l.String(), nil
-}
-
-// GormDataType returns the preferred GORM data type for MediaTypes.
-func (MediaTypes) GormDataType() string {
-	return "text"
 }

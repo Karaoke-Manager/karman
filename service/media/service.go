@@ -6,25 +6,19 @@ import (
 	"crypto/sha256"
 	"errors"
 	"image"
-	// Supported image formats.
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
+	_ "image/gif"  // GIF support
+	_ "image/jpeg" // JPEG support
+	_ "image/png"  // PNG support
 	"io"
-	"io/fs"
 	"sync"
 	"time"
 
-	"gorm.io/gorm"
-	// AV Libraries.
-	"github.com/abema/go-mp4"
-	"github.com/tcolgate/mp3"
+	"github.com/abema/go-mp4" // MP4 support
+	"github.com/tcolgate/mp3" // MP3 support
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
-	"github.com/Karaoke-Manager/karman/service/common"
-	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
 // Service provides an interface for working with media files in Karman.
@@ -47,13 +41,13 @@ type Service interface {
 // NewService creates a new Service instance using the supplied db and store.
 // The default implementation will store media files in the store as well as in the DB.
 // For each media file there will be an entry in the DB, the actual data however lives in the store.
-func NewService(db *gorm.DB, store Store) Service {
+func NewService(db DB, store Store) Service {
 	return &service{db, store}
 }
 
 // service is the default Service implementation.
 type service struct {
-	db    *gorm.DB
+	db    DB
 	store Store
 }
 
@@ -61,17 +55,17 @@ type service struct {
 // Supported media types are analyzed on the fly.
 func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (*model.File, error) {
 	var err error
-	file := entity.File{Type: mediaType}
-	// We save the file here and at the end of the method to make sure that even
-	// for half-written files an entry in the DB exists.
+	// We create the file here and update at the end of the method to make sure
+	// that even for half-written files an entry in the DB exists.
 	// This makes finding orphaned files much easier.
-	if err = s.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return nil, common.DBError(err)
+	file, err := s.db.CreateFile(ctx, mediaType)
+	if err != nil {
+		return nil, err
 	}
 
 	var w io.WriteCloser
 	if w, err = s.store.Create(ctx, file.Type, file.UUID); err != nil {
-		return nil, common.DBError(err)
+		return nil, err
 	}
 	defer func() {
 		cErr := w.Close()
@@ -88,7 +82,7 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 	// Analyze data in parallel to writing
 	go func() {
 		defer wg.Done()
-		if err := fullAnalyzeFile(pr, mediaType, &file); err != nil {
+		if err := fullAnalyzeFile(pr, mediaType, file); err != nil {
 			// TODO: Log unexpected error
 			return
 		}
@@ -104,16 +98,16 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 		return nil, err
 	}
 
-	if err = s.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return nil, common.DBError(err)
+	if err := s.db.UpdateFile(ctx, file); err != nil {
+		return nil, err
 	}
-	return file.ToModel(), err
+	return file, nil
 }
 
 // fullAnalyzeFile reads the complete data from r and updates file to reflect its contents.
 // Analysis includes fields like file size and checksum but
 // also performs content-specific analysis for images, video and audio files.
-func fullAnalyzeFile(r io.Reader, mediaType mediatype.MediaType, file *entity.File) error {
+func fullAnalyzeFile(r io.Reader, mediaType mediatype.MediaType, file *model.File) error {
 	var size int64
 	r = streamio.CountBytes(r, &size)
 	h := sha256.New()
@@ -140,7 +134,7 @@ func fullAnalyzeFile(r io.Reader, mediaType mediatype.MediaType, file *entity.Fi
 }
 
 // analyzeImage sets image-specific metadata on file.
-func analyzeImage(r io.Reader, mediaType mediatype.MediaType, file *entity.File) error {
+func analyzeImage(r io.Reader, mediaType mediatype.MediaType, file *model.File) error {
 	cfg, _, err := image.DecodeConfig(r)
 	if err != nil {
 		return err
@@ -151,7 +145,7 @@ func analyzeImage(r io.Reader, mediaType mediatype.MediaType, file *entity.File)
 }
 
 // analyzeAudio sets audio-specific metadata on file.
-func analyzeAudio(r io.Reader, mediaType mediatype.MediaType, file *entity.File) error {
+func analyzeAudio(r io.Reader, mediaType mediatype.MediaType, file *model.File) error {
 	switch mediaType.Subtype() {
 	case "mpeg", "mpeg3", "x-mpeg-3", "mp3":
 		duration := time.Duration(0)
@@ -174,7 +168,7 @@ func analyzeAudio(r io.Reader, mediaType mediatype.MediaType, file *entity.File)
 }
 
 // analyzeAudio sets video-specific metadata on file.
-func analyzeVideo(r io.Reader, mediaType mediatype.MediaType, file *entity.File) error {
+func analyzeVideo(r io.Reader, mediaType mediatype.MediaType, file *model.File) error {
 	switch mediaType.Subtype() {
 	case "mp4":
 		var rs io.ReadSeeker
@@ -205,9 +199,5 @@ func analyzeVideo(r io.Reader, mediaType mediatype.MediaType, file *entity.File)
 
 // OpenFile is passed on directly to s.store.
 func (s *service) OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error) {
-	r, err := s.store.Open(ctx, file.Type, file.UUID)
-	if errors.Is(err, fs.ErrNotExist) {
-		return r, common.ErrNotFound
-	}
-	return r, err
+	return s.store.Open(ctx, file.Type, file.UUID)
 }

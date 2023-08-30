@@ -67,7 +67,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	update.Apply(song)
-	if err := c.songSvc.UpdateSongData(r.Context(), song); err != nil {
+	if err := c.songSvc.SaveSong(r.Context(), song); err != nil {
 		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return

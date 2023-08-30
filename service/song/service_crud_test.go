@@ -18,7 +18,7 @@ func setupService(t *testing.T, withData bool) (svc Service, data *test.Dataset)
 	if withData {
 		data = test.NewDataset(db)
 	}
-	svc = NewService(db)
+	svc = NewService(NewDB(db))
 	return
 }
 
@@ -60,7 +60,7 @@ func TestService_UpdateSongData(t *testing.T) {
 	*song = *data.BasicSong
 	song.Title = "Foobar"
 	song.Artist = "Hey"
-	err := svc.UpdateSongData(ctx, song)
+	err := svc.SaveSong(ctx, song)
 	assert.NoError(t, err)
 
 	song, err = svc.GetSong(ctx, data.BasicSong.UUID)

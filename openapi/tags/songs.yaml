@@ -437,11 +437,15 @@ components:
           description: |-
             The title of the song.
           example: "Never Gonna Give You Up"
-        artist:
-          type: string
+        artists:
+          type: array
           description: |-
-            The artist of the song.
-          example: "Rick Astley"
+            The list of artists of the song.
+            The first element of this list should be considered the *primary* artist.
+            Subsequent elements are secondary artists (also known as *featured* artists).
+          example: ["Rick Astley"]
+          items:
+            type: string
         genre:
           type: string
           description: |-
@@ -495,6 +499,13 @@ components:
             These are currently ignored by Karman but are stored for future use.
           example:
             subGenre: "Meme"
+        bpm:
+          type: number
+          default: 0
+          example: 123.45
+          description: |-
+            The BPM of the song.
+            These are the actual BPM which is 4 times as high as the number in the UltraStar TXT file.
         gap:
           type: integer
           default: 0

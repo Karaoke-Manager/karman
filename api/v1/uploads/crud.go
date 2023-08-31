@@ -6,13 +6,14 @@ import (
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/api/schema"
+	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
 // Create implements the POST /v1/uploads endpoint.
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	upload, err := c.svc.CreateUpload(r.Context())
-	if err != nil {
+	upload := model.Upload{}
+	if err := c.uploadRepo.CreateUpload(r.Context(), &upload); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -25,7 +26,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 // Find implements the GET /v1/uploads endpoint.
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	uploads, total, err := c.svc.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
+	uploads, total, err := c.uploadRepo.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
@@ -54,7 +55,7 @@ func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
 // Delete implements the DELETE /v1/uploads/{uuid} endpoint.
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
-	if err := c.svc.DeleteUpload(r.Context(), id); err != nil {
+	if _, err := c.uploadRepo.DeleteUpload(r.Context(), id); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

@@ -23,9 +23,14 @@ type Controller struct {
 
 // NewController creates a new Controller instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-controllers.
-func NewController(songService song.Service, mediaService media.Service, uploadService upload.Service) *Controller {
+func NewController(
+	songRepo song.Repository,
+	mediaService media.Service,
+	mediaStore media.Store,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store) *Controller {
 	return &Controller{
-		v1Controller: v1.NewController(songService, mediaService, uploadService),
+		v1Controller: v1.NewController(songRepo, mediaService, mediaStore, uploadRepo, uploadStore),
 	}
 }
 

@@ -12,6 +12,8 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api"
 	"github.com/Karaoke-Manager/karman/service/media"
+	"github.com/Karaoke-Manager/karman/service/song"
+	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 func init() {
@@ -48,16 +50,19 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer pool.Close()
 
+	songRepo := song.NewDBRepository(pool)
+	uploadRepo := upload.NewDBRepository(pool)
+	uploadStore, err := upload.NewFileStore("tmp/uploads")
+	if err != nil {
+		return err
+	}
 	mediaStore, err := media.NewFileStore("tmp/media")
 	if err != nil {
 		return err
 	}
-	mediaSvc := media.NewService(media.NewDBRepository(pool), mediaStore)
+	mediaService := media.NewService(media.NewDBRepository(pool), mediaStore)
 
-	// uploadFS := rwfs.DirFS("tmp/uploads")
-	// uploadSvc := upload.NewService(db, uploadFS)
-
-	apiController := api.NewController(songSvc, mediaSvc, nil)
+	apiController := api.NewController(songRepo, mediaService, mediaStore, uploadRepo, uploadStore)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)

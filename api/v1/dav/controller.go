@@ -23,13 +23,13 @@ func init() {
 
 // Controller implements the /v1/dav endpoints.
 type Controller struct {
-	songSvc  song.Service
-	mediaSvc media.Service
+	songRepo   song.Repository
+	mediaStore media.Store
 }
 
 // NewController creates a new controller instance using the specified services.
-func NewController(songService song.Service, mediaService media.Service) *Controller {
-	return &Controller{songService, mediaService}
+func NewController(songRepo song.Repository, mediaStore media.Store) *Controller {
+	return &Controller{songRepo, mediaStore}
 }
 
 // Router sets up the routing for the endpoint.
@@ -37,7 +37,7 @@ func (c *Controller) Router(r chi.Router) {
 	h := &webdav.Handler{
 		// TODO: Make this configurable/dynamic
 		Prefix:     "/api/v1/dav/",
-		FileSystem: internal.NewFlatFS(c.songSvc, c.mediaSvc),
+		FileSystem: internal.NewFlatFS(c.songRepo, c.mediaStore),
 		LockSystem: webdav.NewMemLS(),
 		Logger:     nil,
 	}

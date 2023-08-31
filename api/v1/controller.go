@@ -20,11 +20,16 @@ type Controller struct {
 
 // NewController creates a new controller using the specified services.
 // This function will create the required sub-controllers automatically.
-func NewController(songService song.Service, mediaService media.Service, uploadService upload.Service) *Controller {
+func NewController(
+	songRepo song.Repository,
+	mediaService media.Service,
+	mediaStore media.Store,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store) *Controller {
 	return &Controller{
-		uploadController: uploads.NewController(uploadService),
-		songController:   songs.NewController(songService, mediaService),
-		davController:    dav.NewController(songService, mediaService),
+		uploadController: uploads.NewController(uploadRepo, uploadStore),
+		songController:   songs.NewController(songRepo, mediaStore, mediaService),
+		davController:    dav.NewController(songRepo, mediaStore),
 	}
 }
 

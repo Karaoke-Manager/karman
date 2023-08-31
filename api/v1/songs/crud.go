@@ -14,13 +14,13 @@ import (
 
 // Create implements the POST /v1/songs endpoint.
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	data, err := txt.ReadSong(r.Body)
+	data, err := txt.NewReader(r.Body).ReadSong()
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	song := &model.Song{Song: data}
-	if err = c.songSvc.CreateSong(r.Context(), song); err != nil {
+	song := model.Song{Song: data}
+	if err = c.songRepo.CreateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
@@ -32,7 +32,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 // Find implements the GET /v1/songs endpoint.
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	songs, total, err := c.songSvc.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
+	songs, total, err := c.songRepo.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
@@ -66,8 +66,8 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.BindError(err))
 		return
 	}
-	update.Apply(song)
-	if err := c.songSvc.SaveSong(r.Context(), song); err != nil {
+	update.Apply(&song)
+	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
@@ -78,7 +78,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 // Delete implements the DELETE /v1/songs/{uuid} endpoint.
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
-	if err := c.songSvc.DeleteSong(r.Context(), id); err != nil {
+	if _, err := c.songRepo.DeleteSong(r.Context(), id); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

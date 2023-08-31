@@ -19,14 +19,14 @@ import (
 // flatFS implements a [webdav.FileSystem] that serves songs in a flat hierarchy:
 // Each song is contained in a folder that contains the TXT file and the media files.
 type flatFS struct {
-	songSvc  songsvc.Service
-	mediaSvc media.Service
+	songRepo   songsvc.Repository
+	mediaStore media.Store
 }
 
 // NewFlatFS creates a new [webdav.FileSystem] that serves songs in a flat hierarchy:
 // The root directory contains a folder for each song which in turn contains all the song's files.
-func NewFlatFS(songSvc songsvc.Service, mediaSvc media.Service) webdav.FileSystem {
-	return &flatFS{songSvc, mediaSvc}
+func NewFlatFS(songRepo songsvc.Repository, mediaStore media.Store) webdav.FileSystem {
+	return &flatFS{songRepo, mediaStore}
 }
 
 // Mkdir is not allowed.
@@ -66,7 +66,7 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 		return nil, fs.ErrNotExist
 	}
 
-	song, err := s.songSvc.GetSong(ctx, id)
+	song, err := s.songRepo.GetSong(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fs.ErrNotExist
 	} else if err != nil {
@@ -74,11 +74,11 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	}
 
 	if !ok {
-		return (*songNode)(song), nil
+		return songNode(song), nil
 	}
 
 	if filename == song.TxtFileName {
-		return (*txtNode)(song), nil
+		return txtNode(song), nil
 	}
 
 	var file *model.File
@@ -120,7 +120,7 @@ func (s *flatFS) OpenFile(ctx context.Context, name string, flag int, _ fs.FileM
 	if err != nil {
 		return nil, err
 	}
-	return ref.Open(ctx, s.songSvc, s.mediaSvc, flag)
+	return ref.Open(ctx, s.songRepo, s.mediaStore, flag)
 }
 
 // node represents a single, existing file in the virtual file system.
@@ -129,5 +129,5 @@ type node interface {
 	// Usually a node implements [fs.FileInfo] and just returns itself here.
 	Stat() (fs.FileInfo, error)
 	// Open attempts to open the node using the specified services and flag.
-	Open(ctx context.Context, songSvc songsvc.Service, mediaSvc media.Service, flag int) (webdav.File, error)
+	Open(ctx context.Context, songRepo songsvc.Repository, mediaStore media.Store, flag int) (webdav.File, error)
 }

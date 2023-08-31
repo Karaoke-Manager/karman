@@ -12,13 +12,14 @@ import (
 
 // Controller implements the /v1/songs endpoints.
 type Controller struct {
-	songRepo song.Repository
-	mediaSvc media.Service
+	songRepo   song.Repository
+	mediaStore media.Store
+	mediaSvc   media.Service
 }
 
 // NewController creates a new Controller instance using the specified services.
-func NewController(songRepo song.Repository, mediaSvc media.Service) *Controller {
-	return &Controller{songRepo, mediaSvc}
+func NewController(songRepo song.Repository, mediaStore media.Store, mediaSvc media.Service) *Controller {
+	return &Controller{songRepo, mediaStore, mediaSvc}
 }
 
 // Router sets up the routing for the endpoint.

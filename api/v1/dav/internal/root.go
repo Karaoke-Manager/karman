@@ -45,18 +45,18 @@ func (rootNode) Sys() any {
 	return nil
 }
 
-func (rootNode) Open(ctx context.Context, songSvc songsvc.Service, _ media.Service, flag int) (webdav.File, error) {
+func (rootNode) Open(ctx context.Context, songRepo songsvc.Repository, _ media.Store, flag int) (webdav.File, error) {
 	if flag&(os.O_RDWR|os.O_WRONLY) != 0 {
 		return nil, fs.ErrInvalid
 	}
-	return &rootDir{ctx: ctx, songSvc: songSvc}, nil
+	return &rootDir{ctx: ctx, songRepo: songRepo}, nil
 }
 
 // rootDir is a rootNode that has been opened for reading.
 type rootDir struct {
-	ctx     context.Context
-	pos     int64
-	songSvc songsvc.Service
+	ctx      context.Context
+	pos      int64
+	songRepo songsvc.Repository
 }
 
 func (*rootDir) Close() error {
@@ -81,7 +81,7 @@ func (f *rootDir) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		npos += offset
 	case io.SeekEnd:
-		_, total, err := f.songSvc.FindSongs(f.ctx, 0, 0)
+		_, total, err := f.songRepo.FindSongs(f.ctx, 0, 0)
 		if err != nil {
 			return f.pos, err
 		}
@@ -101,10 +101,10 @@ func (f *rootDir) Readdir(count int) ([]fs.FileInfo, error) {
 		count = -1
 	}
 	// FIXME: We should probably paginate database request for large databases or provide a more hierarchical FS
-	songs, total, err := f.songSvc.FindSongs(f.ctx, count, f.pos)
+	songs, total, err := f.songRepo.FindSongs(f.ctx, count, f.pos)
 	infos := make([]fs.FileInfo, len(songs))
 	for i, song := range songs {
-		infos[i] = (*songNode)(song)
+		infos[i] = songNode(song)
 	}
 	f.pos += int64(len(songs))
 	if err != nil {

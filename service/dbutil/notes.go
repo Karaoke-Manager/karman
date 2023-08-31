@@ -11,19 +11,20 @@ import (
 	"codello.dev/ultrastar/txt"
 )
 
-type Music ultrastar.Music
+type Notes ultrastar.Notes
 
-func (m *Music) Value() (driver.Value, error) {
-	if m == nil {
+func (ns Notes) Value() (driver.Value, error) {
+	if ns == nil {
 		return nil, nil
 	}
 	b := &strings.Builder{}
-	err := txt.FormatDefault.WriteMusic(b, (*ultrastar.Music)(m))
+	err := txt.NewWriter(b).WriteNotes(ultrastar.Notes(ns))
 	return b.String(), err
 }
 
-func (m *Music) Scan(value any) error {
+func (ns *Notes) Scan(value any) error {
 	if value == nil {
+		*ns = nil
 		return nil
 	}
 	var r io.Reader
@@ -35,10 +36,10 @@ func (m *Music) Scan(value any) error {
 	default:
 		return fmt.Errorf("invalid type for music: %T", value)
 	}
-	m2, err := txt.DialectDefault.ReadMusic(r)
+	ns2, err := txt.NewReader(r).ReadNotes()
 	if err != nil {
 		return err
 	}
-	*m = Music(*m2)
+	*ns = Notes(ns2)
 	return nil
 }

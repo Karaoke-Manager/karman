@@ -9,8 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 
-	_ "github.com/Karaoke-Manager/karman/migrations"
-	migratedb "github.com/Karaoke-Manager/karman/migrations/db"
+	"github.com/Karaoke-Manager/karman/migrations"
 )
 
 func init() {
@@ -38,9 +37,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	}
 	defer sqlDB.Close()
 
-	goose.SetBaseFS(migratedb.FS)
-	migratedb.Set(db)
-
+	goose.SetBaseFS(migrations.FS)
 	if err := goose.SetDialect(db.Dialector.Name()); err != nil {
 		log.Fatalf("goose: failed to set dialect")
 	}

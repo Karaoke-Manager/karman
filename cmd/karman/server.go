@@ -1,19 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/api"
 	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 )
 
 func init() {
@@ -24,7 +22,7 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the Karman server",
 	Long:  "The karman server runs the Karman backend API.",
-	Run:   runServer,
+	RunE:  runServer,
 }
 
 type Config struct {
@@ -37,29 +35,24 @@ var defaultConfig = &Config{
 	Prefix:  "/api",
 }
 
-func runServer(cmd *cobra.Command, args []string) {
+func runServer(cmd *cobra.Command, args []string) error {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	db, err := gorm.Open(sqlite.Open("test.db?_pragma=foreign_keys(1)"), &gorm.Config{
-		NowFunc: func() time.Time { return time.Now().UTC() },
-	})
+	dbConfig, err := pgxpool.ParseConfig("postgres://karman:secret@localhost:5432/karman?sslmode=disable")
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	defer func() {
-		sqlDB, err := db.DB()
-		if err == nil {
-			_ = sqlDB.Close()
-		}
-	}()
-
-	songSvc := song.NewService(db)
+	pool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 
 	mediaStore, err := media.NewFileStore("tmp/media")
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	mediaSvc := media.NewService(db, mediaStore)
+	mediaSvc := media.NewService(media.NewDB(pool), mediaStore)
 
 	// uploadFS := rwfs.DirFS("tmp/uploads")
 	// uploadSvc := upload.NewService(db, uploadFS)
@@ -70,4 +63,5 @@ func runServer(cmd *cobra.Command, args []string) {
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)
 	fmt.Printf("Running on %s\n", defaultConfig.Address)
 	log.Fatalln(http.ListenAndServe(defaultConfig.Address, r))
+	return nil
 }

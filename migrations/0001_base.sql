@@ -1,5 +1,11 @@
 -- +goose Up
+
+-- Extension uuid-ossp is needed for UUID support.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Table entity is the base table for all other tables.
+-- No data should be inserted into this table, it should only be used as a base
+-- for other tables.
 CREATE TABLE entity
 (
     id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -11,6 +17,8 @@ CREATE TABLE entity
 
 
 -- +goose StatementBegin
+-- Function tg_set_updated_at function updates the updated_at column to the current time.
+-- This function is intended to be used as a trigger for tables created from the entity table.
 CREATE FUNCTION tg_set_updated_at()
     RETURNS TRIGGER
 AS
@@ -21,6 +29,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
+
 
 -- +goose Down
 DROP FUNCTION IF EXISTS tg_set_updated_at();

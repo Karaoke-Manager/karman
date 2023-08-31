@@ -6,18 +6,20 @@ import (
 	"os"
 	"strconv"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // MustOpen opens the named file.
+// The file is closed automatically at the end of the test.
 // If the file cannot be opened the test is aborted.
 func MustOpen(t *testing.T, name string) *os.File {
 	f, err := os.Open(name)
-	require.NoErrorf(t, err, "could not open test file: %s", name)
+	if err != nil {
+		t.Fatalf("MustOpen() could not open test file %s: %s", name, err)
+	}
 	t.Cleanup(func() {
-		require.NoErrorf(t, f.Close(), "could not close test file: %s", name)
+		if err := f.Close(); err != nil {
+			t.Fatalf("MustOpen() could not close test file %s: %s", name, err)
+		}
 	})
 	return f
 }
@@ -31,8 +33,16 @@ func DoRequest(h http.Handler, r *http.Request) *http.Response {
 
 // AssertPagination validates that the response provides the expected pagination values.
 func AssertPagination(t *testing.T, resp *http.Response, offset, limit, count int, total int64) {
-	assert.Equal(t, strconv.Itoa(offset), resp.Header.Get("Pagination-Offset"), "Pagination-Offset header does not match")
-	assert.Equal(t, strconv.Itoa(limit), resp.Header.Get("Pagination-Limit"), "Pagination-Limit header does not match")
-	assert.Equal(t, strconv.Itoa(count), resp.Header.Get("Pagination-Count"), "Pagination-Count header does not match")
-	assert.Equal(t, strconv.FormatInt(total, 10), resp.Header.Get("Pagination-Total"), "Pagination-Total header does not match")
+	if resp.Header.Get("Pagination-Offset") != strconv.Itoa(offset) {
+		t.Errorf("Header Pagination-Offset:%s, expected %d", resp.Header.Get("Pagination-Offset"), offset)
+	}
+	if resp.Header.Get("Pagination-Limit") != strconv.Itoa(limit) {
+		t.Errorf("Header Pagination-Limit:%s, expected %d", resp.Header.Get("Pagination-Limit"), limit)
+	}
+	if resp.Header.Get("Pagination-Count") != strconv.Itoa(count) {
+		t.Errorf("Header Pagination-Count:%s, expected %d", resp.Header.Get("Pagination-Count"), count)
+	}
+	if resp.Header.Get("Pagination-Total") != strconv.FormatInt(total, 10) {
+		t.Errorf("Header Pagination-Total:%s, expected %d", resp.Header.Get("Pagination-Total"), total)
+	}
 }

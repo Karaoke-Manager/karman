@@ -16,11 +16,13 @@ jobs:
       pull-requests: read
     uses: codello/.github/.github/workflows/go-lint.yml@v0
 
+  # TODO: Use services instead of testcontainers
   test:
     name: Test
     uses: codello/.github/.github/workflows/go-test.yml@v0
     with:
       test-on: ubuntu-latest,ubuntu-20.04,windows-latest,macos-latest
+      tags: database
 
   build:
     name: Build

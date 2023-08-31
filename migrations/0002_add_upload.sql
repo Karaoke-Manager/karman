@@ -18,7 +18,7 @@ CREATE TABLE upload_errors
     file      TEXT NOT NULL,
     message   TEXT NOT NULL,
 
-    upload_id INT  NOT NULL REFERENCES uploads (id)
+    upload_id INT  NOT NULL REFERENCES uploads (id) ON DELETE CASCADE
 );
 
 -- Trigger updated_at sets uploads.updated_at during updates.

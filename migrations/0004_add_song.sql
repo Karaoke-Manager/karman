@@ -30,11 +30,11 @@ CREATE TABLE songs
 (
     LIKE entity INCLUDING ALL,
 
-    upload_id          INTEGER REFERENCES uploads (id),
-    audio_file_id      INTEGER REFERENCES files (id),
-    cover_file_id      INTEGER REFERENCES files (id),
-    video_file_id      INTEGER REFERENCES files (id),
-    background_file_id INTEGER REFERENCES files (id),
+    upload_id          INTEGER REFERENCES uploads (id) ON DELETE CASCADE,
+    audio_file_id      INTEGER  REFERENCES files (id) ON DELETE SET NULL,
+    cover_file_id      INTEGER  REFERENCES files (id) ON DELETE SET NULL,
+    video_file_id      INTEGER  REFERENCES files (id) ON DELETE SET NULL,
+    background_file_id INTEGER  REFERENCES files (id) ON DELETE SET NULL,
 
     bpm                FLOAT    NOT NULL DEFAULT 0,
     gap                INTERVAL NOT NULL DEFAULT '0'::INTERVAL,

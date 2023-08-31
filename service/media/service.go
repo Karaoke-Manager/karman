@@ -21,51 +21,33 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
 )
 
-// Service provides an interface for working with media files in Karman.
-// An implementation of the Service interface implements the core logic associated with these files.
-type Service interface {
-	// StoreFile creates a new model.File and writes the data provided by r into the file.
-	// This method should update known file metadata fields during the upload.
-	// Depending on the media type implementations should analyze the file set type-specific metadata as well.
-	//
-	// If an error occurs r may have been partially consumed.
-	// If any bytes have been persisted, this method must return a valid model.File that is able to identify the (potentially partial) data.
-	// If the file has not been stored successfully, an error is returned.
-	StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (*model.File, error)
-
-	// OpenFile creates a reader that can be used to read the file.
-	// It is the caller's responsibility to close the reader when done.
-	OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error)
-}
-
 // NewService creates a new Service instance using the supplied db and store.
 // The default implementation will store media files in the store as well as in the DB.
 // For each media file there will be an entry in the DB, the actual data however lives in the store.
-func NewService(db DB, store Store) Service {
-	return &service{db, store}
+func NewService(repo Repository, store Store) Service {
+	return &service{repo, store}
 }
 
 // service is the default Service implementation.
 type service struct {
-	db    DB
+	repo  Repository
 	store Store
 }
 
 // StoreFile creates a new entity.File in the database and then saves the data from r into the store.
 // Supported media types are analyzed on the fly.
-func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (*model.File, error) {
-	var err error
+func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (file model.File, err error) {
 	// We create the file here and update at the end of the method to make sure
 	// that even for half-written files an entry in the DB exists.
 	// This makes finding orphaned files much easier.
-	file, err := s.db.CreateFile(ctx, mediaType)
-	if err != nil {
-		return nil, err
+	file.Type = mediaType
+	if err = s.repo.CreateFile(ctx, &file); err != nil {
+		return
 	}
 
 	var w io.WriteCloser
 	if w, err = s.store.Create(ctx, file.Type, file.UUID); err != nil {
-		return nil, err
+		return
 	}
 	defer func() {
 		cErr := w.Close()
@@ -82,7 +64,7 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 	// Analyze data in parallel to writing
 	go func() {
 		defer wg.Done()
-		if err := fullAnalyzeFile(pr, mediaType, file); err != nil {
+		if err := fullAnalyzeFile(pr, mediaType, &file); err != nil {
 			// TODO: Log unexpected error
 			return
 		}
@@ -95,11 +77,11 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 		// This probably indicates that the request was cancelled or a network error occurred
 		// Let background job do the cleanup
 		// TODO: Log error
-		return nil, err
+		return
 	}
 
-	if err := s.db.UpdateFile(ctx, file); err != nil {
-		return nil, err
+	if err = s.repo.UpdateFile(ctx, &file); err != nil {
+		return
 	}
 	return file, nil
 }
@@ -195,9 +177,4 @@ func analyzeVideo(r io.Reader, mediaType mediatype.MediaType, file *model.File) 
 		}
 	}
 	return nil
-}
-
-// OpenFile is passed on directly to s.store.
-func (s *service) OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error) {
-	return s.store.Open(ctx, file.Type, file.UUID)
 }

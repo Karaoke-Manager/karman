@@ -250,20 +250,6 @@ func (r *dbRepo) CreateSong(ctx context.Context, song *model.Song) error {
 	return nil
 }
 
-// prepareSong modifies song in a way that it can be inserted into the database.
-// This mainly concerns replacing nil values with non-nil zero values.
-func prepareSong(song *model.Song) {
-	if song.Artists == nil {
-		song.Artists = make([]string, 0)
-	}
-	if song.CustomTags == nil {
-		song.CustomTags = make(map[string]string)
-	}
-	if song.NotesP1 == nil {
-		song.NotesP1 = make(ultrastar.Notes, 0)
-	}
-}
-
 // GetSong fetches a single song from the database by its UUID.
 func (r *dbRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error) {
 	row, err := pgxutil.SelectRow(ctx, r.db, `SELECT
@@ -316,10 +302,7 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
 	WHERE s.upload_id IS NULL
 	LIMIT CASE WHEN $1 < 0 THEN NULL ELSE $1 END OFFSET $2`, []any{limit, offset}, func(row pgx.CollectableRow) (model.Song, error) {
 		data, err := pgx.RowToStructByName[songRow](row)
-		if err != nil {
-			return model.Song{}, err
-		}
-		return data.toModel(), nil
+		return data.toModel(), err
 	})
 	return songs, total, err
 }
@@ -394,4 +377,18 @@ func (r *dbRepo) DeleteSong(ctx context.Context, id uuid.UUID) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// prepareSong modifies song in a way that it can be inserted into the database.
+// This mainly concerns replacing nil values with non-nil zero values.
+func prepareSong(song *model.Song) {
+	if song.Artists == nil {
+		song.Artists = make([]string, 0)
+	}
+	if song.CustomTags == nil {
+		song.CustomTags = make(map[string]string)
+	}
+	if song.NotesP1 == nil {
+		song.NotesP1 = make(ultrastar.Notes, 0)
+	}
 }

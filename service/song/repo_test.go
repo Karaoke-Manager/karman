@@ -135,6 +135,15 @@ func Test_dbRepo_UpdateSong(t *testing.T) {
 	db := test.NewDB(t)
 	repo := NewDBRepository(db)
 
+	t.Run("missing", func(t *testing.T) {
+		song := model.Song{}
+		song.UUID = uuid.New()
+		err := repo.UpdateSong(context.TODO(), &song)
+		if !errors.Is(err, svc.ErrNotFound) {
+			t.Errorf("UpdateSong(ctx, &song) returned an unexpected error: %s, expected ErrNotFound", err)
+		}
+	})
+
 	t.Run("metadata", func(t *testing.T) {
 		song := testdata.SimpleSong(t, db)
 		song.Title = "Changed"

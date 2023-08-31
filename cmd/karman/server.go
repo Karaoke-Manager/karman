@@ -52,7 +52,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	mediaSvc := media.NewService(media.NewDB(pool), mediaStore)
+	mediaSvc := media.NewService(media.NewDBRepository(pool), mediaStore)
 
 	// uploadFS := rwfs.DirFS("tmp/uploads")
 	// uploadSvc := upload.NewService(db, uploadFS)

@@ -6,7 +6,34 @@ import (
 	"io/fs"
 
 	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/model"
 )
+
+// Repository provides methods for storing uploads.
+type Repository interface {
+	// CreateUpload creates a new, open upload.
+	// The upload is passed as parameter for consistency with other repositories.
+	// However, currently no data from the upload is being used during creation.
+	CreateUpload(ctx context.Context, upload *model.Upload) error
+
+	// GetUpload fetches the upload with the specified UUID.
+	// If no such upload exists, the error will be common.ErrNotFound.
+	GetUpload(ctx context.Context, id uuid.UUID) (model.Upload, error)
+
+	// FindUploads gives a paginated view to all uploads.
+	// If limit is -1, all uploads are returned.
+	// This method returns the page contents, the total number of uploads and an error (if one occurred).
+	FindUploads(ctx context.Context, limit int, offset int64) ([]model.Upload, int64, error)
+
+	// DeleteUpload deletes the upload with the specified UUID, if it exists.
+	// If no such upload exists, the first return value will be false.
+	DeleteUpload(ctx context.Context, id uuid.UUID) (bool, error)
+
+	// GetErrors returns a paginated list of errors belonging to the upload.
+	// This method is only useful after processing has finished.
+	GetErrors(ctx context.Context, id uuid.UUID, limit int, offset int64) ([]model.UploadProcessingError, int64, error)
+}
 
 // Store is an interface used by the upload service to facilitate the actual file storage.
 // The interface is inspired by fs.FS but unfortunately not compatible.
@@ -19,7 +46,7 @@ type Store interface {
 	// If a file with the specified name already exists, it is overwritten.
 	// If the returned error is nil, the writer must be closed when done.
 	//
-	// The create operation is not allowed for the root of an upload (".").
+	// Calling Create for the root of an upload with name = "." is invalid.
 	Create(ctx context.Context, upload uuid.UUID, name string) (io.WriteCloser, error)
 
 	// Stat returns information about the named file or directory.

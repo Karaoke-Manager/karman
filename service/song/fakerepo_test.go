@@ -143,10 +143,10 @@ func Test_fakeRepo_UpdateSong(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		update := &model.Song{
+		update := model.Song{
 			Model: model.Model{UUID: uuid.New()},
 		}
-		err := repo.UpdateSong(context.TODO(), update)
+		err := repo.UpdateSong(context.TODO(), &update)
 		if !errors.Is(err, svc.ErrNotFound) {
 			t.Errorf("UpdateSong(ctx, &update) returned an unexpected error: %s, expected ErrNotFound", err)
 		}

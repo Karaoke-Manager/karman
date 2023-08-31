@@ -7,26 +7,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/test"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
-func setupService(t *testing.T, withData bool) (svc Service, data *test.Dataset) {
-	db := test.NewDB(t)
-	if withData {
-		data = test.NewDataset(db)
-	}
-	store, _ := fileStore(t)
-	svc = NewService(db, store)
-	return
-}
-
 func TestService_StoreFile(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	svc, _ := setupService(t, false)
+	store, _ := fileStore(t)
+	svc := NewService(NewFakeRepository(), store)
 
 	// in order to not blow up repository size we download the test data on the fly.
 	cases := map[string]struct {

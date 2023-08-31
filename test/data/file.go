@@ -26,9 +26,9 @@ func AudioFile(t *testing.T, db pgxutil.DB) model.File {
 		"type":     file.Type,
 		"size":     file.Size,
 		"duration": file.Duration,
-	}, "uuid, created_at, updated_at", pgx.RowToStructByName[creationResult])
+	}, "id, uuid, created_at, updated_at", pgx.RowToStructByName[creationResult])
 	if err != nil {
-		t.Fatalf("test.AudioFile() could not insert into the database: %s", err)
+		t.Fatalf("testdata.AudioFile() could not insert into the database: %s", err)
 	}
 	file.UUID = row.UUID
 	file.CreatedAt = row.CreatedAt

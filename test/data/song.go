@@ -5,6 +5,8 @@ package testdata
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"codello.dev/ultrastar/txt"
@@ -19,7 +21,9 @@ import (
 
 // SimpleSong inserts a single song into the database and returns the inserted data.
 func SimpleSong(t *testing.T, db pgxutil.DB) model.Song {
-	f := test.MustOpen(t, "testdata/simple-song.txt")
+	_, filename, _, _ := runtime.Caller(0)
+	path := filepath.Join(filepath.Dir(filename), "testdata", "simple-song.txt")
+	f := test.MustOpen(t, path)
 	s, err := txt.NewReader(f).ReadSong()
 	song := model.Song{Song: s, Artists: []string{s.Artist}}
 	if err != nil {
@@ -30,7 +34,7 @@ func SimpleSong(t *testing.T, db pgxutil.DB) model.Song {
 		"genre":    song.Genre,
 		"language": song.Language,
 		"year":     song.Year,
-	}, "uuid, created_at, updated_at", pgx.RowToStructByName[creationResult])
+	}, "id, uuid, created_at, updated_at", pgx.RowToStructByName[creationResult])
 	if err != nil {
 		t.Fatalf("test.SimpleSong() could not insert into the database: %s", err)
 	}

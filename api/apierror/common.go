@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/Karaoke-Manager/karman/service/common"
+	"github.com/Karaoke-Manager/karman/service"
 )
 
 // ProblemTypeDomain is the base domain for all custom problem types.
@@ -75,7 +75,7 @@ func JSONUnmarshalError(err *json.UnmarshalTypeError) *ProblemDetails {
 // This function maps known errors to their responses.
 func ServiceError(err error) *ProblemDetails {
 	switch {
-	case errors.Is(err, common.ErrNotFound):
+	case errors.Is(err, service.ErrNotFound):
 		return ErrNotFound
 	default:
 		return ErrInternalServerError

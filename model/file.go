@@ -14,8 +14,8 @@ type File struct {
 	Type mediatype.MediaType
 
 	// File metadata is calculated automatically
-	Size     int64  // set on upload
-	Checksum []byte // set on upload
+	Size     int64  // read only
+	Checksum []byte // read only
 
 	Duration time.Duration // only audio and videos
 	Width    int           // only images and videos

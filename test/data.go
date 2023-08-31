@@ -17,13 +17,20 @@ import (
 type Dataset struct {
 	InvalidUUID string
 
-	TotalSongs int64
+	TotalSongs   int64
+	TotalUploads int64
 
 	ImageFile *model.File // may be used by multiple songs
 	AudioFile *model.File // may be used by multiple songs
 	VideoFile *model.File // may be used by multiple songs
 
-	UploadWithSongs *model.Upload
+	AbsentUploadUUID uuid.UUID // may be a present UUID for other types
+	AbsentUpload     *model.Upload
+	OpenUpload       *model.Upload // files can be uploaded
+	PendingUpload    *model.Upload // enqueued for processing
+	ProcessingUpload *model.Upload // currently being processed
+	UploadWithSongs  *model.Upload // done processing
+	UploadWithErrors *model.Upload // has 2 errors
 
 	AbsentSongUUID uuid.UUID   // may be a present UUID for other types
 	AbsentSong     *model.Song // UUID is AbsentSongUUID
@@ -39,8 +46,10 @@ type Dataset struct {
 // NewDataset creates a new Dataset and stores it into the db.
 func NewDataset(db *gorm.DB) *Dataset {
 	data := &Dataset{
-		InvalidUUID:    "Hello%20World",
-		AbsentSongUUID: uuid.New(),
+		InvalidUUID:      "Hello%20World",
+		AbsentSongUUID:   uuid.New(),
+		AbsentUploadUUID: uuid.New(),
+		TotalUploads:     5,
 	}
 
 	song := entity.Song{Entity: entity.Entity{UUID: data.AbsentSongUUID}}
@@ -75,14 +84,51 @@ func NewDataset(db *gorm.DB) *Dataset {
 	db.Save(&videoFile)
 	data.VideoFile = videoFile.ToModel()
 
-	upload := entity.Upload{
-		Open:             false,
-		SongsTotal:       4,
-		SongsProcessed:   3,
-		ProcessingErrors: nil,
+	upload := entity.Upload{Entity: entity.Entity{UUID: data.AbsentSongUUID}}
+	data.AbsentUpload = upload.ToModel(0)
+
+	upload = entity.Upload{
+		Open:           true,
+		SongsTotal:     -1,
+		SongsProcessed: -1,
 	}
 	db.Save(&upload)
-	data.UploadWithSongs = upload.ToModel()
+	data.OpenUpload = upload.ToModel(0)
+
+	upload = entity.Upload{
+		Open:           false,
+		SongsTotal:     -1,
+		SongsProcessed: -1,
+	}
+	db.Save(&upload)
+	data.PendingUpload = upload.ToModel(0)
+
+	upload = entity.Upload{
+		Open:           false,
+		SongsTotal:     -1,
+		SongsProcessed: 0,
+	}
+	db.Save(&upload)
+	data.ProcessingUpload = upload.ToModel(0)
+
+	upload = entity.Upload{
+		Open:           false,
+		SongsTotal:     4,
+		SongsProcessed: 4,
+	}
+	db.Save(&upload)
+	data.UploadWithErrors = upload.ToModel(2)
+
+	db.Save(&entity.UploadProcessingError{Upload: upload, File: "file1.txt", Message: "could not parse"})
+	db.Save(&entity.UploadProcessingError{Upload: upload, File: "file2.txt", Message: "could not read"})
+
+	uploadWithSongs := entity.Upload{
+		Open:           false,
+		SongsTotal:     4,
+		SongsProcessed: 4,
+	}
+	db.Save(&uploadWithSongs)
+	data.UploadWithSongs = uploadWithSongs.ToModel(0)
 
 	song = entity.Song{
 		Title:    "Cold",
@@ -95,7 +141,7 @@ func NewDataset(db *gorm.DB) *Dataset {
 	data.BasicSong = song.ToModel()
 
 	song = entity.Song{
-		Upload:   &upload,
+		Upload:   &uploadWithSongs,
 		Title:    "More",
 		Artist:   "Nobory",
 		Genre:    "Rock",

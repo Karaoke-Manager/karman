@@ -3,59 +3,59 @@ package uploads
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
-	schema2 "github.com/Karaoke-Manager/karman/api/schema"
+	"github.com/Karaoke-Manager/karman/api/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
+// Create implements the POST /v1/uploads endpoint.
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	upload, err := c.Service.CreateUpload(r.Context())
+	upload, err := c.svc.CreateUpload(r.Context())
 	if err != nil {
-		// FIXME: Are there special other errors that we should handle?
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 
-	resp := schema2.NewUploadFromModel(upload)
+	resp := schema.FromUpload(upload)
+	render.SetStatus(r, http.StatusCreated)
 	_ = render.Render(w, r, resp)
 }
 
-func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
-	upload := MustGetUpload(r.Context())
-	resp := schema2.NewUploadFromModel(upload)
-	_ = render.Render(w, r, resp)
-}
-
+// Find implements the GET /v1/uploads endpoint.
 func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	// TODO: Do limit-offset pagination
-	uploads, total, err := c.Service.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
+	uploads, total, err := c.svc.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
-		// FIXME: Differentiate other errors?
-		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
 
-	uploadSchemas := make([]*schema2.Upload, len(uploads))
-	for i, upload := range uploads {
-		uploadSchemas[i] = schema2.NewUploadFromModel(upload)
-	}
-	resp := &schema2.List[*schema2.Upload]{
-		Items:  uploadSchemas,
+	resp := schema.List[*schema.Upload]{
+		Items:  make([]*schema.Upload, len(uploads)),
 		Offset: pagination.Offset,
-		Limit:  pagination.Limit,
+		Limit:  pagination.RequestLimit,
 		Total:  total,
 	}
-	_ = render.Render(w, r, resp)
+	for i, upload := range uploads {
+		s := schema.FromUpload(upload)
+		resp.Items[i] = &s
+	}
+	_ = render.Render(w, r, &resp)
 }
 
+// Get implements the GET /v1/uploads/{uuid} endpoint.
+func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
+	upload := MustGetUpload(r.Context())
+	resp := schema.FromUpload(upload)
+	_ = render.Render(w, r, &resp)
+}
+
+// Delete implements the DELETE /v1/uploads/{uuid} endpoint.
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
-	uuid := chi.URLParam(r, "uuid")
-	if err := c.Service.DeleteUploadByUUID(r.Context(), uuid); err != nil {
-		_ = render.Render(w, r, apierror.DBError(err))
+	id := middleware.MustGetUUID(r.Context())
+	if err := c.svc.DeleteUpload(r.Context(), id); err != nil {
+		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
 	_ = render.NoContent(w, r)

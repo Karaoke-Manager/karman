@@ -11,6 +11,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"io/fs"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
+	"github.com/Karaoke-Manager/karman/service/common"
 	"github.com/Karaoke-Manager/karman/service/entity"
 )
 
@@ -64,12 +66,12 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 	// for half-written files an entry in the DB exists.
 	// This makes finding orphaned files much easier.
 	if err = s.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return nil, err
+		return nil, common.DBError(err)
 	}
 
 	var w io.WriteCloser
-	if w, err = s.store.CreateFile(ctx, file.Type, file.UUID); err != nil {
-		return nil, err
+	if w, err = s.store.Create(ctx, file.Type, file.UUID); err != nil {
+		return nil, common.DBError(err)
 	}
 	defer func() {
 		cErr := w.Close()
@@ -103,7 +105,7 @@ func (s *service) StoreFile(ctx context.Context, mediaType mediatype.MediaType, 
 	}
 
 	if err = s.db.WithContext(ctx).Save(&file).Error; err != nil {
-		return nil, err
+		return nil, common.DBError(err)
 	}
 	return file.ToModel(), err
 }
@@ -203,5 +205,9 @@ func analyzeVideo(r io.Reader, mediaType mediatype.MediaType, file *entity.File)
 
 // OpenFile is passed on directly to s.store.
 func (s *service) OpenFile(ctx context.Context, file *model.File) (io.ReadCloser, error) {
-	return s.store.OpenFile(ctx, file.Type, file.UUID)
+	r, err := s.store.Open(ctx, file.Type, file.UUID)
+	if errors.Is(err, fs.ErrNotExist) {
+		return r, common.ErrNotFound
+	}
+	return r, err
 }

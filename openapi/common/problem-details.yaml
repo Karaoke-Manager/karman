@@ -141,3 +141,16 @@ components:
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
             allOf:
               - $ref: "#/components/schemas/ProblemDetails"
+    UnsupportedMediaType:
+      x-summary: Unsupported Media Type
+      description: |-
+        This error indicates that the specified `Content-Type` is not supported for this endpoint.
+      content:
+        application/problem+json:
+          schema:
+            example:
+              title: "Unsupported Media Type"
+              status: 415
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"

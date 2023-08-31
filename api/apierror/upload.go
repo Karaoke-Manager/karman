@@ -9,8 +9,8 @@ import (
 
 // These constants identify known problem types related to uploads.
 const (
-	// TypeUploadClosed indicates that a file action to an upload was rejected because the upload has already been marked for processing.
-	TypeUploadClosed = ProblemTypeDomain + "/upload-closed"
+	// TypeUploadState indicates that a file action to an upload was rejected because the upload has already been marked for processing.
+	TypeUploadState = ProblemTypeDomain + "/upload-state"
 
 	// TypeUploadFileNotFound indicates that a file was requested from an upload but the file was not found.
 	TypeUploadFileNotFound = ProblemTypeDomain + "/upload-file-not-found"
@@ -19,15 +19,15 @@ const (
 	TypeInvalidUploadPath = ProblemTypeDomain + "/invalid-upload-path"
 )
 
-// UploadClosed generates an error indicating that the upload has been marked for processing and cannot be modified.
-func UploadClosed(upload *model.Upload) *ProblemDetails {
+// UploadState generates an error indicating that the upload is not in the correct state to perform this action.
+func UploadState(upload *model.Upload) *ProblemDetails {
 	return &ProblemDetails{
-		Type:   TypeUploadClosed,
-		Title:  "Upload Closed",
+		Type:   TypeUploadState,
+		Title:  "Invalid Upload State",
 		Status: http.StatusConflict,
-		Detail: "You cannot access the files of the upload, because the upload is already closed.",
+		Detail: "This action cannot be performed in the current upload state.",
 		Fields: map[string]any{
-			"upload": upload.UUID.String(),
+			"uuid": upload.UUID.String(),
 		},
 	}
 }
@@ -40,8 +40,8 @@ func UploadFileNotFound(upload *model.Upload, path string) *ProblemDetails {
 		Status: http.StatusNotFound,
 		Detail: fmt.Sprintf("The file at %q cannot be found in upload %s", path, upload.UUID.String()),
 		Fields: map[string]any{
-			"upload": upload.UUID.String(),
-			"path":   path,
+			"uuid": upload.UUID.String(),
+			"path": path,
 		},
 	}
 }

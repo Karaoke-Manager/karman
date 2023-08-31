@@ -24,7 +24,7 @@ func NewDB(t *testing.T) *gorm.DB {
 		sqlDB, _ := db.DB()
 		_ = sqlDB.Close()
 	})
-	err = db.AutoMigrate(&entity.Song{}, &entity.File{}, &entity.UploadProcessingError{}, &entity.Upload{})
+	err = db.AutoMigrate(&entity.Upload{}, &entity.UploadProcessingError{}, &entity.File{}, &entity.Song{})
 	require.NoError(t, err, "Failed to migrate database.")
 	return db
 }

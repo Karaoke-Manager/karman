@@ -14,7 +14,7 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
-func fileStore(t *testing.T) (Store, string) {
+func fileStore(t *testing.T) (*FileStore, string) {
 	dir, err := os.MkdirTemp("", "karman-test-*")
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -52,13 +52,13 @@ func TestNewFileStore(t *testing.T) {
 	})
 }
 
-func TestFileStore_CreateFile(t *testing.T) {
+func TestFileStore_Create(t *testing.T) {
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
 	t.Run("new file", func(t *testing.T) {
 		store, dir := fileStore(t)
-		w, err := store.CreateFile(ctx, mediatype.Nil, id)
+		w, err := store.Create(ctx, mediatype.Nil, id)
 		require.NoError(t, err)
 		n, err := io.WriteString(w, "Hello World")
 		assert.NoError(t, err)
@@ -80,7 +80,7 @@ func TestFileStore_CreateFile(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, f.Close())
 
-		w, err := store.CreateFile(ctx, mediatype.Nil, id)
+		w, err := store.Create(ctx, mediatype.Nil, id)
 		require.NoError(t, err)
 		n, err := io.WriteString(w, "Another\nValue")
 		assert.NoError(t, err)
@@ -94,7 +94,7 @@ func TestFileStore_CreateFile(t *testing.T) {
 	})
 }
 
-func TestFileStore_ReadFile(t *testing.T) {
+func TestFileStore_Open(t *testing.T) {
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 	store, dir := fileStore(t)
@@ -102,7 +102,7 @@ func TestFileStore_ReadFile(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "e4", id.String()), []byte("Hello World"), 0660))
 
 	t.Run("read file", func(t *testing.T) {
-		r, err := store.OpenFile(ctx, mediatype.Nil, id)
+		r, err := store.Open(ctx, mediatype.Nil, id)
 		assert.NoError(t, err)
 		data, err := io.ReadAll(r)
 		assert.NoError(t, err)
@@ -111,7 +111,7 @@ func TestFileStore_ReadFile(t *testing.T) {
 	})
 
 	t.Run("non existing", func(t *testing.T) {
-		_, err := store.OpenFile(ctx, mediatype.Nil, uuid.New())
+		_, err := store.Open(ctx, mediatype.Nil, uuid.New())
 		assert.ErrorIs(t, err, os.ErrNotExist)
 	})
 }

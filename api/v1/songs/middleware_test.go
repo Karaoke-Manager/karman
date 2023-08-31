@@ -12,9 +12,9 @@ import (
 	"github.com/Karaoke-Manager/karman/test"
 )
 
-func TestController_FetchUpload(t *testing.T) {
+func TestController_FetchSong(t *testing.T) {
 	_, c, data := setup(t, true)
-	h := c.FetchUpload(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := c.FetchSong(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetSong(r.Context())
 		assert.True(t, ok, "Did not find a song in the context.")
 	}))

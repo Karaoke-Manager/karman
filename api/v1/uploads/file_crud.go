@@ -2,103 +2,92 @@ package uploads
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/api/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	uploadSvc "github.com/Karaoke-Manager/karman/service/upload"
 )
 
-func (c *Controller) handleFileError(w http.ResponseWriter, r *http.Request, upload *model.Upload, path string, err error) {
-	var details *apierror.ProblemDetails
-	switch {
-	case errors.Is(err, uploadSvc.ErrUploadClosed):
-		details = apierror.UploadClosed(upload)
-	case errors.Is(err, fs.ErrNotExist):
-		details = apierror.UploadFileNotFound(upload, path)
-	default:
-		details = apierror.ErrInternalServerError
-	}
-	_ = render.Render(w, r, details)
-}
-
+// PutFile implements the PUT /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
-
-	if err := c.Service.CreateFile(r.Context(), upload, path, r.Body); err != nil {
-		c.handleFileError(w, r, upload, path, err)
+	fmt.Printf("Put file at %q\n", path)
+	if path == "." {
+		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return
 	}
-
+	f, err := c.svc.CreateFile(r.Context(), upload, path)
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	_, err = io.Copy(f, r.Body)
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
+	err = f.Close()
+	if err != nil {
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
+		return
+	}
 	_ = render.NoContent(w, r)
 }
 
+// GetFile implements the GET /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
-	type FileSchema struct {
-		render.NopRenderer
-		Name  string `json:"name"`
-		Size  int64  `json:"size"`
-		IsDir bool   `json:"directory"`
-	}
-
-	type ResponseSchema struct {
-		render.NopRenderer
-		UploadUUID uuid.UUID    `json:"upload"`
-		File       FileSchema   `json:"file"`
-		Children   []FileSchema `json:"children,omitempty"`
-	}
-
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
+	marker := r.URL.Query().Get("marker")
 
-	stat, err := c.Service.StatFile(r.Context(), upload, path)
-	if err != nil {
-		c.handleFileError(w, r, upload, path, err)
+	stat, err := c.svc.StatFile(r.Context(), upload, path)
+	if errors.Is(err, fs.ErrNotExist) {
+		_ = render.Render(w, r, apierror.UploadFileNotFound(upload, path))
 		return
 	}
-	resp := ResponseSchema{
-		UploadUUID: upload.UUID,
-		File: FileSchema{
-			Name:  stat.Name(),
-			Size:  stat.Size(),
-			IsDir: stat.IsDir(),
-		},
-	}
+	var children []fs.FileInfo
 	if stat.IsDir() {
-		entries, err := c.Service.ReadDir(r.Context(), upload, path+"/"+stat.Name())
+		dir, err := c.svc.OpenDir(r.Context(), upload, path)
 		if err != nil {
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
+		}
+		if err = dir.SkipTo(marker); err != nil {
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		}
-		children := make([]FileSchema, len(entries))
-		for i, entry := range entries {
-			info, err := entry.Info()
-			if err != nil {
-				_ = render.Render(w, r, apierror.ErrInternalServerError)
-				return
-			}
-			children[i] = FileSchema{
-				Name:  entry.Name(),
-				Size:  info.Size(),
-				IsDir: entry.IsDir(),
-			}
+		children, err = dir.Readdir(500)
+		if errors.Is(err, io.EOF) {
+			marker = ""
+		} else if err != nil {
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
+			return
+		} else {
+			marker = dir.Marker()
 		}
-		resp.Children = children
 	}
-	_ = render.Render(w, r, resp)
+	s := schema.FromUploadFileStat(stat, children, marker)
+	if path == "." {
+		// Do not include root dir name
+		s.Name = ""
+	}
+	_ = render.Render(w, r, s)
 }
 
+// DeleteFile implements the DELETE /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
-
-	if err := c.Service.DeleteFile(r.Context(), upload, path); err != nil {
-		c.handleFileError(w, r, upload, path, err)
+	if path == "." {
+		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
+		return
+	}
+	if err := c.svc.DeleteFile(r.Context(), upload, path); err != nil {
+		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
 	_ = render.NoContent(w, r)

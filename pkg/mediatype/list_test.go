@@ -1,7 +1,6 @@
 package mediatype
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -25,7 +24,9 @@ func TestMediaTypes_BestMatch(t *testing.T) {
 			l := ParseList(c.list)
 			a := ParseList(c.available)
 			m := l.BestMatch(a...)
-			assert.Equal(t, c.expected, m, "BestMatch()")
+			if !m.Equals(c.expected) {
+				t.Errorf("BestMatch(%v) = %q, expected %q", a, m, c.expected)
+			}
 		})
 	}
 }

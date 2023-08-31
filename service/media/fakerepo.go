@@ -20,7 +20,7 @@ func NewFakeRepository() Repository {
 	return &fakeRepo{files: make(map[uuid.UUID]model.File)}
 }
 
-// CreateFile stores file and sets its UUID, CreatedAt, and UpdatedAt
+// CreateFile stores file and sets its UUID, CreatedAt, and UpdatedAt.
 func (f fakeRepo) CreateFile(ctx context.Context, file *model.File) error {
 	file.UUID = uuid.New()
 	file.CreatedAt = time.Now()

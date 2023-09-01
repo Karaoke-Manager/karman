@@ -1,3 +1,5 @@
+//go:build database
+
 package songs
 
 import (
@@ -11,8 +13,6 @@ import (
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
@@ -44,7 +44,7 @@ func TestController_FetchSong(t *testing.T) {
 func TestController_CheckModify(t *testing.T) {
 	t.Parallel()
 
-	c := NewController(song.NewFakeRepository(), media.NewFakeStore(), media.NewFakeService(media.NewFakeRepository()))
+	c, _ := setupController(t)
 	simpleSong := model.Song{Model: model.Model{UUID: uuid.New()}}
 	songWithUpload := model.Song{Model: model.Model{UUID: uuid.New()}, InUpload: true}
 

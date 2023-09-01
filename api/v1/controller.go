@@ -22,13 +22,14 @@ type Controller struct {
 // This function will create the required sub-controllers automatically.
 func NewController(
 	songRepo song.Repository,
-	mediaService media.Service,
+	songSvc song.Service,
+	mediaSvc media.Service,
 	mediaStore media.Store,
 	uploadRepo upload.Repository,
 	uploadStore upload.Store) *Controller {
 	return &Controller{
 		uploadController: uploads.NewController(uploadRepo, uploadStore),
-		songController:   songs.NewController(songRepo, mediaStore, mediaService),
+		songController:   songs.NewController(songRepo, songSvc, mediaStore, mediaSvc),
 		davController:    dav.NewController(songRepo, mediaStore),
 	}
 }

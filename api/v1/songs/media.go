@@ -2,6 +2,7 @@ package songs
 
 import (
 	"io"
+	"mime"
 	"net/http"
 	"strconv"
 
@@ -17,12 +18,14 @@ import (
 // GetTxt implements the GET /v1/songs/{uuid}/txt endpoint.
 func (c *Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
+	c.songSvc.Prepare(r.Context(), &song)
 
 	t := render.MustGetNegotiatedContentType(r)
 	if t.Equals(mediatype.TextPlain) {
 		t = t.WithoutParameters("charset", "utf-8")
 	}
 	w.Header().Set("Content-Type", t.String())
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": song.TxtFileName}))
 	w.WriteHeader(http.StatusOK)
 	_ = txt.WriteSong(w, song.Song)
 }
@@ -36,11 +39,13 @@ func (c *Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
+	c.songSvc.ParseArtists(r.Context(), &song)
 	err = c.songRepo.UpdateSong(r.Context(), &song)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
+	c.songSvc.Prepare(r.Context(), &song)
 	s := schema.FromSong(song)
 	_ = render.Render(w, r, &s)
 }
@@ -52,7 +57,8 @@ func (c *Controller) GetCover(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "cover"))
 		return
 	}
-	c.sendFile(w, r, song.CoverFile)
+	c.songSvc.Prepare(r.Context(), &song)
+	c.sendFile(w, r, song.CoverFile, song.CoverFileName)
 }
 
 // GetBackground implements the GET /v1/songs/{uuid}/background endpoint.
@@ -62,7 +68,8 @@ func (c *Controller) GetBackground(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "background"))
 		return
 	}
-	c.sendFile(w, r, song.BackgroundFile)
+	c.songSvc.Prepare(r.Context(), &song)
+	c.sendFile(w, r, song.BackgroundFile, song.BackgroundFileName)
 }
 
 // GetAudio implements the GET /v1/songs/{uuid}/audio endpoint.
@@ -72,7 +79,8 @@ func (c *Controller) GetAudio(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "audio"))
 		return
 	}
-	c.sendFile(w, r, song.AudioFile)
+	c.songSvc.Prepare(r.Context(), &song)
+	c.sendFile(w, r, song.AudioFile, song.AudioFileName)
 }
 
 // GetVideo implements the GET /v1/songs/{uuid}/video endpoint.
@@ -82,12 +90,13 @@ func (c *Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "video"))
 		return
 	}
-	c.sendFile(w, r, song.VideoFile)
+	c.songSvc.Prepare(r.Context(), &song)
+	c.sendFile(w, r, song.VideoFile, song.VideoFileName)
 }
 
 // sendFile sends the file as response to r.
 // This method makes sure that the required headers are set.
-func (c *Controller) sendFile(w http.ResponseWriter, r *http.Request, file *model.File) {
+func (c *Controller) sendFile(w http.ResponseWriter, r *http.Request, file *model.File, name string) {
 	contentType := render.NegotiateContentType(r, file.Type)
 	if contentType.IsNil() {
 		render.NotAcceptable(w, r)
@@ -101,6 +110,7 @@ func (c *Controller) sendFile(w http.ResponseWriter, r *http.Request, file *mode
 	defer f.Close()
 	w.Header().Set("Content-Length", strconv.FormatInt(file.Size, 10))
 	w.Header().Set("Content-Type", contentType.String())
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": name}))
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.Copy(w, f)
 }

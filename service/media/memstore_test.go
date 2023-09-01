@@ -10,9 +10,9 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
-func Test_fakeStore(t *testing.T) {
+func Test_memStore(t *testing.T) {
 	id := uuid.New()
-	store := NewFakeStore()
+	store := NewMemStore()
 
 	w, err := store.Create(context.TODO(), mediatype.Nil, id)
 	if err != nil {

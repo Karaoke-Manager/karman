@@ -3,6 +3,7 @@
 package songs
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/test"
@@ -25,28 +25,24 @@ import (
 func setupController(t *testing.T) (*Controller, pgxutil.DB) {
 	db := test.NewDB(t)
 	songRepo := song.NewDBRepository(db)
-	mediaStore := media.NewFakeStore()
-	mediaService := media.NewFakeService(media.NewDBRepository(db))
-	return NewController(songRepo, mediaStore, mediaService), db
+	songSvc := song.NewService()
+	mediaStore := media.NewMemStore()
+	mediaRepo := media.NewDBRepository(db)
+	mediaService := media.NewFakeService(mediaRepo)
+	return NewController(songRepo, songSvc, mediaStore, mediaService), db
 }
 
-// setupHandler is a convenience function that calls setupController and builds a HTTP handler around the controller.
-func setupHandler(t *testing.T, prefix string) (http.Handler, pgxutil.DB) {
-	c, db := setupController(t)
+// setupHandler is a convenience function that sets up a http.Handler for c.
+func setupHandler(c *Controller, prefix string) http.Handler {
 	r := chi.NewRouter()
 	r.Route(strings.TrimSuffix(prefix, "/")+"/", c.Router)
-	return r, db
-}
-
-// songPath is a helper function that returns the request path to the resource identified by suffix, scoped to song.
-func songPath(song model.Song, suffix string) string {
-	return "/" + song.UUID.String() + suffix
+	return r
 }
 
 // testSongConflict returns a test that checks that the specified request causes a 409 Conflict error.
-func testSongConflict(h http.Handler, method string, path string, id uuid.UUID) func(t *testing.T) {
+func testSongConflict(h http.Handler, method string, urlFmt string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
-		r := httptest.NewRequest(method, path, nil)
+		r := httptest.NewRequest(method, fmt.Sprintf(urlFmt, id), nil)
 		resp := test.DoRequest(h, r)
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
 			"uuid": id.String(),

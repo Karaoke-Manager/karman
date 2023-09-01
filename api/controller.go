@@ -25,12 +25,13 @@ type Controller struct {
 // The injected dependencies are passed along to the sub-controllers.
 func NewController(
 	songRepo song.Repository,
-	mediaService media.Service,
+	songSvc song.Service,
+	mediaSvc media.Service,
 	mediaStore media.Store,
 	uploadRepo upload.Repository,
 	uploadStore upload.Store) *Controller {
 	return &Controller{
-		v1Controller: v1.NewController(songRepo, mediaService, mediaStore, uploadRepo, uploadStore),
+		v1Controller: v1.NewController(songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore),
 	}
 }
 

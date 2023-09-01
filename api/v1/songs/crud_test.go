@@ -20,7 +20,9 @@ import (
 
 //go:generate go run ../../../../tools/gensong -output testdata/valid-song.txt
 func TestController_Create(t *testing.T) {
-	h, _ := setupHandler(t, "/v1/songs/")
+	t.Parallel()
+	c, _ := setupController(t)
+	h := setupHandler(c, "/v1/songs/")
 	url := "/v1/songs/"
 
 	t.Run("200 OK", func(t *testing.T) {
@@ -55,7 +57,9 @@ func TestController_Create(t *testing.T) {
 }
 
 func TestController_Find(t *testing.T) {
-	h, db := setupHandler(t, "/v1/songs/")
+	t.Parallel()
+	c, db := setupController(t)
+	h := setupHandler(c, "/v1/songs/")
 	testdata.NSongs(t, db, 150)
 	url := "/v1/songs/"
 
@@ -77,7 +81,9 @@ func TestController_Find(t *testing.T) {
 }
 
 func TestController_Get(t *testing.T) {
-	h, db := setupHandler(t, "/v1/songs/")
+	t.Parallel()
+	c, db := setupController(t)
+	h := setupHandler(c, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
 
@@ -102,7 +108,9 @@ func TestController_Get(t *testing.T) {
 }
 
 func TestController_Update(t *testing.T) {
-	h, db := setupHandler(t, "/v1/songs/")
+	t.Parallel()
+	c, db := setupController(t)
+	h := setupHandler(c, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithUpload := testdata.SongWithUpload(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
@@ -129,7 +137,7 @@ func TestController_Update(t *testing.T) {
 	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPatch, url, "application/json"))
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPatch, url, "text/plain", "application/json"))
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodPatch, fmt.Sprintf("/v1/songs/%s", uuid.New()), http.StatusNotFound))
-	t.Run("409 Conflict", testSongConflict(h, http.MethodPatch, fmt.Sprintf("/v1/songs/%s", songWithUpload.UUID), songWithUpload.UUID))
+	t.Run("409 Conflict", testSongConflict(h, http.MethodPatch, "/v1/songs/%s", songWithUpload.UUID))
 	t.Run("422 Unprocessable Entity", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPatch, url, strings.NewReader(`
 			{"title": "Foobar", "medley": {"mode": "manual"}}
@@ -141,7 +149,9 @@ func TestController_Update(t *testing.T) {
 }
 
 func TestController_Delete(t *testing.T) {
-	h, db := setupHandler(t, "/v1/songs/")
+	t.Parallel()
+	c, db := setupController(t)
+	h := setupHandler(c, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
 

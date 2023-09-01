@@ -1,3 +1,6 @@
+run:
+  build-tags:
+    - database
 # FIXME: Add useful linters
 linters:
   enable:

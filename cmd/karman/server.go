@@ -58,6 +58,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// TODO: Check DB Connection before startup
 
 	songRepo := song.NewDBRepository(pool)
+	songSvc := song.NewService()
 	uploadRepo := upload.NewDBRepository(pool)
 	uploadStore, err := upload.NewFileStore("tmp/uploads")
 	if err != nil {
@@ -69,7 +70,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	mediaService := media.NewService(media.NewDBRepository(pool), mediaStore)
 
-	apiController := api.NewController(songRepo, mediaService, mediaStore, uploadRepo, uploadStore)
+	apiController := api.NewController(songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)

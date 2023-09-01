@@ -20,6 +20,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	song := model.Song{Song: data}
+	c.songSvc.ParseArtists(r.Context(), &song)
 	if err = c.songRepo.CreateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return

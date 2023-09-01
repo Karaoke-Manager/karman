@@ -21,25 +21,25 @@ func (b *closeBuffer) Close() error {
 	return nil
 }
 
-// fakeStore is an in-memory Store implementation.
-type fakeStore struct {
+// memStore is an in-memory Store implementation.
+type memStore struct {
 	files map[uuid.UUID]*closeBuffer
 }
 
-// NewFakeStore returns a new Store implementation that holds file contents in memory.
-func NewFakeStore() Store {
-	return &fakeStore{make(map[uuid.UUID]*closeBuffer)}
+// NewMemStore returns a new Store implementation that holds file contents in memory.
+func NewMemStore() Store {
+	return &memStore{make(map[uuid.UUID]*closeBuffer)}
 }
 
 // Create opens a writer to a new file.
-func (s *fakeStore) Create(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
+func (s *memStore) Create(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
 	buf := &closeBuffer{bytes.Buffer{}}
 	s.files[id] = buf
 	return buf, nil
 }
 
 // Open returns a new reader to the data of the file.
-func (s *fakeStore) Open(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
+func (s *memStore) Open(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
 	buf, ok := s.files[id]
 	if !ok {
 		return nil, fs.ErrNotExist

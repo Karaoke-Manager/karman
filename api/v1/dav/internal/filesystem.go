@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/net/webdav"
-	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/service/media"
 	songsvc "github.com/Karaoke-Manager/karman/service/song"
 )
@@ -67,7 +67,7 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	}
 
 	song, err := s.songRepo.GetSong(ctx, id)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, service.ErrNotFound) {
 		return nil, fs.ErrNotExist
 	} else if err != nil {
 		return nil, err

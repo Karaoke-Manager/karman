@@ -1,14 +1,18 @@
+//go:build database
+
 package songs
 
 import (
 	"encoding/json"
-	"io"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
 
+	"codello.dev/ultrastar/txt"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
@@ -16,39 +20,54 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/test"
+	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
 func TestController_GetTxt(t *testing.T) {
-	h, _, data := setup(t, true)
+	h, db := setupHandler(t, "/v1/songs/")
+	songWithCover := testdata.SongWithCover(t, db)
+	url := fmt.Sprintf("/v1/songs/%s/txt", songWithCover.UUID)
 
 	t.Run("200 OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, songPath(data.SongWithCover, "/txt"), nil)
+		r := httptest.NewRequest(http.MethodGet, url, nil)
 		resp := test.DoRequest(h, r)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		body, err := io.ReadAll(resp.Body)
-		if assert.NoError(t, err) {
-			assert.Equal(t, `#TITLE:Some
-#ARTIST:Unimportant
-#COVER:Unimportant - Some [CO].png
-E
-`, string(body))
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("GET /{uuid}/txt returned status %d, expected %d", resp.StatusCode, http.StatusOK)
+		}
+		body, err := txt.NewReader(resp.Body).ReadSong()
+		if err != nil {
+			t.Errorf("GET %s responded with an invalid UltraStar song", url)
+		}
+		if body.Title != songWithCover.Title {
+			t.Errorf(`GET %s responded with "#TITLE:%s", expected %q`, url, body.Title, songWithCover.Title)
+		}
+		if body.CoverFileName == "" {
+			t.Errorf("GET %s responded with no #COVER, expected non-empty string", url)
 		}
 	})
-	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, "/"+data.InvalidUUID+"/txt"))
-	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, songPath(data.AbsentSong, "/txt"), http.StatusNotFound))
+	t.Run("400 Bad Request (Invalid UUID)", test.InvalidUUID(h, http.MethodGet, fmt.Sprintf("/v1/songs/%s/txt", testdata.InvalidUUID)))
+	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, fmt.Sprintf("/v1/songs/%s/txt", uuid.New()), http.StatusNotFound))
 }
 
 func TestController_ReplaceTxt(t *testing.T) {
-	h, _, data := setup(t, true)
-	path := songPath(data.SongWithCover, "/txt")
+	h, db := setupHandler(t, "/v1/songs/")
+	songWithCover := testdata.SongWithCover(t, db)
+	url := fmt.Sprintf("/v1/songs/%s/txt", songWithCover.UUID)
 
 	t.Run("200 OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPut, path, strings.NewReader(`#TITLE:Foobar
+		r := httptest.NewRequest(http.MethodPut, url, strings.NewReader(`#TITLE:Foobar
 #ARTIST:Barfoo`))
 		r.Header.Set("Content-Type", "text/plain")
 		resp := test.DoRequest(h, r)
+
 		var song schema.Song
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("PUT %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusOK)
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&song); err != nil {
+			t.Errorf("PUT %s responded invalid song schema: %s", url, err)
+			return
+		}
 		if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&song)) {
 			assert.Equal(t, "Foobar", song.Title)
 			assert.Equal(t, "Barfoo", song.Artist)

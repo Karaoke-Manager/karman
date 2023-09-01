@@ -2,12 +2,11 @@ package main
 
 import (
 	"log"
-	"time"
 
-	"github.com/glebarez/sqlite"
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/Karaoke-Manager/karman/migrations"
 )
@@ -25,23 +24,14 @@ var migrateCmd = &cobra.Command{
 
 func runMigrate(cmd *cobra.Command, args []string) {
 	// TODO: build proper CLI
-	db, err := gorm.Open(sqlite.Open("test.db?_pragma=foreign_keys(1)"), &gorm.Config{
-		NowFunc: func() time.Time { return time.Now().UTC() },
-	})
-	if err != nil {
-		log.Fatalf("goose: failed to open DB: %v\n", err)
-	}
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatalf("goose: failed to open DB: %v\n", err)
-	}
-	defer sqlDB.Close()
-
 	goose.SetBaseFS(migrations.FS)
-	if err := goose.SetDialect(db.Dialector.Name()); err != nil {
-		log.Fatalf("goose: failed to set dialect")
+	db, err := goose.OpenDBWithDriver("pgx", "postgres://karman:secret@localhost:5432/karman?sslmode=disable")
+	if err != nil {
+		log.Fatalf("goose: failed to open DB: %s", err)
 	}
-	if err := goose.Up(sqlDB, "."); err != nil {
+	defer db.Close()
+
+	if err := goose.Up(db, "."); err != nil {
 		log.Printf("%#v", err)
 		log.Fatalf("goose up: %v", err)
 	}

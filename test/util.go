@@ -34,15 +34,15 @@ func DoRequest(h http.Handler, r *http.Request) *http.Response {
 // AssertPagination validates that the response provides the expected pagination values.
 func AssertPagination(t *testing.T, resp *http.Response, offset, limit, count int, total int64) {
 	if resp.Header.Get("Pagination-Offset") != strconv.Itoa(offset) {
-		t.Errorf("Header Pagination-Offset:%s, expected %d", resp.Header.Get("Pagination-Offset"), offset)
+		t.Errorf("%s %s responded with Pagination-Offset:%s, expected %d", resp.Request.Method, resp.Request.RequestURI, resp.Header.Get("Pagination-Offset"), offset)
 	}
 	if resp.Header.Get("Pagination-Limit") != strconv.Itoa(limit) {
-		t.Errorf("Header Pagination-Limit:%s, expected %d", resp.Header.Get("Pagination-Limit"), limit)
+		t.Errorf("%s %s responded with Pagination-Limit:%s, expected %d", resp.Request.Method, resp.Request.RequestURI, resp.Header.Get("Pagination-Limit"), limit)
 	}
 	if resp.Header.Get("Pagination-Count") != strconv.Itoa(count) {
-		t.Errorf("Header Pagination-Count:%s, expected %d", resp.Header.Get("Pagination-Count"), count)
+		t.Errorf("%s %s responded with Pagination-Count:%s, expected %d", resp.Request.Method, resp.Request.RequestURI, resp.Header.Get("Pagination-Count"), count)
 	}
 	if resp.Header.Get("Pagination-Total") != strconv.FormatInt(total, 10) {
-		t.Errorf("Header Pagination-Total:%s, expected %d", resp.Header.Get("Pagination-Total"), total)
+		t.Errorf("%s %s responded with Pagination-Total:%s, expected %d", resp.Request.Method, resp.Request.RequestURI, resp.Header.Get("Pagination-Total"), total)
 	}
 }

@@ -7,8 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/Karaoke-Manager/karman/api/apierror"
 )
 
@@ -16,26 +14,38 @@ import (
 // Any fields will be checked for presence in the custom fields of the response.
 // This assertion will NOT fail if additional fields are present in the response.
 func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType string, fields map[string]any) {
-	assert.Equal(t, code, resp.StatusCode, "response status code does not equal expected value")
-	assert.Equal(t, "application/problem+json", resp.Header.Get("Content-Type"), "Content-Type header does not equal expected value.")
-	var err apierror.ProblemDetails
-	if assert.NoError(t, json.NewDecoder(resp.Body).Decode(&err), "response does not fit ProblemDetails schema") {
-		assert.Equal(t, code, err.Status, "problem details status does not equal expected value")
-		if errType == "" {
-			assert.Truef(t, err.IsDefaultType(), "problem details has unexpected type %s", err.Type)
-		} else {
-			assert.Equal(t, errType, err.Type, "problem details has unexpected type")
+	if resp.StatusCode != code {
+		t.Errorf("%s %s responded with status code %d, expected %d", resp.Request.Method, resp.Request.RequestURI, resp.StatusCode, code)
+	}
+	if resp.Header.Get("Content-Type") != "application/problem+json" {
+		t.Errorf("%s %s responded with Content-Type %s, expected %s", resp.Request.Method, resp.Request.RequestURI, resp.Header.Get("Content-Type"), "application/problem+json")
+	}
+	var details apierror.ProblemDetails
+	if err := json.NewDecoder(resp.Body).Decode(&details); err != nil {
+		t.Errorf("%s %s responded with invalid problem details schema: %s", resp.Request.Method, resp.Request.RequestURI, err)
+		return
+	}
+	if details.Status != code {
+		t.Errorf(`%s %s responded with {"code": %d}, expected %d`, resp.Request.Method, resp.Request.RequestURI, details.Status, code)
+	}
+	if details.IsDefaultType() && errType != "" {
+		t.Errorf(`%s %s responded with {"type": <default>}, expected %q`, resp.Request.Method, resp.Request.RequestURI, errType)
+	} else if !details.IsDefaultType() && errType == "" {
+		t.Errorf(`%s %s responded with {"type": %q}, expected default type`, resp.Request.Method, resp.Request.RequestURI, details.Type)
+	}
+	for field, expected := range fields {
+		actual, ok := details.Fields[field]
+		if !ok {
+			t.Errorf("%s %s responded with problem details, expected field %s", resp.Request.Method, resp.Request.RequestURI, field)
+			continue
 		}
-		for field, value := range fields {
-			actual, ok := err.Fields[field]
-			assert.Truef(t, ok, "field %s is not present in problem details", field)
-
-			expectedType := reflect.TypeOf(value)
-			actualType := reflect.TypeOf(actual)
-			if actualType.ConvertibleTo(expectedType) {
-				actual = reflect.ValueOf(actual).Convert(expectedType).Interface()
-			}
-			assert.Equalf(t, value, actual, "field %s has unexpected value in problem details", field)
+		expectedType := reflect.TypeOf(expected)
+		actualType := reflect.TypeOf(actual)
+		if actualType.ConvertibleTo(expectedType) {
+			actual = reflect.ValueOf(actual).Convert(expectedType).Interface()
+		}
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf(`%s %s responded with {%q: %q}, expected %q`, resp.Request.Method, resp.Request.RequestURI, field, actual, expected)
 		}
 	}
 }

@@ -91,10 +91,15 @@ func ProcessingUpload(t *testing.T, db pgxutil.DB) model.Upload {
 }
 
 func DoneUpload(t *testing.T, db pgxutil.DB) model.Upload {
+	u, _ := doneUpload(t, db, 20)
+	return u
+}
+
+func doneUpload(t *testing.T, db pgxutil.DB, n int) (model.Upload, int) {
 	row, err := pgxutil.InsertRowReturning(context.TODO(), db, "uploads", map[string]any{
 		"open":            false,
-		"songs_total":     20,
-		"songs_processed": 20,
+		"songs_total":     n,
+		"songs_processed": n,
 	}, "id, uuid, created_at, updated_at", pgx.RowToStructByName[creationResult])
 	if err != nil {
 		t.Fatalf("testdata.DoneUpload() could not insert into the database: %s", err)
@@ -106,10 +111,10 @@ func DoneUpload(t *testing.T, db pgxutil.DB) model.Upload {
 			UpdatedAt: row.UpdatedAt,
 		},
 		State:          model.UploadStateDone,
-		SongsTotal:     20,
-		SongsProcessed: 20,
+		SongsTotal:     n,
+		SongsProcessed: n,
 		Errors:         0,
-	}
+	}, row.ID
 }
 
 func DoneUploadWithErrors(t *testing.T, db pgxutil.DB) model.Upload {

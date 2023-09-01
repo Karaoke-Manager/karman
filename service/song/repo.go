@@ -35,6 +35,8 @@ type songRow struct {
 	UpdatedAt time.Time        `db:"updated_at"`
 	DeletedAt pgtype.Timestamp `db:"deleted_at"`
 
+	UploadID pgtype.Int4 `db:"upload_id"`
+
 	BPM             ultrastar.BPM
 	Gap             time.Duration
 	VideoGap        time.Duration `db:"video_gap"`
@@ -109,7 +111,8 @@ func (r songRow) toModel() model.Song {
 			CreatedAt: r.CreatedAt,
 			UpdatedAt: r.UpdatedAt,
 		},
-		Artists: r.Artists,
+		InUpload: r.UploadID.Valid,
+		Artists:  r.Artists,
 		Song: ultrastar.Song{
 			BPM:             r.BPM,
 			Gap:             r.Gap,
@@ -253,7 +256,7 @@ func (r *dbRepo) CreateSong(ctx context.Context, song *model.Song) error {
 // GetSong fetches a single song from the database by its UUID.
 func (r *dbRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error) {
 	row, err := pgxutil.SelectRow(ctx, r.db, `SELECT
-    s.uuid, s.created_at, s.updated_at, s.deleted_at,
+    s.uuid, s.created_at, s.updated_at, s.deleted_at, s.upload_id,
     s.title, s.artists, s.genre, s.edition, s.creator, s.language, s.year, s.comment, s.extra,
     s.bpm, s.gap, s.video_gap, s.start, s."end", s.preview_start, s.medley_start_beat, s.medley_end_beat, s.manual_medley,
     s.duet_singer1, s.duet_singer2, s.notes_p1, s.notes_p2,
@@ -285,7 +288,7 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
 	}
 
 	songs, err := pgxutil.Select(ctx, r.db, `SELECT
-    s.uuid, s.created_at, s.updated_at, s.deleted_at,
+    s.uuid, s.created_at, s.updated_at, s.deleted_at, s.upload_id,
     s.title, s.artists, s.genre, s.edition, s.creator, s.language, s.year, s.comment, s.extra,
     s.bpm, s.gap, s.video_gap, s.start, s."end", s.preview_start, s.medley_start_beat, s.medley_end_beat, s.manual_medley,
     s.notes_p1, s.notes_p2, s.duet_singer1, s.duet_singer2,

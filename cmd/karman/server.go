@@ -50,6 +50,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer pool.Close()
 
+	// TODO: Check DB Connection before startup
+
 	songRepo := song.NewDBRepository(pool)
 	uploadRepo := upload.NewDBRepository(pool)
 	uploadStore, err := upload.NewFileStore("tmp/uploads")

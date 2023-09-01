@@ -2,9 +2,9 @@ package test
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"testing"
 
@@ -22,25 +22,14 @@ import (
 )
 
 var (
-	pgVersion string // postgres version, used with testcontainers
-	pgImage   string // full postgres image, used with testcontainers, overrides pgVersion
+	pgVersion = os.Getenv("PGVERSION") // postgres version, used with testcontainers
+	pgImage   = os.Getenv("PGIMAGE")   // full postgres image, used with testcontainers, overrides pgVersion
 
-	pgHost string // host of the database
-	pgPort string // port of the database
-	pgUser string // user of the database, must have CREATE/DROP DATABASE permission
-	pgPass string // password of pgUser
+	pgHost = os.Getenv("PGHOST") // host of the database
+	pgPort = os.Getenv("PGPORT") // port of the database
+	pgUser = os.Getenv("PGUSER") // user of the database, must have CREATE/DROP DATABASE permission
+	pgPass = os.Getenv("PGPASS") // password of pgUser
 )
-
-// init adds flags supported by this package.
-func init() {
-	flag.StringVar(&pgVersion, "pg-version", "15", "Version of PostgreSQL to be used.")
-	flag.StringVar(&pgImage, "pg-image", "", "Full image name to use for PostgreSQL testing.")
-
-	flag.StringVar(&pgHost, "pg-host", "", "Hostname of an existing database for testing.")
-	flag.StringVar(&pgPort, "pg-port", "5432", "Port number of an existing database for testing.")
-	flag.StringVar(&pgUser, "pg-user", "karman", "Username to connect to the testing database. Needs CREATE/DROP DATABASE permission.")
-	flag.StringVar(&pgPass, "pg-pass", "secret", "Password for pg-user.")
-}
 
 // NewDB creates a new database connection for a single test.
 // Depending on how the go test command was invoked this method behaves in one of two ways:

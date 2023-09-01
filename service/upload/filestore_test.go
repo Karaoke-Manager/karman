@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/google/uuid"
@@ -168,7 +169,7 @@ func TestFileStore_Create(t *testing.T) {
 		if stat.Size() != 0 {
 			t.Errorf("Stat() indicates a size of %d, expected %d", stat.Size(), 0)
 		}
-		if stat.Mode() != store.FileMode {
+		if runtime.GOOS != "windows" && stat.Mode() != store.FileMode {
 			t.Errorf("f.Stat() indicates mode %#o, expected %#o", stat.Mode(), store.FileMode)
 		}
 		dirStat, err := os.Stat(filepath.Join(dir, id.String(), "my/foo"))
@@ -178,7 +179,7 @@ func TestFileStore_Create(t *testing.T) {
 		if !dirStat.IsDir() {
 			t.Errorf("dir.Stat() indicates a file, expected directory")
 		}
-		if dirStat.Mode().Perm() != store.DirMode {
+		if runtime.GOOS != "windows" && dirStat.Mode().Perm() != store.DirMode {
 			t.Errorf("dir.Stat() indicates mode %#o, expected %#o", dirStat.Mode().Perm(), store.DirMode)
 		}
 	})

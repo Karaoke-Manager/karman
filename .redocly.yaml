@@ -1,5 +1,5 @@
-extends:
-  - recommended
+extends: [ recommended ]
+
 theme:
   openapi:
     hideHostname: true
@@ -21,7 +21,7 @@ rules:
   parameter-description: error
   path-segment-plural:
     severity: error
-    exceptions: [v1]
+    exceptions: [ v1 ]
     ignoreLastPathSegment: true
 
   paths-kebab-case: error

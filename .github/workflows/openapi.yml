@@ -1,0 +1,41 @@
+name: OpenAPI
+on:
+  pull_request:
+    paths: [ openapi/** ]
+  push:
+    branches: [ main ]
+    tags: [ "*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint OpenAPI Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      - name: Install Redocly CLI
+        run: npm install --global @redocly/cli
+      - name: Lint OpenAPI Spec
+        run: make lint-openapi
+
+  test:
+    name: Build OpenAPI Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      - name: Install Redocly CLI
+        run: npm install --global @redocly/cli
+      - name: Lint OpenAPI Spec
+        run: make openapi

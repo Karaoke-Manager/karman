@@ -1,30 +1,36 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
-	"gorm.io/gorm"
 
 	"github.com/Karaoke-Manager/karman/api"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
+	"github.com/Karaoke-Manager/karman/service/upload"
 )
-
-func init() {
-	rootCmd.AddCommand(serverCmd)
-}
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the Karman server",
 	Long:  "The karman server runs the Karman backend API.",
-	Run:   runServer,
+	RunE:  runServer,
+}
+
+var (
+	connStringServer string
+)
+
+func init() {
+	serverCmd.Flags().StringVarP(&connStringServer, "conn", "c", "postgres://karman:secret@localhost:5432/karman?sslmode=disable", "Connection String to PostgreSQL database")
+	rootCmd.AddCommand(serverCmd)
 }
 
 type Config struct {
@@ -37,37 +43,44 @@ var defaultConfig = &Config{
 	Prefix:  "/api",
 }
 
-func runServer(cmd *cobra.Command, args []string) {
+func runServer(_ *cobra.Command, _ []string) error {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	db, err := gorm.Open(sqlite.Open("test.db?_pragma=foreign_keys(1)"), &gorm.Config{
-		NowFunc: func() time.Time { return time.Now().UTC() },
-	})
+	dbConfig, err := pgxpool.ParseConfig(connStringServer)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	defer func() {
-		sqlDB, err := db.DB()
-		if err == nil {
-			_ = sqlDB.Close()
-		}
-	}()
+	pool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 
-	songSvc := song.NewService(db)
+	// TODO: Check DB Connection before startup
 
+	songRepo := song.NewDBRepository(pool)
+	songSvc := song.NewService()
+	uploadRepo := upload.NewDBRepository(pool)
+	uploadStore, err := upload.NewFileStore("tmp/uploads")
+	if err != nil {
+		return err
+	}
 	mediaStore, err := media.NewFileStore("tmp/media")
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
-	mediaSvc := media.NewService(db, mediaStore)
+	mediaService := media.NewService(media.NewDBRepository(pool), mediaStore)
 
-	// uploadFS := rwfs.DirFS("tmp/uploads")
-	// uploadSvc := upload.NewService(db, uploadFS)
-
-	apiController := api.NewController(songSvc, mediaSvc, nil)
+	apiController := api.NewController(songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore)
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)
+	server := &http.Server{
+		Addr:              defaultConfig.Address,
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           r,
+	}
 	fmt.Printf("Running on %s\n", defaultConfig.Address)
-	log.Fatalln(http.ListenAndServe(defaultConfig.Address, r))
+	log.Fatalln(server.ListenAndServe())
+	return nil
 }

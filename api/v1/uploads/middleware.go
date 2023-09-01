@@ -22,21 +22,21 @@ const (
 )
 
 // SetUpload sets the song instance in ctx.
-func SetUpload(ctx context.Context, upload *model.Upload) context.Context {
+func SetUpload(ctx context.Context, upload model.Upload) context.Context {
 	return context.WithValue(ctx, contextKeyInstance, upload)
 }
 
 // GetUpload returns a model.Upload instance from the context.
 // If the context does not contain an upload instance, the second return value will be false.
-func GetUpload(ctx context.Context) (*model.Upload, bool) {
-	u, ok := ctx.Value(contextKeyInstance).(*model.Upload)
+func GetUpload(ctx context.Context) (model.Upload, bool) {
+	u, ok := ctx.Value(contextKeyInstance).(model.Upload)
 	return u, ok
 }
 
 // MustGetUpload returns a model.Upload instance from the context.
 // In contrast to GetUpload this function panics if the context does not contain an upload instance.
-func MustGetUpload(ctx context.Context) *model.Upload {
-	return ctx.Value(contextKeyInstance).(*model.Upload)
+func MustGetUpload(ctx context.Context) model.Upload {
+	return ctx.Value(contextKeyInstance).(model.Upload)
 }
 
 // FetchUpload is a middleware that fetches the model.Upload instance identified by the request and stores it in the request context.
@@ -44,7 +44,7 @@ func (c *Controller) FetchUpload(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		id := middleware.MustGetUUID(r.Context())
 		// TODO: Maybe support 410 for soft deleted?
-		upload, err := c.svc.GetUpload(r.Context(), id)
+		upload, err := c.uploadRepo.GetUpload(r.Context(), id)
 		if err != nil {
 			_ = render.Render(w, r, apierror.ServiceError(err))
 			return

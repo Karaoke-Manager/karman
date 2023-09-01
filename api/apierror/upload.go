@@ -20,7 +20,7 @@ const (
 )
 
 // UploadState generates an error indicating that the upload is not in the correct state to perform this action.
-func UploadState(upload *model.Upload) *ProblemDetails {
+func UploadState(upload model.Upload) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadState,
 		Title:  "Invalid Upload State",
@@ -33,7 +33,7 @@ func UploadState(upload *model.Upload) *ProblemDetails {
 }
 
 // UploadFileNotFound generates an error indicating that a requested file within an upload was not found.
-func UploadFileNotFound(upload *model.Upload, path string) *ProblemDetails {
+func UploadFileNotFound(upload model.Upload, path string) *ProblemDetails {
 	return &ProblemDetails{
 		Type:   TypeUploadFileNotFound,
 		Title:  "File not Found",

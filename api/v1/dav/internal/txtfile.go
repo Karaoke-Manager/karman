@@ -19,15 +19,15 @@ import (
 // txtNode represents the TXT file for a song.
 type txtNode model.Song
 
-func (n *txtNode) Stat() (fs.FileInfo, error) {
+func (n txtNode) Stat() (fs.FileInfo, error) {
 	return n, nil
 }
 
-func (n *txtNode) Name() string {
+func (n txtNode) Name() string {
 	return n.TxtFileName
 }
 
-func (n *txtNode) Size() int64 {
+func (n txtNode) Size() int64 {
 	b := &strings.Builder{}
 	if err := txt.WriteSong(b, n.Song); err != nil {
 		// TODO: Log error, should not happen
@@ -36,41 +36,41 @@ func (n *txtNode) Size() int64 {
 	return int64(b.Len())
 }
 
-func (n *txtNode) Mode() fs.FileMode {
+func (n txtNode) Mode() fs.FileMode {
 	return 0444
 }
 
-func (n *txtNode) ModTime() time.Time {
+func (n txtNode) ModTime() time.Time {
 	return n.UpdatedAt
 }
 
-func (n *txtNode) IsDir() bool {
+func (n txtNode) IsDir() bool {
 	return false
 }
 
-func (n *txtNode) Sys() any {
+func (n txtNode) Sys() any {
 	return nil
 }
 
-func (n *txtNode) ContentType(context.Context) (string, error) {
+func (n txtNode) ContentType(context.Context) (string, error) {
 	return "text/plain; charset=utf-8", nil
 }
 
-func (n *txtNode) Open(_ context.Context, _ song.Service, _ media.Service, flag int) (webdav.File, error) {
+func (n txtNode) Open(_ context.Context, _ song.Repository, _ media.Store, flag int) (webdav.File, error) {
 	if flag&(os.O_RDWR|os.O_WRONLY) != 0 {
 		return nil, fs.ErrPermission
 	}
 	b := &bytes.Buffer{}
 	_ = txt.WriteSong(b, n.Song)
 	return &txtFile{
-		song: (*model.Song)(n),
+		song: model.Song(n),
 		r:    bytes.NewReader(b.Bytes()),
 	}, nil
 }
 
 // txtFile represents a txtNode that has been opened for reading.
 type txtFile struct {
-	song *model.Song
+	song model.Song
 	r    *bytes.Reader
 }
 
@@ -95,5 +95,5 @@ func (f *txtFile) Readdir(int) ([]fs.FileInfo, error) {
 }
 
 func (f *txtFile) Stat() (fs.FileInfo, error) {
-	return (*txtNode)(f.song), nil
+	return txtNode(f.song), nil
 }

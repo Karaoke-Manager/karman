@@ -5,20 +5,21 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 )
 
 // Controller implements the /v1/songs endpoints.
 type Controller struct {
-	songSvc  song.Service
-	mediaSvc media.Service
+	songRepo   song.Repository
+	songSvc    song.Service
+	mediaStore media.Store
+	mediaSvc   media.Service
 }
 
 // NewController creates a new Controller instance using the specified services.
-func NewController(songSvc song.Service, mediaSvc media.Service) *Controller {
-	return &Controller{songSvc, mediaSvc}
+func NewController(songRepo song.Repository, songSvc song.Service, mediaStore media.Store, mediaSvc media.Service) *Controller {
+	return &Controller{songRepo, songSvc, mediaStore, mediaSvc}
 }
 
 // Router sets up the routing for the endpoint.

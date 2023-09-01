@@ -9,7 +9,8 @@ import (
 type Song struct {
 	Model
 
-	*ultrastar.Song
+	ultrastar.Song
+	Artists []string
 
 	// InUpload indicates whether this song belongs to an upload.
 	InUpload bool // read only

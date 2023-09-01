@@ -33,7 +33,7 @@ func Decode(r io.Reader, _ mediatype.MediaType, v any) (err error) {
 func Encode(w io.Writer, v any) (err error) {
 	b, err := xml.Marshal(v)
 	if err != nil {
-		panic(fmt.Errorf("cannot encode XML: %e", err))
+		panic(fmt.Errorf("cannot encode XML: %w", err))
 	}
 
 	// Try to find <?xml header in first 100 bytes (just in case there are some XML comments).

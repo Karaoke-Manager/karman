@@ -36,7 +36,7 @@ var (
 )
 
 // runVersion actually prints the current Karman version.
-func runVersion(cmd *cobra.Command, args []string) {
+func runVersion(_ *cobra.Command, _ []string) {
 	info := getVersionInfo()
 	if info == nil {
 		_, _ = fmt.Fprintln(os.Stderr, "No version info provided during build.")

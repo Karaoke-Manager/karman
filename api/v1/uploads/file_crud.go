@@ -2,7 +2,6 @@ package uploads
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -10,18 +9,18 @@ import (
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/schema"
 	"github.com/Karaoke-Manager/karman/pkg/render"
+	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 // PutFile implements the PUT /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
-	upload := MustGetUpload(r.Context())
+	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
-	fmt.Printf("Put file at %q\n", path)
 	if path == "." {
 		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return
 	}
-	f, err := c.svc.CreateFile(r.Context(), upload, path)
+	f, err := c.uploadStore.Create(r.Context(), u.UUID, path)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -41,21 +40,22 @@ func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 
 // GetFile implements the GET /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
-	upload := MustGetUpload(r.Context())
+	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
 	marker := r.URL.Query().Get("marker")
 
-	stat, err := c.svc.StatFile(r.Context(), upload, path)
+	stat, err := c.uploadStore.Stat(r.Context(), u.UUID, path)
 	if errors.Is(err, fs.ErrNotExist) {
-		_ = render.Render(w, r, apierror.UploadFileNotFound(upload, path))
+		_ = render.Render(w, r, apierror.UploadFileNotFound(u, path))
 		return
 	}
 	var children []fs.FileInfo
 	if stat.IsDir() {
-		dir, err := c.svc.OpenDir(r.Context(), upload, path)
+		f, err := c.uploadStore.Open(r.Context(), u.UUID, path)
 		if err != nil {
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 		}
+		dir := f.(upload.Dir)
 		if err = dir.SkipTo(marker); err != nil {
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
@@ -80,13 +80,13 @@ func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 
 // DeleteFile implements the DELETE /v1/uploads/{uuid}/files/* endpoint.
 func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
-	upload := MustGetUpload(r.Context())
+	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
 	if path == "." {
 		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return
 	}
-	if err := c.svc.DeleteFile(r.Context(), upload, path); err != nil {
+	if err := c.uploadStore.Delete(r.Context(), u.UUID, path); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

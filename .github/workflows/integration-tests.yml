@@ -1,0 +1,67 @@
+name: Integration Tests
+on:
+  workflow_call:
+    inputs:
+      test-on:
+        description: "A comma-separated list of platforms for which to build the image."
+        type: string
+        required: false
+        default: "ubuntu-latest"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Prepare Tests
+    runs-on: ubuntu-latest
+    outputs:
+      test-on: ${{ steps.platforms.outputs.json }}
+    steps:
+      - name: Prepare Test Platforms
+        id: platforms
+        run: |
+          echo -n "json=" >> "$GITHUB_OUTPUT"
+          echo "$PLATFORMS" | jq --raw-input --compact-output 'split(",") | map(gsub("^\\s+|\\s+$";""))' >> "$GITHUB_OUTPUT"
+        env:
+          PLATFORMS: ${{ inputs.test-on }}
+
+  test:
+    name: ${{ matrix.test-on }}, PostgreSQL ${{ matrix.postgres }}
+    needs: [ prepare ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-on: ${{ fromJSON(needs.prepare.outputs.test-on) }}
+        postgres: [ 15, 14, 13 ]
+    runs-on: ${{ matrix.test-on }}
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}-alpine
+        ports: [ "5432:5432" ]
+        env:
+          POSTGRES_USER: karman
+          POSTGRES_PASSWORD: secret
+          # Set health checks to wait until postgres has started
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - name: Fetch Dependencies
+        run: go mod download
+      - name: Run Tests
+        run: go test --tags=database ./...
+        env:
+          CGO_ENABLED: 0
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: karman
+          PGPASS: secret

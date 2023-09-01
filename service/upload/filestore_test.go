@@ -2,74 +2,108 @@ package upload
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+// fileStore creates a new FileStore using a temporary directory.
+// The directory path is returned as the second parameter.
 func fileStore(t *testing.T) (*FileStore, string) {
 	dir, err := os.MkdirTemp("", "karman-test-*")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("MkdirTemp(...) returned an unexpected error: %s", err)
+	}
 	t.Cleanup(func() {
 		_ = os.RemoveAll(dir)
 	})
 	store, err := NewFileStore(dir)
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", dir, err)
+	}
 	return store, dir
 }
 
 func TestNewFileStore(t *testing.T) {
+	t.Parallel()
+
 	dir, err := os.MkdirTemp("", "karman-test-*")
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("MkdirTemp(...) returned an unexpected error: %s", err)
+	}
 	t.Cleanup(func() {
 		_ = os.RemoveAll(dir)
 	})
 
 	t.Run("missing root directory", func(t *testing.T) {
 		_, err = NewFileStore(filepath.Join(dir, "test1"))
-		assert.Error(t, err)
+		if err == nil {
+			t.Errorf("NewFileStore(<missing>) did not return an error, but an error was expected")
+		}
 	})
 	t.Run("file root", func(t *testing.T) {
 		path := filepath.Join(dir, "test2")
-		err = os.WriteFile(path, []byte("Hello"), 0660)
-		require.NoError(t, err)
+		if err = os.WriteFile(path, []byte("Hello"), 0600); err != nil {
+			t.Fatalf("WriteFile(%q, %q, 0600) returned an unexpected error: %s", path, "Hello", err)
+		}
 		_, err = NewFileStore(path)
-		assert.Error(t, err)
+		if err == nil {
+			t.Errorf("NewFileStore(<file>) did not return an error, but an error was expected")
+		}
 	})
 	t.Run("success", func(t *testing.T) {
 		path := filepath.Join(dir, "test3")
-		err = os.Mkdir(path, 0770)
-		require.NoError(t, err)
+		if err = os.Mkdir(path, 0770); err != nil {
+			t.Fatalf("Mkdir(%q, 0770) returned an unexpected error: %s", path, err)
+		}
 		_, err = NewFileStore(path)
-		assert.NoError(t, err)
+		if err != nil {
+			t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", path, err)
+		}
 	})
 }
 
 func TestFileStore_Create(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
 	t.Run("new file", func(t *testing.T) {
 		store, dir := fileStore(t)
 		w, err := store.Create(ctx, id, "foobar.txt")
-		if !assert.NoError(t, err) {
+		if err != nil {
+			t.Errorf("Create(ctx, %q, %q) returned an unexpected error: %s", id, "foobar.txt", err)
 			return
 		}
 		n, err := io.WriteString(w, "Hello World")
-		assert.NoError(t, err)
-		assert.Equal(t, 11, n)
-		require.NoError(t, w.Close())
+		if err != nil {
+			t.Errorf("WriteString(...) returned an unexpected error: %s", err)
+			return
+		}
+		if n != 11 {
+			t.Errorf("WriteString(...) write %d bytes, expected %d", n, 11)
+		}
+		if err = w.Close(); err != nil {
+			t.Errorf("Close() returned an unexpected error: %s", err)
+		}
 
 		stat, err := os.Stat(filepath.Join(dir, id.String(), "foobar.txt"))
-		require.NoError(t, err)
-		assert.False(t, stat.IsDir())
-		assert.Equal(t, int64(11), stat.Size())
+		if err != nil {
+			t.Fatalf("os.Stat(...) returned an unexpected error: %s", err)
+		}
+		if stat.IsDir() {
+			t.Errorf("os.Stat(...) indicates a directory, expected file")
+		}
+		if stat.Size() != 11 {
+			t.Errorf("os.Stat(...) indicates a file size of %d, expected %d", stat.Size(), 11)
+		}
 	})
 
 	t.Run("overwrite file", func(t *testing.T) {
@@ -77,125 +111,207 @@ func TestFileStore_Create(t *testing.T) {
 		dir = filepath.Join(dir, id.String())
 		name := filepath.Join(dir, "file.txt")
 
-		require.NoError(t, os.Mkdir(dir, store.DirMode))
-		require.NoError(t, os.WriteFile(name, []byte("Test"), store.FileMode))
+		if err := os.Mkdir(dir, store.DirMode); err != nil {
+			t.Fatalf("os.Mkdir(%q, ...) returned an unexpected error: %s", dir, err)
+		}
+		if err := os.WriteFile(name, []byte("Test"), store.FileMode); err != nil {
+			t.Fatalf("os.WriteFile(%q, ...) returned an unexpected error: %s", name, err)
+		}
 
 		w, err := store.Create(ctx, id, "file.txt")
-		if !assert.NoError(t, err) {
+		if err != nil {
+			t.Errorf("Create(ctx, %q, %q) returned an unexpected error: %s", id, "file.txt", err)
 			return
 		}
 		n, err := io.WriteString(w, "Another\nValue")
-		assert.NoError(t, err)
-		assert.Equal(t, 13, n)
-		require.NoError(t, w.Close())
+		if err != nil {
+			t.Errorf("WriteString(...) returned an unexpected error: %s", err)
+		}
+		if n != 13 {
+			t.Errorf("WriteString(...) wrote %d bytes, expected %d", n, 13)
+		}
+		if err = w.Close(); err != nil {
+			t.Errorf("Close() returned an unexpected error: %s", err)
+			return
+		}
 
 		stat, err := os.Stat(name)
-		require.NoError(t, err)
-		assert.False(t, stat.IsDir())
-		assert.Equal(t, int64(13), stat.Size())
+		if err != nil {
+			t.Fatalf("os.Stat(%q) returned an unexpected error: %s", name, err)
+		}
+		if stat.IsDir() {
+			t.Errorf("Stat(%q) indicates a directory, expected file", name)
+		}
+		if stat.Size() != 13 {
+			t.Errorf("Stat(%q) indicates a size of %d, expected %d", name, stat.Size(), 13)
+		}
 	})
 
 	t.Run("intermediate folders", func(t *testing.T) {
 		store, dir := fileStore(t)
 
 		w, err := store.Create(ctx, id, "my/foo/bar.txt")
-		if !assert.NoError(t, err) {
+		if err != nil {
+			t.Errorf("Create(ctx, %q, %q) returned an unexpected error: %s", id, "my/foo/bar.txt", err)
 			return
 		}
-		require.NoError(t, w.Close())
+		if err = w.Close(); err != nil {
+			t.Errorf("Close() returned an unexpected error: %s", err)
+			return
+		}
 		stat, err := os.Stat(filepath.Join(dir, id.String(), "my/foo/bar.txt"))
-		if !assert.NoError(t, err) {
-			assert.False(t, stat.IsDir())
-			assert.Equal(t, 0, stat.Size())
-			assert.Equal(t, store.FileMode, stat.Mode())
+		if err != nil {
+			t.Fatalf("os.Stat(...) returned an unexpected error: %s", err)
+		}
+		if stat.IsDir() {
+			t.Errorf("f.Stat() indicates a directory, expected file")
+		}
+		if stat.Size() != 0 {
+			t.Errorf("Stat() indicates a size of %d, expected %d", stat.Size(), 0)
+		}
+		if runtime.GOOS != "windows" && stat.Mode() != store.FileMode {
+			t.Errorf("f.Stat() indicates mode %#o, expected %#o", stat.Mode(), store.FileMode)
 		}
 		dirStat, err := os.Stat(filepath.Join(dir, id.String(), "my/foo"))
-		if !assert.NoError(t, err) {
-			assert.True(t, dirStat.IsDir())
-			assert.Equal(t, store.DirMode, dirStat.Mode())
+		if err != nil {
+			t.Fatalf("os.Stat(...) returned an unexpected error: %s", err)
+		}
+		if !dirStat.IsDir() {
+			t.Errorf("dir.Stat() indicates a file, expected directory")
+		}
+		if runtime.GOOS != "windows" && dirStat.Mode().Perm() != store.DirMode {
+			t.Errorf("dir.Stat() indicates mode %#o, expected %#o", dirStat.Mode().Perm(), store.DirMode)
 		}
 	})
 
 	t.Run("root", func(t *testing.T) {
 		store, _ := fileStore(t)
 		_, err := store.Create(ctx, id, ".")
-		assert.Error(t, err)
+		if err == nil {
+			t.Errorf("Create(ctx, %q, %q) did not return an error, but an error was expected", id, ".")
+		}
 	})
 }
 
 func TestFileStore_Stat(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
 	t.Run("present", func(t *testing.T) {
 		store, dir := fileStore(t)
-		require.NoError(t, os.MkdirAll(filepath.Join(dir, id.String()), store.DirMode))
-		require.NoError(t, os.WriteFile(filepath.Join(dir, id.String(), "foobar.txt"), []byte("Hello World"), store.FileMode))
+		if err := os.MkdirAll(filepath.Join(dir, id.String()), store.DirMode); err != nil {
+			t.Fatalf("os.MkdirAll(...) returned an unexpected error: %s", err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, id.String(), "foobar.txt"), []byte("Hello World"), store.FileMode); err != nil {
+			t.Fatalf("os.WriteFile(...) returned an unexpected error: %s", err)
+		}
 
 		stat, err := store.Stat(ctx, id, "foobar.txt")
-		if assert.NoError(t, err) {
-			assert.False(t, stat.IsDir())
-			assert.Equal(t, int64(11), stat.Size())
+		if err != nil {
+			t.Errorf("Stat(ctx, %q, %q) returned an unexpected error: %s", id, "foobar.txt", err)
+			return
+		}
+		if stat.IsDir() {
+			t.Errorf("Stat(ctx, %q, %q) indicates a directory, expected file", id, "foobar.txt")
+		}
+		if stat.Size() != 11 {
+			t.Errorf("Stat(ctx, %q, %q) indicates a file size of %d, expected %d", id, "foobar.txt", stat.Size(), 11)
 		}
 	})
 
 	t.Run("absent", func(t *testing.T) {
 		store, _ := fileStore(t)
 		_, err := store.Stat(ctx, id, "hello.txt")
-		assert.ErrorIs(t, err, fs.ErrNotExist)
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("Stat(ctx, %q, %q) returned an unexpected error: %s, expected fs.ErrNotExist", id, "hello.txt", err)
+		}
 	})
 
 	t.Run("root", func(t *testing.T) {
 		store, _ := fileStore(t)
 		stat, err := store.Stat(ctx, id, ".")
-		if assert.NoError(t, err) {
-			assert.True(t, stat.IsDir())
-			assert.Equal(t, id.String(), stat.Name())
+		if err != nil {
+			t.Errorf("Stat(ctx, %q, %q) returned an unexpected error: %s", id, ".", err)
+			return
+		}
+		if !stat.IsDir() {
+			t.Errorf("Stat(ctx, %q, %q) indicates a file, expected directory", id, ".")
+		}
+		if stat.Name() != id.String() {
+			t.Errorf("Stat(ctx, %q, %q) indicates a filename of %q, expected %q", id, ".", stat.Name(), id.String())
 		}
 	})
 }
 
 func TestFileStore_Open(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
 	t.Run("file", func(t *testing.T) {
 		store, dir := fileStore(t)
-		require.NoError(t, os.MkdirAll(filepath.Join(dir, id.String()), store.DirMode))
-		require.NoError(t, os.WriteFile(filepath.Join(dir, id.String(), "test.txt"), []byte("Foobar"), store.FileMode))
+		if err := os.MkdirAll(filepath.Join(dir, id.String()), store.DirMode); err != nil {
+			t.Fatalf("os.MkdirAll(...) returned an unexpected error: %s", err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, id.String(), "test.txt"), []byte("Foobar"), store.FileMode); err != nil {
+			t.Fatalf("os.WriteFile(...) returned an unexpected error: %s", err)
+		}
 
 		f, err := store.Open(ctx, id, "test.txt")
-		if !assert.NoError(t, err) {
+		if err != nil {
+			t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, "test.txt", err)
 			return
 		}
 		data, err := io.ReadAll(f)
-		assert.NoError(t, err)
-		assert.Equal(t, []byte("Foobar"), data)
-		assert.NoError(t, f.Close())
+		if err != nil {
+			t.Errorf("Read returned an unexpected error: %s", err)
+		}
+		if string(data) != "Foobar" {
+			t.Errorf("Read returned data %q, expected %q", data, "Foobar")
+		}
+		if err = f.Close(); err != nil {
+			t.Errorf("Close() returned an unexpected error: %s", err)
+		}
 	})
 
 	t.Run("absent", func(t *testing.T) {
 		store, _ := fileStore(t)
 		_, err := store.Open(ctx, id, "foobar")
-		assert.ErrorIs(t, err, fs.ErrNotExist)
+		if !errors.Is(err, fs.ErrNotExist) {
+			t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s, expected fs.ErrNotExist", id, "foobar", err)
+		}
 	})
 
 	t.Run("folder", func(t *testing.T) {
 		store, dir := fileStore(t)
-		require.NoError(t, os.MkdirAll(filepath.Join(dir, id.String(), "test", "folder"), store.DirMode))
+		if err := os.MkdirAll(filepath.Join(dir, id.String(), "test", "folder"), store.DirMode); err != nil {
+			t.Fatalf("os.MkdirAll(...) returned an unexpected error: %s", err)
+		}
 
 		f, err := store.Open(ctx, id, "test")
-		if !assert.NoError(t, err) {
+		if err != nil {
+			t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, "test", err)
 			return
 		}
 		stat, err := f.Stat()
-		assert.NoError(t, err)
-		assert.True(t, stat.IsDir())
-		assert.Implements(t, (*Dir)(nil), f)
+		if err != nil {
+			t.Errorf("f.Stat() returned an unexpected error: %s", err)
+		}
+		if !stat.IsDir() {
+			t.Errorf("f.Stat() indicates a file, expected directory")
+		}
+		if _, ok := f.(Dir); !ok {
+			t.Errorf("f does not implement interface Dir, expected f to implement Dir")
+		}
 	})
 }
 
 func TestFileStore_Delete(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
@@ -211,46 +327,78 @@ func TestFileStore_Delete(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			store, dir := fileStore(t)
-			require.NoError(t, os.MkdirAll(filepath.Join(dir, id.String(), "empty"), store.DirMode))
-			require.NoError(t, os.MkdirAll(filepath.Join(dir, id.String(), "foobar"), store.DirMode))
-			require.NoError(t, os.WriteFile(filepath.Join(dir, id.String(), "foobar/test.txt"), []byte("Foobar"), store.FileMode))
+			if err := os.MkdirAll(filepath.Join(dir, id.String(), "empty"), store.DirMode); err != nil {
+				t.Fatalf("os.MkdirAll(...) returned an unexpected error: %s", err)
+			}
+			if err := os.MkdirAll(filepath.Join(dir, id.String(), "foobar"), store.DirMode); err != nil {
+				t.Fatalf("os.MkdirAll(...) returned an unexpected error: %s", err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, id.String(), "foobar/test.txt"), []byte("Foobar"), store.FileMode); err != nil {
+				t.Fatalf("os.WriteFile(...) returned an unexpected error: %s", err)
+			}
 
-			assert.NoError(t, store.Delete(ctx, id, c.path))
+			if err := store.Delete(ctx, id, c.path); err != nil {
+				t.Errorf("Delete(ctx, %q, %q) returned an unexpected error: %s", id, c.path, err)
+			}
 			_, err := os.Stat(filepath.Join(dir, id.String(), c.path))
-			assert.ErrorIs(t, err, fs.ErrNotExist)
+			if !errors.Is(err, fs.ErrNotExist) {
+				t.Errorf("Delete(ctx, %q, %q) [2nd time] returned an unexpected error: %s, expected fs.ErrNotExist", id, c.path, err)
+			}
 		})
 	}
 }
 
 func TestFolderDir_Marker(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
 	store, _ := NewFileStore("./testdata")
 	f, err := store.Open(ctx, id, ".")
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, ".", err)
+		return
+	}
 	dir := f.(Dir)
 
-	assert.Equal(t, "", dir.Marker())
+	if dir.Marker() != "" {
+		t.Errorf("dir.Marker() = %q, expected %q", dir.Marker(), "")
+	}
 	_, err = dir.Readdir(2)
-	assert.NoError(t, err)
-	assert.Equal(t, "dir2", dir.Marker())
+	if err != nil {
+		t.Errorf("dir.Readdir(2) returned an unexpected error: %s", err)
+	}
+	if dir.Marker() != "dir2" {
+		t.Errorf("dir.Marker() = %q, expected %q", dir.Marker(), "dir2")
+	}
 }
 
 func TestFolderDir_SkipTo(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 	store, _ := NewFileStore("./testdata")
 
 	f, err := store.Open(ctx, id, ".")
-	require.NoError(t, err)
+	if err != nil {
+		t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, ".", err)
+		return
+	}
 	dir := f.(Dir)
 
-	assert.NoError(t, dir.SkipTo("def"))
-	assert.Error(t, dir.SkipTo("abc"))
+	if err := dir.SkipTo("def"); err != nil {
+		t.Errorf("dir.SkipTo(%q) returned an unexpected error: %s", "def", err)
+	}
+	if err := dir.SkipTo("abc"); err == nil {
+		t.Errorf("dir.SkipTo(%q) did not return an error, but an error was expected", "abc")
+	}
 }
 
 func TestFolderDir_ReadDir(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 	store, _ := NewFileStore("./testdata")
@@ -270,14 +418,25 @@ func TestFolderDir_ReadDir(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			f, err := store.Open(ctx, id, ".")
-			require.NoError(t, err)
+			if err != nil {
+				t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, ".", err)
+				return
+			}
 			dir := f.(Dir)
 
-			assert.NoError(t, dir.SkipTo(c.marker))
+			if err := dir.SkipTo(c.marker); err != nil {
+				t.Errorf("dir.SkipTo(%q) returned an unexpected error: %s", c.marker, err)
+			}
 			entries, err := dir.Readdir(c.n)
-			assert.NoError(t, err)
-			assert.Len(t, entries, c.len)
-			assert.Equal(t, c.newMarker, dir.Marker())
+			if err != nil {
+				t.Errorf("dir.Readdir(%d) returned an unexpected error: %s", c.n, err)
+			}
+			if len(entries) != c.len {
+				t.Errorf("dir.Readdir(%d) returned %d entries, expected %d", c.n, len(entries), c.len)
+			}
+			if dir.Marker() != c.newMarker {
+				t.Errorf("dir.Marker() = %q, expected %q", dir.Marker(), c.newMarker)
+			}
 		})
 	}
 }

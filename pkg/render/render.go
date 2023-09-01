@@ -31,7 +31,7 @@ func (NopRenderer) Render(http.ResponseWriter, *http.Request) error { return nil
 // A RenderError indicates that an error occurred during the rendering process of the response.
 // This kind of error is often an indication of a programming error or can be
 // an indication of malformed data.
-type RenderError struct {
+type RenderError struct { //nolint:revive
 	// The underlying error.
 	err error
 }
@@ -89,7 +89,7 @@ func Render(w http.ResponseWriter, r *http.Request, v Renderer) error {
 
 // RenderList works like [Render] but takes a slice of payloads.
 // See [Render] for details.
-func RenderList(w http.ResponseWriter, r *http.Request, l []Renderer) error {
+func RenderList(w http.ResponseWriter, r *http.Request, l []Renderer) error { //nolint:revive
 	for _, v := range l {
 		if err := renderer(w, r, v); err != nil {
 			return RenderError{err}
@@ -103,7 +103,7 @@ func RenderList(w http.ResponseWriter, r *http.Request, l []Renderer) error {
 
 // isNil is a helper function that tests if f is the nil value.
 func isNil(f reflect.Value) bool {
-	switch f.Kind() {
+	switch f.Kind() { //nolint:exhaustive
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
 		return f.IsNil()
 	default:
@@ -132,7 +132,7 @@ func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 		if isNil(f) {
 			continue
 		}
-		switch f.Type().Kind() {
+		switch f.Type().Kind() { //nolint:exhaustive
 		case reflect.Slice:
 			if f.Type().Elem().Implements(rendererType) {
 				for i := 0; i < f.Len(); i++ {
@@ -151,6 +151,8 @@ func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 					}
 				}
 			}
+		default:
+			// other types are not processed recursively
 		}
 		if f.Type().Implements(rendererType) {
 			fv := f.Interface().(Renderer)
@@ -161,11 +163,7 @@ func renderer(w http.ResponseWriter, r *http.Request, v Renderer) error {
 	}
 
 	// We call it bottom-up.
-	if err := v.Render(w, r); err != nil {
-		return err
-	}
-
-	return nil
+	return v.Render(w, r)
 }
 
 var rendererType = reflect.TypeOf(new(Renderer)).Elem()

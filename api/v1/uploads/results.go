@@ -13,7 +13,7 @@ import (
 func (c *Controller) GetErrors(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	pagination := middleware.MustGetPagination(r.Context())
-	errors, total, err := c.svc.GetErrors(r.Context(), upload, pagination.Limit, pagination.Offset)
+	errors, total, err := c.uploadRepo.GetErrors(r.Context(), upload.UUID, pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return

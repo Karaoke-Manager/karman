@@ -1,48 +1,50 @@
+//go:build database
+
 package songs
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/model"
+	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/test"
 )
 
-// setup prepares a test instance of the songs.Controller.
-// The tests in this package are more integration tests than unit tests as we test against an in-memory SQLite database
-// instead of mocking service objects.
-// The reason for this approach is mainly reduced testing complexity.
-//
-// If withData is true, a test dataset will be created and stored in the DB.
-// Otherwise, data will be nil.
-func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *test.Dataset) {
+// setupController prepares a test instance of the songs.Controller.
+// The tests in this package are integration tests that run against an actual PostgreSQL database.
+// The database can use testcontainers or be an external service.
+func setupController(t *testing.T) (*Controller, pgxutil.DB) {
 	db := test.NewDB(t)
-	if withData {
-		data = test.NewDataset(db)
-	}
-	songSvc := song.NewService(db)
-	mediaSvc := media.NewFakeService("Foobar", db)
-	c = NewController(songSvc, mediaSvc)
+	songRepo := song.NewDBRepository(db)
+	songSvc := song.NewService()
+	mediaStore := media.NewMemStore()
+	mediaRepo := media.NewDBRepository(db)
+	mediaService := media.NewFakeService(mediaRepo)
+	return NewController(songRepo, songSvc, mediaStore, mediaService), db
+}
+
+// setupHandler is a convenience function that sets up a http.Handler for c.
+func setupHandler(c *Controller, prefix string) http.Handler {
 	r := chi.NewRouter()
-	r.Route("/", c.Router)
-	return r, c, data
+	r.Route(strings.TrimSuffix(prefix, "/")+"/", c.Router)
+	return r
 }
 
-func songPath(song *model.Song, suffix string) string {
-	return "/" + song.UUID.String() + suffix
-}
-
-func testSongConflict(h http.Handler, method string, path string, id uuid.UUID) func(t *testing.T) {
+// testSongConflict returns a test that checks that the specified request causes a 409 Conflict error.
+func testSongConflict(h http.Handler, method string, urlFmt string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
-		r := httptest.NewRequest(method, path, nil)
-		resp := test.DoRequest(h, r)
+		r := httptest.NewRequest(method, fmt.Sprintf(urlFmt, id), nil)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
 			"uuid": id.String(),
 		})

@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/api/v1"
+	v1 "github.com/Karaoke-Manager/karman/api/v1"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
@@ -23,9 +23,15 @@ type Controller struct {
 
 // NewController creates a new Controller instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-controllers.
-func NewController(songService song.Service, mediaService media.Service, uploadService upload.Service) *Controller {
+func NewController(
+	songRepo song.Repository,
+	songSvc song.Service,
+	mediaSvc media.Service,
+	mediaStore media.Store,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store) *Controller {
 	return &Controller{
-		v1Controller: v1.NewController(songService, mediaService, uploadService),
+		v1Controller: v1.NewController(songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore),
 	}
 }
 

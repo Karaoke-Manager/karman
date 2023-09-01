@@ -24,7 +24,7 @@ type Upload struct {
 }
 
 // FromUpload generates a response schema, describing m.
-func FromUpload(m *model.Upload) Upload {
+func FromUpload(m model.Upload) Upload {
 	return Upload{
 		UUID:           m.UUID,
 		Status:         m.State,
@@ -134,7 +134,7 @@ type UploadProcessingError struct {
 }
 
 // FromUploadProcessingError creates an UploadProcessingError describing err.
-func FromUploadProcessingError(err *model.UploadProcessingError) UploadProcessingError {
+func FromUploadProcessingError(err model.UploadProcessingError) UploadProcessingError {
 	return UploadProcessingError{
 		File:    err.File,
 		Message: err.Message,

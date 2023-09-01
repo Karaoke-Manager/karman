@@ -1,80 +1,107 @@
+//go:build database
+
 package uploads
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
+	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/test"
+	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
 func TestController_FetchUpload(t *testing.T) {
-	_, c, data := setup(t, true)
+	t.Parallel()
+
+	c, db := setupController(t)
+	openUpload := testdata.OpenUpload(t, db)
+
 	h := c.FetchUpload(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetUpload(r.Context())
-		assert.True(t, ok, "Did not find an upload in the context.")
+		if !ok {
+			t.Errorf("FetchUpload() did not set an upload in the context, expected upload to be set")
+		}
 	}))
 
 	t.Run("OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(middleware.SetUUID(r.Context(), data.OpenUpload.UUID))
-		test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", openUpload.UUID), nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), openUpload.UUID))
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(middleware.SetUUID(r.Context(), data.AbsentUploadUUID))
-		resp := test.DoRequest(h, r)
+		id := uuid.New()
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", id), nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), id))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
 
 func TestController_ValidateFilePath(t *testing.T) {
+	t.Parallel()
+
 	h := ValidateFilePath(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetFilePath(r.Context())
-		assert.True(t, ok, "Did not find an upload in the context.")
+		if !ok {
+			t.Errorf("ValidateFilePath() did not set a file path in the context, expected path to be set")
+		}
 	}))
 
 	t.Run("OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		path := "abc/def.txt"
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/{uuid}/files/%s", path), nil)
 		ctx := chi.NewRouteContext()
 		ctx.URLParams.Add("*", "abc/def.txt")
 		r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
-		test.DoRequest(h, r)
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("400 Bad Request", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		path := "some/../invalid-path"
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/{uuid}/files/%s", path), nil)
 		ctx := chi.NewRouteContext()
-		ctx.URLParams.Add("*", "some//invalid path")
+		ctx.URLParams.Add("*", path)
 		r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUploadPath, map[string]any{
-			"path": "some//invalid path",
+			"path": path,
 		})
 	})
 }
 
 func TestController_UploadState(t *testing.T) {
-	data := test.NewDataset(test.NewDB(t))
+	t.Parallel()
+
+	openUpload := model.Upload{
+		Model: model.Model{UUID: uuid.New()},
+		State: model.UploadStateOpen,
+	}
+	processingUpload := model.Upload{
+		Model: model.Model{UUID: uuid.New()},
+		State: model.UploadStateProcessing, SongsTotal: -1, SongsProcessed: -1,
+	}
+
 	h := UploadState(model.UploadStateOpen)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	t.Run("OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(SetUpload(r.Context(), data.OpenUpload))
-		test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/uploads/%s/files/foo.txt", openUpload.UUID), nil)
+		r = r.WithContext(SetUpload(r.Context(), openUpload))
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("409 Conflict", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(SetUpload(r.Context(), data.ProcessingUpload))
-		resp := test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/uploads/%s/files/foo.txt", processingUpload.UUID), nil)
+		r = r.WithContext(SetUpload(r.Context(), processingUpload))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadState, map[string]any{
-			"uuid": data.ProcessingUpload.UUID.String(),
+			"uuid": processingUpload.UUID.String(),
 		})
 	})
 }

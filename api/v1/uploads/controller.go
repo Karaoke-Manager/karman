@@ -11,12 +11,13 @@ import (
 
 // Controller implements the /v1/uploads endpoints.
 type Controller struct {
-	svc upload.Service
+	uploadRepo  upload.Repository
+	uploadStore upload.Store
 }
 
 // NewController creates a new Controller instance using the specified service.
-func NewController(svc upload.Service) *Controller {
-	s := &Controller{svc}
+func NewController(uploadRepo upload.Repository, uploadStore upload.Store) *Controller {
+	s := &Controller{uploadRepo, uploadStore}
 	return s
 }
 

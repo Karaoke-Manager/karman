@@ -51,4 +51,11 @@ Editing the code should be straight forward. Use your favorite editor or IDE and
 
 Before submitting a pull request please make sure that your code passes all tests and adheres to the coding style enforced by `golangci-lint`. These things are checked in CI and your pull request will only be merged if the CI passes.
 
-Please ensure that you add appropriate tests alongside your features.
+### Tests
+
+Please ensure that you add appropriate tests alongside your features. We do not aim for a specific coverage but all features should be accompanied by useful tests. When writing your tests, please follow these guidelines:
+
+- Tests should be written using the Go Standard Library. We want to keep test-only dependencies to a minimum.
+- When testing database queries or when running integration tests use the `test.NewDB(*testing.T)` function to prepare a clean database environment for the test.
+- Tests that rely on external dependencies (such as database) should be annotated with an appropriate build tag. Currently only the `database` tag is used for tests that require a database connection.
+- Do not hesitate to include long-running tests but skip those if `testing.Short()` is `true`.

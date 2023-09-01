@@ -39,8 +39,8 @@ func NewFileStore(root string) (*FileStore, error) {
 	}
 	return &FileStore{
 		root:     root,
-		FileMode: 0660,
-		DirMode:  0770,
+		FileMode: 0640,
+		DirMode:  0750,
 	}, nil
 }
 
@@ -53,7 +53,7 @@ func (s *FileStore) Create(_ context.Context, upload uuid.UUID, name string) (io
 	if err := os.MkdirAll(filepath.Dir(name), s.DirMode); err != nil {
 		return nil, err
 	}
-	return os.Create(name)
+	return os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, s.FileMode)
 }
 
 // Stat fetches information about a named file.

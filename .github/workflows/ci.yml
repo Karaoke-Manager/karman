@@ -15,25 +15,33 @@ jobs:
       contents: read
       pull-requests: read
     uses: codello/.github/.github/workflows/go-lint.yml@v0
+    with:
+      args: --timeout=5m
 
-  test:
-    name: Test
+  unit-test:
+    name: Unit Tests
     uses: codello/.github/.github/workflows/go-test.yml@v0
     with:
       test-on: ubuntu-latest,ubuntu-20.04,windows-latest,macos-latest
+
+  integration-test:
+    name: Integration Tests
+    uses: ./.github/workflows/integration-tests.yml
+    with:
+      test-on: ubuntu-latest,ubuntu-20.04
 
   build:
     name: Build
     uses: codello/.github/.github/workflows/go-build.yml@v0
     with:
       packages: ./cmd/karman
-      platforms: linux/amd64,linux/arm64,linux/arm,linux/386
+      platforms: linux/amd64,linux/arm64,linux/arm,linux/386,windows/amd64,darwin/amd64,darwin/arm64
       ldflags: -w -s -X "main.Version=${{ github.ref_type == 'tag' && github.ref_name || '' }}"
 
   publish:
     name: Publish
     if: ${{ github.event_name == 'push' }}
-    needs: [ test, build ]
+    needs: [ unit-test, integration-test, build ]
     permissions:
       contents: read
       packages: write

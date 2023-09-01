@@ -18,48 +18,48 @@ import (
 // songNode represents the directory for a song.
 type songNode model.Song
 
-func (n *songNode) Stat() (fs.FileInfo, error) {
+func (n songNode) Stat() (fs.FileInfo, error) {
 	return n, nil
 }
 
-func (n *songNode) Name() string {
+func (n songNode) Name() string {
 	return fmt.Sprintf("%s - %s (%s)", n.Artist, n.Title, n.UUID)
 }
 
-func (n *songNode) Size() int64 {
+func (n songNode) Size() int64 {
 	return 0
 }
 
-func (n *songNode) Mode() fs.FileMode {
+func (n songNode) Mode() fs.FileMode {
 	return fs.ModeDir | 0555
 }
 
-func (n *songNode) ModTime() time.Time {
+func (n songNode) ModTime() time.Time {
 	return n.UpdatedAt
 }
 
-func (n *songNode) IsDir() bool {
+func (n songNode) IsDir() bool {
 	return true
 }
 
-func (n *songNode) Sys() any {
+func (n songNode) Sys() any {
 	return nil
 }
 
-func (n *songNode) Open(_ context.Context, _ song.Service, _ media.Service, flag int) (webdav.File, error) {
+func (n songNode) Open(_ context.Context, _ song.Repository, _ media.Store, flag int) (webdav.File, error) {
 	if flag&(os.O_RDWR|os.O_WRONLY) != 0 {
 		return nil, fs.ErrInvalid
 	}
 	return &songDir{
 		pos:  0,
-		song: (*model.Song)(n),
+		song: model.Song(n),
 	}, nil
 }
 
 // songDir represents a songNode that has been opened for reading.
 type songDir struct {
 	pos  int64
-	song *model.Song
+	song model.Song
 }
 
 func (*songDir) Close() error {
@@ -113,7 +113,7 @@ func (f *songDir) Readdir(count int) ([]fs.FileInfo, error) {
 	infos := make([]fs.FileInfo, 0, 5)
 	fileIndex := int64(0)
 	if f.pos == fileIndex && len(infos) != count {
-		infos = append(infos, (*txtNode)(f.song))
+		infos = append(infos, txtNode(f.song))
 		f.pos++
 	}
 	fileIndex++
@@ -164,5 +164,5 @@ func (f *songDir) Readdir(count int) ([]fs.FileInfo, error) {
 }
 
 func (f *songDir) Stat() (fs.FileInfo, error) {
-	return (*songNode)(f.song), nil
+	return songNode(f.song), nil
 }

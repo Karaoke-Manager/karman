@@ -1,7 +1,6 @@
 package mediatype
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -21,13 +20,15 @@ func TestParse(t *testing.T) {
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			result, err := Parse(c.v)
-			if c.wantErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
+			actual, err := Parse(c.v)
+			if err != nil && !c.wantErr {
+				t.Errorf("Parse(%q) returned an unexpected error: %s", c.v, err)
+			} else if err == nil && c.wantErr {
+				t.Errorf("Parse(%q) did not return an error, but an error was expeced", c.v)
 			}
-			assert.Equal(t, c.expected, result)
+			if !actual.Equals(c.expected) {
+				t.Errorf("Parse(%q) = %q, expected %q", c.v, actual, c.expected)
+			}
 		})
 	}
 }
@@ -46,7 +47,10 @@ func TestMediaType_IsWildcardSubtype(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			parsed := MustParse(c.v)
-			assert.Equalf(t, c.want, parsed.IsWildcardSubtype(), "IsWildcardSubtype(%q)", parsed)
+			actual := parsed.IsWildcardSubtype()
+			if actual != c.want {
+				t.Errorf("%q.IsWildcardSubtype() = %t, expected %t", parsed, actual, c.want)
+			}
 		})
 	}
 }
@@ -65,7 +69,10 @@ func TestMediaType_IsConcrete(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			parsed := MustParse(c.v)
-			assert.Equalf(t, c.want, parsed.IsConcrete(), "IsConcrete()")
+			actual := parsed.IsConcrete()
+			if actual != c.want {
+				t.Errorf("%q.IsConcrete() = %t, expected %t", parsed, actual, c.want)
+			}
 		})
 	}
 }
@@ -84,7 +91,10 @@ func TestMediaType_SubtypeSuffix(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			parsed := MustParse(c.v)
-			assert.Equalf(t, c.want, parsed.SubtypeSuffix(), "SubtypeSuffix()")
+			actual := parsed.SubtypeSuffix()
+			if actual != c.want {
+				t.Errorf("%q.SubtypeSuffix() = %q, expected %q", parsed, actual, c.want)
+			}
 		})
 	}
 }
@@ -101,7 +111,10 @@ func TestMediaType_Quality(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			parsed := MustParse(c.v)
-			assert.Equalf(t, c.want, parsed.Quality(), "Quality()")
+			actual := parsed.Quality()
+			if actual != c.want {
+				t.Errorf("%q.Quality() = %f, expected %f", parsed, actual, c.want)
+			}
 		})
 	}
 }
@@ -128,7 +141,10 @@ func TestMediaType_Includes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			one := MustParse(c.one)
 			other := MustParse(c.other)
-			assert.Equalf(t, c.want, one.Includes(other), "Includes(%#v, %#v)", c.one, c.other)
+			actual := one.Includes(other)
+			if actual != c.want {
+				t.Errorf("%q.Includes(%q) = %t, expected %t", one, other, actual, c.want)
+			}
 		})
 	}
 }
@@ -155,7 +171,10 @@ func TestMediaType_IsCompatibleWith(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			one := MustParse(c.one)
 			other := MustParse(c.other)
-			assert.Equalf(t, c.want, one.IsCompatibleWith(other), "IsCompatibleWith(%#v, %#v)", c.one, c.other)
+			actual := one.IsCompatibleWith(other)
+			if actual != c.want {
+				t.Errorf("%q.IsCompatibleWith(%q) = %t, expected %t", one, other, actual, c.want)
+			}
 		})
 	}
 }
@@ -179,7 +198,10 @@ func TestMediaType_IsMoreSpecific(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			one := MustParse(c.one)
 			other := MustParse(c.other)
-			assert.Equalf(t, c.want, one.IsMoreSpecific(other), "IsMoreSpecific(%#v, %#v)", c.one, c.other)
+			actual := one.IsMoreSpecific(other)
+			if actual != c.want {
+				t.Errorf("%q.IsMoreSpecific(%q) = %t, expected %t", one, other, actual, c.want)
+			}
 		})
 	}
 }
@@ -202,7 +224,10 @@ func TestMediaType_HasHigherPriority(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			one := MustParse(c.one)
 			other := MustParse(c.other)
-			assert.Equalf(t, c.want, one.HasHigherPriority(other), "HasHigherPriority(%#v, %#v)", c.one, c.other)
+			actual := one.HasHigherPriority(other)
+			if actual != c.want {
+				t.Errorf("%q.HasHigherPriority(%q) = %t, expected %t", one, other, actual, c.want)
+			}
 		})
 	}
 }

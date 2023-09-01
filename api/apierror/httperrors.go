@@ -18,13 +18,13 @@ const (
 // These values do not have additional information associated with them and
 // should only be used if the HTTP status code by itself is sufficiently clear about the error.
 var (
-	ErrBadRequest           = HttpStatus(http.StatusBadRequest)
-	ErrNotFound             = HttpStatus(http.StatusNotFound)
-	ErrMethodNotAllowed     = HttpStatus(http.StatusMethodNotAllowed)
-	ErrNotAcceptable        = HttpStatus(http.StatusNotAcceptable)
-	ErrUnprocessableEntity  = HttpStatus(http.StatusUnprocessableEntity)
-	ErrUnsupportedMediaType = HttpStatus(http.StatusUnsupportedMediaType)
-	ErrInternalServerError  = HttpStatus(http.StatusInternalServerError)
+	ErrBadRequest           = HTTPStatus(http.StatusBadRequest)
+	ErrNotFound             = HTTPStatus(http.StatusNotFound)
+	ErrMethodNotAllowed     = HTTPStatus(http.StatusMethodNotAllowed)
+	ErrNotAcceptable        = HTTPStatus(http.StatusNotAcceptable)
+	ErrUnprocessableEntity  = HTTPStatus(http.StatusUnprocessableEntity)
+	ErrUnsupportedMediaType = HTTPStatus(http.StatusUnsupportedMediaType)
+	ErrInternalServerError  = HTTPStatus(http.StatusInternalServerError)
 )
 
 // MissingContentType generates an error indicating that no content type was specified in the request.
@@ -55,14 +55,14 @@ func UnsupportedMediaType(allowed ...mediatype.MediaType) *ProblemDetails {
 
 // UnprocessableEntity generates an error indicating that the request payload did not conform to the expected schema.
 func UnprocessableEntity(message string) *ProblemDetails {
-	p := HttpStatus(http.StatusUnprocessableEntity)
+	p := HTTPStatus(http.StatusUnprocessableEntity)
 	p.Detail = message
 	return p
 }
 
 // BadRequest generates an 400 Bad Request error with the specified message.
 func BadRequest(message string) *ProblemDetails {
-	p := HttpStatus(http.StatusBadRequest)
+	p := HTTPStatus(http.StatusBadRequest)
 	p.Detail = message
 	return p
 }

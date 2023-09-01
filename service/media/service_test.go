@@ -3,30 +3,20 @@ package media
 import (
 	"context"
 	"encoding/hex"
-	"os"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/test"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func setupService(t *testing.T, withData bool) (svc Service, data *test.Dataset) {
-	db := test.NewDB(t)
-	if withData {
-		data = test.NewDataset(db)
-	}
-	store, _ := fileStore(t)
-	svc = NewService(db, store)
-	return
-}
-
 func TestService_StoreFile(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	svc, _ := setupService(t, false)
+	store, _ := fileStore(t)
+	svc := NewService(NewFakeRepository(), store)
 
 	// in order to not blow up repository size we download the test data on the fly.
 	cases := map[string]struct {
@@ -47,16 +37,27 @@ func TestService_StoreFile(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			f, err := os.Open("testdata/" + c.file)
-			require.NoErrorf(t, err, "Could not load test file: %s", c.file)
-			defer f.Close()
+			f := test.MustOpen(t, fmt.Sprintf("testdata/%s", c.file))
 			file, err := svc.StoreFile(ctx, c.media, f)
-			if assert.NoError(t, err) {
-				assert.Equal(t, c.duration, file.Duration, "Duration")
-				assert.Equal(t, c.width, file.Width, "Width")
-				assert.Equal(t, c.height, file.Height, "Height")
-				assert.Equal(t, c.size, file.Size, "Size")
-				assert.Equal(t, c.Checksum, hex.EncodeToString(file.Checksum), "Checksum")
+			if err != nil {
+				t.Errorf("StoreFile(ctx, %q, f) returned an unexpected error: %s", c.media, err)
+				return
+			}
+			if file.Duration != c.duration {
+				t.Errorf("StoreFile(ctx, %q, f) yielded file.Duration = %s, expected %s", c.media, file.Duration, c.duration)
+			}
+			if file.Width != c.width {
+				t.Errorf("StoreFile(ctx, %q, f) yielded file.Width = %d, expected %d", c.media, file.Width, c.width)
+			}
+			if file.Height != c.height {
+				t.Errorf("StoreFile(ctx, %q, f) yielded file.Height = %d, expected %d", c.media, file.Height, c.height)
+			}
+			if file.Size != c.size {
+				t.Errorf("StoreFile(ctx, %q, f) yielded file.Size = %d, expected %d", c.media, file.Size, c.size)
+			}
+			sum := hex.EncodeToString(file.Checksum)
+			if sum != c.Checksum {
+				t.Errorf("StoreFile(ctx, %q, f) yielded file.Checksum = %s, expected %s", c.media, sum, c.Checksum)
 			}
 		})
 	}

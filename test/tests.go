@@ -17,7 +17,7 @@ func InvalidPagination(h http.Handler, method string, path string) func(t *testi
 		q.Set("limit", "foo")
 		q.Set("offset", "bar")
 		r.URL.RawQuery = q.Encode()
-		resp := DoRequest(h, r)
+		resp := DoRequest(h, r) //nolint:bodyclose
 		AssertProblemDetails(t, resp, http.StatusBadRequest, "", nil)
 	}
 }
@@ -26,7 +26,7 @@ func InvalidPagination(h http.Handler, method string, path string) func(t *testi
 func APIError(h http.Handler, method string, path string, status int, problemType string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)
-		resp := DoRequest(h, r)
+		resp := DoRequest(h, r) //nolint:bodyclose
 		AssertProblemDetails(t, resp, status, problemType, nil)
 	}
 }

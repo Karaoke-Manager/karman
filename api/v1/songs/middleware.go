@@ -21,21 +21,21 @@ const (
 )
 
 // SetSong sets the song instance in ctx.
-func SetSong(ctx context.Context, song *model.Song) context.Context {
+func SetSong(ctx context.Context, song model.Song) context.Context {
 	return context.WithValue(ctx, contextKeyInstance, song)
 }
 
 // GetSong returns a model.Song instance from the context.
 // If the context does not contain a song instance, the second return value will be false.
-func GetSong(ctx context.Context) (*model.Song, bool) {
-	u, ok := ctx.Value(contextKeyInstance).(*model.Song)
+func GetSong(ctx context.Context) (model.Song, bool) {
+	u, ok := ctx.Value(contextKeyInstance).(model.Song)
 	return u, ok
 }
 
 // MustGetSong returns a model.Song instance from the context.
 // In contrast to GetSong this function panics if the context does not contain a song instance.
-func MustGetSong(ctx context.Context) *model.Song {
-	return ctx.Value(contextKeyInstance).(*model.Song)
+func MustGetSong(ctx context.Context) model.Song {
+	return ctx.Value(contextKeyInstance).(model.Song)
 }
 
 // FetchSong is a middleware that fetches the model.Song instance identified by the request and stores it in the request context.
@@ -43,7 +43,7 @@ func (c *Controller) FetchSong(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		id := middleware.MustGetUUID(r.Context())
 		// TODO: Maybe support 410 for soft deleted?
-		song, err := c.songSvc.GetSong(r.Context(), id)
+		song, err := c.songRepo.GetSong(r.Context(), id)
 		if err != nil {
 			_ = render.Render(w, r, apierror.ServiceError(err))
 			return

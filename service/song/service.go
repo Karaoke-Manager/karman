@@ -2,57 +2,66 @@ package song
 
 import (
 	"context"
+	"fmt"
+	"mime"
+	"strings"
 
 	"github.com/Karaoke-Manager/karman/model"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
-// Service provides an interface for working with songs.
-type Service interface {
-	CreateSong(ctx context.Context, song *model.Song) error
-
-	// UpdateSongData updates the data of an existing song in the persistence layer (metadata and music).
-	// If an error occurs it is returned.
-	UpdateSongData(ctx context.Context, song *model.Song) error
-
-	// FindSongs retrieves a paginated view of songs from the persistence layer.
-	// If limit = -1, all songs are returned.
-	// This method returns the page contents, the total number of songs and an error (if one occurred).
-	FindSongs(ctx context.Context, limit int, offset int64) ([]*model.Song, int64, error)
-
-	// GetSong retrieves the song with the specified UUID from the persistence layer.
-	// If an error occurs (such as the song not being found), the return value will indicate as much.
-	GetSong(ctx context.Context, id uuid.UUID) (*model.Song, error)
-
-	// DeleteSong deletes the song with the specified ID.
-	// If no such song exists, this method does not return an error.
-	DeleteSong(ctx context.Context, id uuid.UUID) error
-
-	// ReplaceCover sets the cover of song to file and persists the change.
-	// Both the song and file must already be persisted.
-	ReplaceCover(ctx context.Context, song *model.Song, file *model.File) error
-
-	// ReplaceAudio sets the audio of song to file and persists the change.
-	// Both the song and file must already be persisted.
-	ReplaceAudio(ctx context.Context, song *model.Song, file *model.File) error
-
-	// ReplaceVideo sets the video of song to file and persists the change.
-	// Both the song and file must already be persisted.
-	ReplaceVideo(ctx context.Context, song *model.Song, file *model.File) error
-
-	// ReplaceBackground sets the background of song to file and persists the change.
-	// Both the song and file must already be persisted.
-	ReplaceBackground(ctx context.Context, song *model.Song, file *model.File) error
-}
-
-// NewService creates a new default implementation of Service using db as persistence layer.
-func NewService(db *gorm.DB) Service {
-	return &service{db}
-}
-
 // service is the default Service implementation.
-type service struct {
-	db *gorm.DB
+type service struct{}
+
+// NewService creates a new Service.
+func NewService() Service {
+	return &service{}
+}
+
+// ParseArtists splits song.Artist into song.Artists.
+func (s *service) ParseArtists(_ context.Context, song *model.Song) {
+	artists := strings.Split(song.Artist, ",")
+	for i, artist := range artists {
+		artists[i] = strings.TrimSpace(artist)
+	}
+	// TODO: Parse featured artists as well
+	song.Artists = artists
+}
+
+// Prepare sets song.Artist as well as file names for referenced files.
+func (s *service) Prepare(_ context.Context, song *model.Song) {
+	song.Artist = strings.Join(song.Artists, ", ")
+	// TODO: Generate safe file names
+	song.TxtFileName = fmt.Sprintf("%s - %s.txt", song.Artist, song.Title)
+	if song.AudioFile != nil {
+		song.AudioFileName = fmt.Sprintf("%s - %s [AUDIO]%s", song.Artist, song.Title, s.extensionForType(song.AudioFile.Type))
+	}
+	if song.CoverFile != nil {
+		song.CoverFileName = fmt.Sprintf("%s - %s [CO]%s", song.Artist, song.Title, s.extensionForType(song.CoverFile.Type))
+	}
+	if song.VideoFile != nil {
+		song.VideoFileName = fmt.Sprintf("%s - %s [VIDEO]%s", song.Artist, song.Title, s.extensionForType(song.VideoFile.Type))
+	}
+	if song.BackgroundFile != nil {
+		song.BackgroundFileName = fmt.Sprintf("%s - %s [BG]%s", song.Artist, song.Title, s.extensionForType(song.BackgroundFile.Type))
+	}
+}
+
+// extensionForType returns the file extension that should be used for the specified media type.
+// The returned extension includes a leading dot.
+func (*service) extensionForType(t mediatype.MediaType) string {
+	// preferred, known types
+	switch t.FullType() {
+	case "audio/mpeg", "audio/mp3":
+		return ".mp3"
+	case "video/mp4":
+		return ".mp4"
+	case "image/jpeg":
+		return ".jpg"
+	}
+	ext, _ := mime.ExtensionsByType(t.FullType())
+	if len(ext) == 0 {
+		return ""
+	}
+	return ext[0]
 }

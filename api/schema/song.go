@@ -53,19 +53,20 @@ type ImageFile struct {
 // All fields in SongRW are readable and writeable fields.
 // The Song schema extends this with some read-only fields.
 type SongRW struct {
-	Title    string `json:"title"`
-	Artist   string `json:"artist,omitempty"`
-	Genre    string `json:"genre,omitempty"`
-	Edition  string `json:"edition,omitempty"`
-	Creator  string `json:"creator,omitempty"`
-	Language string `json:"language,omitempty"`
-	Year     int    `json:"year,omitempty"`
-	Comment  string `json:"comment,omitempty"`
+	Title    string   `json:"title"`
+	Artists  []string `json:"artists,omitempty"`
+	Genre    string   `json:"genre,omitempty"`
+	Edition  string   `json:"edition,omitempty"`
+	Creator  string   `json:"creator,omitempty"`
+	Language string   `json:"language,omitempty"`
+	Year     int      `json:"year,omitempty"`
+	Comment  string   `json:"comment,omitempty"`
 
 	DuetSinger1 string            `json:"duetSinger1,omitempty"`
 	DuetSinger2 string            `json:"duetSinger2,omitempty"`
 	Extra       map[string]string `json:"extra,omitempty"`
 
+	BPM          ultrastar.BPM  `json:"bpm"`
 	Gap          time.Duration  `json:"gap,omitempty"`
 	VideoGap     time.Duration  `json:"videoGap,omitempty"`
 	NotesGap     ultrastar.Beat `json:"notesGap,omitempty"`
@@ -94,12 +95,12 @@ type Song struct {
 }
 
 // FromSong converts m into a schema instance representing the current state of m.
-func FromSong(m *model.Song) Song {
+func FromSong(m model.Song) Song {
 	song := Song{
 		UUID: m.UUID,
 		SongRW: SongRW{
 			Title:    m.Title,
-			Artist:   m.Artist,
+			Artists:  m.Artists,
 			Genre:    m.Genre,
 			Edition:  m.Edition,
 			Creator:  m.Creator,
@@ -111,6 +112,7 @@ func FromSong(m *model.Song) Song {
 			DuetSinger2: m.DuetSinger2,
 			Extra:       m.CustomTags,
 
+			BPM:          m.BPM,
 			Gap:          m.Gap,
 			VideoGap:     m.VideoGap,
 			Start:        m.Start,
@@ -164,7 +166,7 @@ func FromSong(m *model.Song) Song {
 // Apply stores the fields of s into the respective fields of m.
 func (s *SongRW) Apply(m *model.Song) {
 	m.Title = s.Title
-	m.Artist = s.Artist
+	m.Artists = s.Artists
 	m.Genre = s.Genre
 	m.Edition = s.Edition
 	m.Creator = s.Creator
@@ -176,6 +178,7 @@ func (s *SongRW) Apply(m *model.Song) {
 	m.DuetSinger2 = s.DuetSinger2
 	m.CustomTags = s.Extra
 
+	m.BPM = s.BPM
 	m.Gap = s.Gap
 	m.VideoGap = s.VideoGap
 	m.Start = s.Start

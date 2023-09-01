@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/webdav"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
@@ -58,11 +59,12 @@ func (n *mediaNode) ETag(context.Context) (string, error) {
 	return "", webdav.ErrNotImplemented
 }
 
-func (n *mediaNode) Open(ctx context.Context, _ song.Service, mediaSvc media.Service, flag int) (webdav.File, error) {
+func (n *mediaNode) Open(ctx context.Context, _ song.Repository, mediaStore media.Store, flag int) (webdav.File, error) {
 	if flag&(os.O_RDWR|os.O_WRONLY) != 0 {
 		return nil, fs.ErrPermission
 	}
-	r, err := mediaSvc.OpenFile(ctx, n.file)
+	// TODO: determine mediatype from path and file extension.
+	r, err := mediaStore.Open(ctx, mediatype.Nil, n.file.UUID)
 	if err != nil {
 		return nil, err
 	}

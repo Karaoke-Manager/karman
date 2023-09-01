@@ -1,4 +1,26 @@
-# FIXME: Add useful linters
+run:
+  build-tags:
+    - database
+linters-settings:
+  goimports:
+    local-prefixes: github.com/Karaoke-Manager/karman
 linters:
   enable:
+    # Default Linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # Additional Linters
+    - goimports
     - godot
+    - gosec
+    - errorlint
+    - bodyclose
+    - exhaustive
+    - revive
+    # SQL Stuff
+    - rowserrcheck
+    - sqlclosecheck

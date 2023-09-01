@@ -1,52 +1,78 @@
+//go:build database
+
 package songs
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/test"
+	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
 func TestController_FetchSong(t *testing.T) {
-	_, c, data := setup(t, true)
+	t.Parallel()
+
+	c, db := setupController(t)
+	simpleSong := testdata.SimpleSong(t, db)
+
 	h := c.FetchSong(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetSong(r.Context())
-		assert.True(t, ok, "Did not find a song in the context.")
+		if !ok {
+			t.Errorf("FetchSong() did not set a song in the context, expected song to be set")
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}))
 
 	t.Run("OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(middleware.SetUUID(r.Context(), data.BasicSong.UUID))
-		test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s", simpleSong.UUID), nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), simpleSong.UUID))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
+		if resp.StatusCode != http.StatusNoContent {
+			t.Errorf("FetchSong() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
+		}
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(middleware.SetUUID(r.Context(), data.AbsentSongUUID))
-		resp := test.DoRequest(h, r)
+		id := uuid.New()
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s", id), nil)
+		r = r.WithContext(middleware.SetUUID(r.Context(), id))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
 
 func TestController_CheckModify(t *testing.T) {
-	_, c, data := setup(t, true)
-	h := c.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	t.Parallel()
+
+	c, _ := setupController(t)
+	simpleSong := model.Song{Model: model.Model{UUID: uuid.New()}}
+	songWithUpload := model.Song{Model: model.Model{UUID: uuid.New()}, InUpload: true}
+
+	h := c.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
 
 	t.Run("OK", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(SetSong(r.Context(), data.BasicSong))
-		test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", simpleSong.UUID), nil)
+		r = r.WithContext(SetSong(r.Context(), simpleSong))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
+		if resp.StatusCode != http.StatusNoContent {
+			t.Errorf("CheckModify() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
+		}
 	})
 	t.Run("409 Conflict", func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r = r.WithContext(SetSong(r.Context(), data.SongWithUpload))
-		resp := test.DoRequest(h, r)
+		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", songWithUpload.UUID), nil)
+		r = r.WithContext(SetSong(r.Context(), songWithUpload))
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
-			"uuid": data.SongWithUpload.UUID.String(),
+			"uuid": songWithUpload.UUID.String(),
 		})
 	})
 }

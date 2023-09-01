@@ -8,7 +8,7 @@ require (
 	github.com/ajg/form v1.5.1
 	github.com/brianvoe/gofakeit/v6 v6.23.1
 	github.com/go-chi/chi/v5 v5.0.10
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jackc/pgxutil v0.0.0-20230722221055-3c9f5efec167
 	github.com/pressly/goose/v3 v3.15.0

@@ -10,7 +10,7 @@ import (
 
 func TestFakeService_StoreFile(t *testing.T) {
 	t.Parallel()
-	
+
 	repo := NewFakeRepository()
 	svc := NewFakeService(repo)
 	file, err := svc.StoreFile(context.TODO(), mediatype.AudioMPEG, strings.NewReader("Hello World"))

@@ -27,7 +27,7 @@ func TestController_GetErrors(t *testing.T) {
 	t.Run("200 OK", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/errors", uploadWithErrors.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		test.AssertPagination(t, resp, 0, 100, uploadWithErrors.Errors, int64(uploadWithErrors.Errors))
 		var errors []schema.UploadProcessingError

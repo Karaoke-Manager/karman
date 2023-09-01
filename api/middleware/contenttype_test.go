@@ -62,7 +62,7 @@ func TestRequireContentType(t *testing.T) {
 				}))
 				req := httptest.NewRequest(http.MethodPost, "/", nil)
 				req.Header.Set("Content-Type", c.actual)
-				resp := test.DoRequest(h, req)
+				resp := test.DoRequest(h, req) //nolint:bodyclose
 				if c.ok {
 					if resp.StatusCode != c.code {
 						t.Errorf("RequireContentType(%q) rejected %q, expected accept", c.allowed, c.actual)

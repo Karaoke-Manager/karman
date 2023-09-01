@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib" // required to run migrations
 	"github.com/jackc/pgxutil"
 	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
@@ -158,10 +158,7 @@ func migrate(database string) error {
 	if err = goose.Up(db, "."); err != nil {
 		return err
 	}
-	if err = db.Close(); err != nil {
-		return err
-	}
-	return nil
+	return db.Close()
 }
 
 // connectionString is a helper method to construct a connection string to the specified database.

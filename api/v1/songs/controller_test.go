@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/test"
@@ -43,7 +44,7 @@ func setupHandler(c *Controller, prefix string) http.Handler {
 func testSongConflict(h http.Handler, method string, urlFmt string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, fmt.Sprintf(urlFmt, id), nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
 			"uuid": id.String(),
 		})

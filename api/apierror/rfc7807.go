@@ -119,8 +119,8 @@ func (p *ProblemDetails) PrepareResponse(w http.ResponseWriter, r *http.Request)
 	return p
 }
 
-// HttpStatus returns a ProblemDetails value representing the specified status.
+// HTTPStatus returns a ProblemDetails value representing the specified status.
 // When rendering the value will have its title set to the default status text for status.
-func HttpStatus(status int) *ProblemDetails {
+func HTTPStatus(status int) *ProblemDetails {
 	return &ProblemDetails{Status: status}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/api/v1"
+	v1 "github.com/Karaoke-Manager/karman/api/v1"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"

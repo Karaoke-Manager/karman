@@ -56,7 +56,7 @@ func TestPaginate(t *testing.T) {
 			}
 			req.URL.RawQuery = q.Encode()
 			req.RequestURI = "/?" + req.URL.RawQuery
-			resp := test.DoRequest(h, req)
+			resp := test.DoRequest(h, req) //nolint:bodyclose
 			if !c.expErr {
 				if resp.StatusCode != http.StatusOK {
 					t.Errorf("Paginate(%d, %d) rejected limit=%q, offset=%q, expected accept", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset)

@@ -37,11 +37,11 @@ func NewMockStore(placeholder string) Store {
 }
 
 // Create opens a writer to a new file.
-func (s *mockStore) Create(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
+func (s *mockStore) Create(_ context.Context, _ mediatype.MediaType, _ uuid.UUID) (io.WriteCloser, error) {
 	return &mockWriter{expect: s.placeholder}, nil
 }
 
 // Open returns a new reader to the mocked data.
-func (s *mockStore) Open(ctx context.Context, mediaType mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
+func (s *mockStore) Open(_ context.Context, _ mediatype.MediaType, _ uuid.UUID) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(s.placeholder)), nil
 }

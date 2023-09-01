@@ -43,7 +43,7 @@ func TestUUID(t *testing.T) {
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("uuid", c.value)
 			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
-			resp := test.DoRequest(h, req)
+			resp := test.DoRequest(h, req) //nolint:bodyclose
 			if !c.expectError {
 				if resp.StatusCode != http.StatusOK {
 					t.Errorf("UUID(%q) rejected %q, expected accept", "uuid", c.value)

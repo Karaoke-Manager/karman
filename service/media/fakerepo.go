@@ -21,7 +21,7 @@ func NewFakeRepository() Repository {
 }
 
 // CreateFile stores file and sets its UUID, CreatedAt, and UpdatedAt.
-func (f fakeRepo) CreateFile(ctx context.Context, file *model.File) error {
+func (f fakeRepo) CreateFile(_ context.Context, file *model.File) error {
 	file.UUID = uuid.New()
 	file.CreatedAt = time.Now()
 	file.UpdatedAt = file.CreatedAt
@@ -30,7 +30,7 @@ func (f fakeRepo) CreateFile(ctx context.Context, file *model.File) error {
 }
 
 // UpdateFile updates the stored version of file.
-func (f fakeRepo) UpdateFile(ctx context.Context, file *model.File) error {
+func (f fakeRepo) UpdateFile(_ context.Context, file *model.File) error {
 	if _, ok := f.files[file.UUID]; !ok {
 		return svc.ErrNotFound
 	}

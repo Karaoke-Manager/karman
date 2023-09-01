@@ -56,9 +56,7 @@ func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType s
 func MissingContentType(h http.Handler, method string, path string, allowed ...any) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)
-		w := httptest.NewRecorder()
-		h.ServeHTTP(w, r)
-		resp := w.Result()
+		resp := DoRequest(h, r) //nolint:bodyclose
 		AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeMissingContentType, map[string]any{
 			"acceptedContentTypes": allowed,
 		})
@@ -72,9 +70,7 @@ func InvalidContentType(h http.Handler, method string, path string, invalid stri
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, path, nil)
 		r.Header.Set("Content-Type", invalid)
-		w := httptest.NewRecorder()
-		h.ServeHTTP(w, r)
-		resp := w.Result()
+		resp := DoRequest(h, r) //nolint:bodyclose
 		AssertProblemDetails(t, resp, http.StatusUnsupportedMediaType, apierror.TypeUnsupportedMediaType, map[string]any{
 			"acceptedContentTypes": allowed,
 		})

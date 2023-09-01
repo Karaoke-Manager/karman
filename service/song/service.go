@@ -19,7 +19,7 @@ func NewService() Service {
 }
 
 // ParseArtists splits song.Artist into song.Artists.
-func (s *service) ParseArtists(ctx context.Context, song *model.Song) {
+func (s *service) ParseArtists(_ context.Context, song *model.Song) {
 	artists := strings.Split(song.Artist, ",")
 	for i, artist := range artists {
 		artists[i] = strings.TrimSpace(artist)
@@ -29,7 +29,7 @@ func (s *service) ParseArtists(ctx context.Context, song *model.Song) {
 }
 
 // Prepare sets song.Artist as well as file names for referenced files.
-func (s *service) Prepare(ctx context.Context, song *model.Song) {
+func (s *service) Prepare(_ context.Context, song *model.Song) {
 	song.Artist = strings.Join(song.Artists, ", ")
 	// TODO: Generate safe file names
 	song.TxtFileName = fmt.Sprintf("%s - %s.txt", song.Artist, song.Title)

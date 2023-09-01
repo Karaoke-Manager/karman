@@ -24,7 +24,7 @@ func NewFakeRepository() Repository {
 }
 
 // CreateSong stores the song and sets its UUID, CreatedAt, and UpdatedAt fields.
-func (r *fakeRepo) CreateSong(ctx context.Context, song *model.Song) error {
+func (r *fakeRepo) CreateSong(_ context.Context, song *model.Song) error {
 	song.UUID = uuid.New()
 	song.CreatedAt = time.Now()
 	song.UpdatedAt = song.CreatedAt
@@ -33,7 +33,7 @@ func (r *fakeRepo) CreateSong(ctx context.Context, song *model.Song) error {
 }
 
 // GetSong fetches looks up the song with the specified UUID.
-func (r *fakeRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error) {
+func (r *fakeRepo) GetSong(_ context.Context, id uuid.UUID) (model.Song, error) {
 	song, ok := r.songs[id]
 	if !ok {
 		return model.Song{}, svc.ErrNotFound
@@ -43,7 +43,7 @@ func (r *fakeRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error
 
 // FindSongs returns a list of songs limited by the specified pagination parameters.
 // This implementation does not support complex filter queries.
-func (r *fakeRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]model.Song, int64, error) {
+func (r *fakeRepo) FindSongs(_ context.Context, limit int, offset int64) ([]model.Song, int64, error) {
 	if limit < 0 {
 		limit = math.MaxInt
 	}
@@ -63,14 +63,14 @@ func (r *fakeRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mo
 }
 
 // DeleteSong deletes the song with the specified UUID (if it exists).
-func (r *fakeRepo) DeleteSong(ctx context.Context, id uuid.UUID) (bool, error) {
+func (r *fakeRepo) DeleteSong(_ context.Context, id uuid.UUID) (bool, error) {
 	_, ok := r.songs[id]
 	delete(r.songs, id)
 	return ok, nil
 }
 
 // UpdateSong updates the data of song.
-func (r *fakeRepo) UpdateSong(ctx context.Context, song *model.Song) error {
+func (r *fakeRepo) UpdateSong(_ context.Context, song *model.Song) error {
 	_, ok := r.songs[song.UUID]
 	if !ok {
 		return svc.ErrNotFound

@@ -116,7 +116,7 @@ func fullAnalyzeFile(r io.Reader, mediaType mediatype.MediaType, file *model.Fil
 }
 
 // analyzeImage sets image-specific metadata on file.
-func analyzeImage(r io.Reader, mediaType mediatype.MediaType, file *model.File) error {
+func analyzeImage(r io.Reader, _ mediatype.MediaType, file *model.File) error {
 	cfg, _, err := image.DecodeConfig(r)
 	if err != nil {
 		return err

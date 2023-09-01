@@ -25,7 +25,7 @@ func TestController_Create(t *testing.T) {
 
 	t.Run("201 Created", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var upload schema.Upload
 		if resp.StatusCode != http.StatusCreated {
@@ -54,7 +54,7 @@ func TestController_Find(t *testing.T) {
 
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		test.AssertPagination(t, resp, 0, 25, 25, 30)
 		var uploads []schema.Upload
@@ -81,7 +81,7 @@ func TestController_Get(t *testing.T) {
 	t.Run("200 OK (Open)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var upload schema.Upload
 		if resp.StatusCode != http.StatusOK {
@@ -101,7 +101,7 @@ func TestController_Get(t *testing.T) {
 	t.Run("200 OK (Pending)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s", pendingUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var upload schema.Upload
 		if resp.StatusCode != http.StatusOK {
@@ -121,7 +121,7 @@ func TestController_Get(t *testing.T) {
 	t.Run("200 OK (Processing)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s", processingUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var upload schema.Upload
 		if resp.StatusCode != http.StatusOK {
@@ -150,7 +150,7 @@ func TestController_Get(t *testing.T) {
 	t.Run("200 OK (Done)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s", doneUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var upload schema.Upload
 		if resp.StatusCode != http.StatusOK {
@@ -186,14 +186,14 @@ func TestController_Delete(t *testing.T) {
 
 	t.Run("204 No Content", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodDelete, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DLEETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
 
 		// Repeat the same delete to test idempotency
 		r = httptest.NewRequest(http.MethodDelete, url, nil)
-		resp = test.DoRequest(h, r)
+		resp = test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DLEETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}

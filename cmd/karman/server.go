@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -42,7 +43,7 @@ var defaultConfig = &Config{
 	Prefix:  "/api",
 }
 
-func runServer(cmd *cobra.Command, args []string) error {
+func runServer(_ *cobra.Command, _ []string) error {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
 	dbConfig, err := pgxpool.ParseConfig(connStringServer)
@@ -74,7 +75,12 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	r := chi.NewRouter()
 	r.Route(defaultConfig.Prefix+"/", apiController.Router)
+	server := &http.Server{
+		Addr:              defaultConfig.Address,
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           r,
+	}
 	fmt.Printf("Running on %s\n", defaultConfig.Address)
-	log.Fatalln(http.ListenAndServe(defaultConfig.Address, r))
+	log.Fatalln(server.ListenAndServe())
 	return nil
 }

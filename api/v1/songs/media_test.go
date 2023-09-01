@@ -33,7 +33,7 @@ func TestController_GetTxt(t *testing.T) {
 
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("GET %s returned status %d, expected %d", url, resp.StatusCode, http.StatusOK)
 		}
@@ -67,7 +67,7 @@ func TestController_ReplaceTxt(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, url, strings.NewReader(`#TITLE:Foobar
 #ARTIST:Barfoo`))
 		r.Header.Set("Content-Type", "text/plain")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var song schema.Song
 		if resp.StatusCode != http.StatusOK {
@@ -91,7 +91,7 @@ func TestController_ReplaceTxt(t *testing.T) {
 	t.Run("400 Bad Request (Invalid Body)", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, url, strings.NewReader(`Invalid Song`))
 		r.Header.Set("Content-Type", "text/plain")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidTXT, map[string]any{
 			"line": 1,
 		})
@@ -105,7 +105,7 @@ func TestController_ReplaceTxt(t *testing.T) {
 func testMediaNotFound(h http.Handler, song model.Song, media string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s/%s", song.UUID, media), nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, apierror.TypeMediaFileNotFound, map[string]any{
 			"uuid":  song.UUID.String(),
 			"media": media,
@@ -116,7 +116,7 @@ func testMediaNotFound(h http.Handler, song model.Song, media string) func(t *te
 func testGetFile(h http.Handler, path string, file model.File) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, path, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("%s %s responded with status code %d, expected %d", r.Method, r.RequestURI, resp.StatusCode, http.StatusOK)
 		}
@@ -205,7 +205,7 @@ func testPutFile(h http.Handler, path string, contentType string, content io.Rea
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, path, content)
 		r.Header.Set("Content-Type", contentType)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("%s %s responded with status code %d, expected %d", r.Method, r.RequestURI, resp.StatusCode, http.StatusNoContent)
 		}
@@ -283,14 +283,14 @@ func TestController_ReplaceVideo(t *testing.T) {
 func testDeleteFile(h http.Handler, path string) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodDelete, path, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("%s %s responded with status code %d, expected %d", r.Method, r.RequestURI, resp.StatusCode, http.StatusNoContent)
 		}
 
 		// Repeat the request to test idempotency
 		r = httptest.NewRequest(http.MethodDelete, path, nil)
-		resp = test.DoRequest(h, r)
+		resp = test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("%s %s responded with status code %d, expected %d", r.Method, r.RequestURI, resp.StatusCode, http.StatusNoContent)
 		}

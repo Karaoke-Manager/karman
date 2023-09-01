@@ -48,8 +48,8 @@ func TestNewFileStore(t *testing.T) {
 	})
 	t.Run("file root", func(t *testing.T) {
 		path := filepath.Join(dir, "test2")
-		if err = os.WriteFile(path, []byte("Hello"), 0660); err != nil {
-			t.Fatalf("WriteFile(%q, %q, 0660) returned an unexpected error: %s", path, "Hello", err)
+		if err = os.WriteFile(path, []byte("Hello"), 0600); err != nil {
+			t.Fatalf("WriteFile(%q, %q, 0600) returned an unexpected error: %s", path, "Hello", err)
 		}
 		_, err = NewFileStore(path)
 		if err == nil {

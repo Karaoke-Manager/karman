@@ -27,7 +27,7 @@ func init() {
 	rootCmd.AddCommand(migrateCmd)
 }
 
-func runMigrate(cmd *cobra.Command, args []string) {
+func runMigrate(_ *cobra.Command, _ []string) {
 	// TODO: build proper CLI
 	goose.SetBaseFS(migrations.FS)
 	db, err := goose.OpenDBWithDriver("pgx", connString)

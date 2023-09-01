@@ -30,7 +30,7 @@ func TestController_PutFile(t *testing.T) {
 	t.Run("204 No Content", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, url, strings.NewReader("Hello World"))
 		r.Header.Set("Content-Type", "application/octet-stream")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("PUT %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
@@ -59,7 +59,7 @@ func TestController_GetFile(t *testing.T) {
 	t.Run("200 OK (File)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/files/foo/bar.txt", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		var stat schema.UploadFileStat
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("GET %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusOK)
@@ -81,7 +81,7 @@ func TestController_GetFile(t *testing.T) {
 	t.Run("200 OK (Folder)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/files/foo", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		var stat schema.UploadFileStat
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("GET %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusOK)
@@ -103,7 +103,7 @@ func TestController_GetFile(t *testing.T) {
 	t.Run("200 OK (Root)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/files/", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		var stat schema.UploadFileStat
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("GET %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusOK)
@@ -127,7 +127,7 @@ func TestController_GetFile(t *testing.T) {
 	t.Run("404 Not Found (Upload)", test.HTTPError(h, http.MethodGet, fmt.Sprintf("/v1/uploads/%s/files/test.txt", uuid.New()), http.StatusNotFound))
 	t.Run("404 Not Found (File)", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s/files/absent.txt", openUpload.UUID), nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, apierror.TypeUploadFileNotFound, map[string]any{
 			"uuid": openUpload.UUID.String(),
 			"path": "absent.txt",
@@ -151,14 +151,14 @@ func TestController_DeleteFile(t *testing.T) {
 	t.Run("204 No Content (File)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/files/test.txt", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodDelete, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
 
 		// Repeat the request to test idempotency
 		r = httptest.NewRequest(http.MethodDelete, url, nil)
-		resp = test.DoRequest(h, r)
+		resp = test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
@@ -166,14 +166,14 @@ func TestController_DeleteFile(t *testing.T) {
 	t.Run("204 No Content (Folder)", func(t *testing.T) {
 		url := fmt.Sprintf("/v1/uploads/%s/files/foo", openUpload.UUID)
 		r := httptest.NewRequest(http.MethodDelete, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
 
 		// Repeat the request to test idempotency
 		r = httptest.NewRequest(http.MethodDelete, url, nil)
-		resp = test.DoRequest(h, r)
+		resp = test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}

@@ -72,7 +72,7 @@ func testInvalidPath(h http.Handler, method string, reqPath string, path string)
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, reqPath, nil)
 		r.Header.Set("Content-Type", "application/octet-stream")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUploadPath, map[string]any{
 			"path": path,
 		})
@@ -84,7 +84,7 @@ func testInvalidPath(h http.Handler, method string, reqPath string, path string)
 func testInvalidState(h http.Handler, method string, pathFmt string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
 		r := httptest.NewRequest(method, fmt.Sprintf(pathFmt, id), nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadState, map[string]any{
 			"uuid": id.String(),
 		})

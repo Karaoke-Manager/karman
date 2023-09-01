@@ -50,7 +50,7 @@ func TestNewFileStore(t *testing.T) {
 	})
 	t.Run("file root", func(t *testing.T) {
 		path := filepath.Join(dir, "test2")
-		err = os.WriteFile(path, []byte("Hello"), 0660)
+		err = os.WriteFile(path, []byte("Hello"), 0600)
 		if err != nil {
 			t.Fatalf("cold not create temporary file at %s: %s", path, err)
 		}
@@ -160,7 +160,7 @@ func TestFileStore_Open(t *testing.T) {
 	if err := os.Mkdir(filepath.Dir(path), 0770); err != nil {
 		t.Fatalf("Mkdir(%q) returned an unexpected error: %s", path, err)
 	}
-	if err := os.WriteFile(path, []byte("Hello World"), 0660); err != nil {
+	if err := os.WriteFile(path, []byte("Hello World"), 0600); err != nil {
 		t.Fatalf("WriteFile(...) returned an unexpected error: %s", err)
 	}
 

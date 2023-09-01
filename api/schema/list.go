@@ -36,7 +36,7 @@ func (l *List[T]) Render(http.ResponseWriter, *http.Request) error {
 
 // PrepareResponse generates the actual response list from l.
 // This method also sets pagination headers.
-func (l *List[T]) PrepareResponse(w http.ResponseWriter, r *http.Request) any {
+func (l *List[T]) PrepareResponse(w http.ResponseWriter, _ *http.Request) any {
 	w.Header().Set("Pagination-Count", strconv.Itoa(l.Count))
 	w.Header().Set("Pagination-Offset", strconv.FormatInt(l.Offset, 10))
 	w.Header().Set("Pagination-Limit", strconv.Itoa(l.Limit))

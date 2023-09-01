@@ -47,7 +47,7 @@ func NewFileStore(root string) (*FileStore, error) {
 
 // Create opens a writer for file.
 // Any necessary intermediate directories are created before this method returns.
-func (s *FileStore) Create(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
+func (s *FileStore) Create(_ context.Context, _ mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
 	idStr := id.String()
 	path := filepath.Join(s.root, idStr[:2], idStr)
 	if err := os.MkdirAll(filepath.Dir(path), s.DirMode); err != nil {
@@ -57,7 +57,7 @@ func (s *FileStore) Create(ctx context.Context, _ mediatype.MediaType, id uuid.U
 }
 
 // Open opens a reader for file.
-func (s *FileStore) Open(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
+func (s *FileStore) Open(_ context.Context, _ mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
 	idStr := id.String()
 	path := filepath.Join(s.root, idStr[:2], idStr)
 	return os.Open(path)

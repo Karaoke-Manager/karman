@@ -108,7 +108,7 @@ func binder(r *http.Request, v Binder) error {
 		if isNil(f) {
 			continue
 		}
-		switch f.Type().Kind() {
+		switch f.Type().Kind() { //nolint:exhaustive
 		case reflect.Slice:
 			if f.Type().Elem().Implements(binderType) {
 				for i := 0; i < f.Len(); i++ {
@@ -127,6 +127,8 @@ func binder(r *http.Request, v Binder) error {
 					}
 				}
 			}
+		default:
+			// other types are not processed recursively
 		}
 		if f.Type().Implements(binderType) {
 			fv := f.Interface().(Binder)
@@ -136,12 +138,7 @@ func binder(r *http.Request, v Binder) error {
 		}
 	}
 
-	// We call it bottom-up
-	if err := v.Bind(r); err != nil {
-		return err
-	}
-
-	return nil
+	return v.Bind(r)
 }
 
 var binderType = reflect.TypeOf(new(Binder)).Elem()

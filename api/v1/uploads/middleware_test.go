@@ -35,13 +35,13 @@ func TestController_FetchUpload(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", openUpload.UUID), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), openUpload.UUID))
-		test.DoRequest(h, r)
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
 		id := uuid.New()
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", id), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), id))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
@@ -62,7 +62,7 @@ func TestController_ValidateFilePath(t *testing.T) {
 		ctx := chi.NewRouteContext()
 		ctx.URLParams.Add("*", "abc/def.txt")
 		r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
-		test.DoRequest(h, r)
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("400 Bad Request", func(t *testing.T) {
 		path := "some/../invalid-path"
@@ -70,7 +70,7 @@ func TestController_ValidateFilePath(t *testing.T) {
 		ctx := chi.NewRouteContext()
 		ctx.URLParams.Add("*", path)
 		r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUploadPath, map[string]any{
 			"path": path,
 		})
@@ -94,12 +94,12 @@ func TestController_UploadState(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/uploads/%s/files/foo.txt", openUpload.UUID), nil)
 		r = r.WithContext(SetUpload(r.Context(), openUpload))
-		test.DoRequest(h, r)
+		test.DoRequest(h, r) //nolint:bodyclose
 	})
 	t.Run("409 Conflict", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/uploads/%s/files/foo.txt", processingUpload.UUID), nil)
 		r = r.WithContext(SetUpload(r.Context(), processingUpload))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadState, map[string]any{
 			"uuid": processingUpload.UUID.String(),
 		})

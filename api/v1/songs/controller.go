@@ -5,7 +5,6 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 )

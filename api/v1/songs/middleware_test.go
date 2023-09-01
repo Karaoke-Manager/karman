@@ -34,7 +34,7 @@ func TestController_FetchSong(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s", simpleSong.UUID), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), simpleSong.UUID))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("FetchSong() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
 		}
@@ -43,7 +43,7 @@ func TestController_FetchSong(t *testing.T) {
 		id := uuid.New()
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s", id), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), id))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
@@ -62,7 +62,7 @@ func TestController_CheckModify(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", simpleSong.UUID), nil)
 		r = r.WithContext(SetSong(r.Context(), simpleSong))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("CheckModify() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
 		}
@@ -70,7 +70,7 @@ func TestController_CheckModify(t *testing.T) {
 	t.Run("409 Conflict", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", songWithUpload.UUID), nil)
 		r = r.WithContext(SetSong(r.Context(), songWithUpload))
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadSongReadonly, map[string]any{
 			"uuid": songWithUpload.UUID.String(),
 		})

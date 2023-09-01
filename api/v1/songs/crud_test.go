@@ -28,7 +28,7 @@ func TestController_Create(t *testing.T) {
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, url, test.MustOpen(t, "testdata/valid-song.txt"))
 		r.Header.Set("Content-Type", "text/plain")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var song schema.Song
 		if resp.StatusCode != http.StatusCreated {
@@ -47,7 +47,7 @@ func TestController_Create(t *testing.T) {
 	t.Run("400 Bad Request (Body)", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, url, strings.NewReader("Foo"))
 		r.Header.Set("Content-Type", "text/plain")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidTXT, map[string]any{
 			"line": 1,
 		})
@@ -65,7 +65,7 @@ func TestController_Find(t *testing.T) {
 
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var songs []schema.Song
 		test.AssertPagination(t, resp, 0, 25, 25, 150)
@@ -89,7 +89,7 @@ func TestController_Get(t *testing.T) {
 
 	t.Run("200 OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 
 		var song schema.Song
 		if resp.StatusCode != http.StatusOK {
@@ -120,7 +120,7 @@ func TestController_Update(t *testing.T) {
 			{"title": "Foobar"}
 		`))
 		r.Header.Set("Content-Type", "application/json")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("PATCH %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
@@ -131,7 +131,7 @@ func TestController_Update(t *testing.T) {
 			{"title": "Foo
 		`))
 		r.Header.Set("Content-Type", "application/json")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusBadRequest, "", nil)
 	})
 	t.Run("400 Bad Request (Missing Content-Type)", test.MissingContentType(h, http.MethodPatch, url, "application/json"))
@@ -143,7 +143,7 @@ func TestController_Update(t *testing.T) {
 			{"title": "Foobar", "medley": {"mode": "manual"}}
 		`))
 		r.Header.Set("Content-Type", "application/json")
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, "", nil)
 	})
 }
@@ -157,14 +157,14 @@ func TestController_Delete(t *testing.T) {
 
 	t.Run("204 No Content", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodDelete, url, nil)
-		resp := test.DoRequest(h, r)
+		resp := test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}
 
 		// Repeat the same delete to test idempotency
 		r = httptest.NewRequest(http.MethodDelete, url, nil)
-		resp = test.DoRequest(h, r)
+		resp = test.DoRequest(h, r) //nolint:bodyclose
 		if resp.StatusCode != http.StatusNoContent {
 			t.Errorf("DELETE %s responded with status code %d, expected %d", url, resp.StatusCode, http.StatusNoContent)
 		}

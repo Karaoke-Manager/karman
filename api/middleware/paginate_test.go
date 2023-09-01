@@ -1,15 +1,11 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/test"
 )
 
 func TestPaginate(t *testing.T) {
@@ -34,12 +30,21 @@ func TestPaginate(t *testing.T) {
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			handler := Paginate(c.defaultLimit, c.maxLimit)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h := Paginate(c.defaultLimit, c.maxLimit)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				p := MustGetPagination(r.Context())
-				assert.False(t, c.expErr)
-				assert.Equal(t, c.expectedRequestLimit, p.RequestLimit)
-				assert.Equal(t, c.expectedLimit, p.Limit)
-				assert.Equal(t, c.expectedOffset, p.Offset)
+				if c.expErr {
+					t.Errorf("Paginate(%d, %d) accepted limit=%q, offset=%q, expected reject", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset)
+				}
+				if p.RequestLimit != c.expectedRequestLimit {
+					t.Errorf("Paginate(%d, %d)(limit=%q, offset=%q) yielded p.RequestLimit=%d, expected %d", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset, p.RequestLimit, c.expectedRequestLimit)
+				}
+				if p.Limit != c.expectedLimit {
+					t.Errorf("Paginate(%d, %d)(limit=%q, offset=%q) yielded p.Limit=%d, expected %d", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset, p.Limit, c.expectedLimit)
+				}
+				if p.Offset != c.expectedOffset {
+					t.Errorf("Paginate(%d, %d)(limit=%q, offset=%q) yielded p.Offset=%d, expected %d", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset, p.Offset, c.expectedOffset)
+				}
+				w.WriteHeader(http.StatusOK)
 			}))
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			q := req.URL.Query()
@@ -50,16 +55,15 @@ func TestPaginate(t *testing.T) {
 				q.Add("offset", c.reqOffset)
 			}
 			req.URL.RawQuery = q.Encode()
-			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, req)
-			resp := w.Result()
-
-			if c.expErr {
-				var err apierror.ProblemDetails
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-				assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				assert.Equal(t, http.StatusBadRequest, err.Status)
+			req.RequestURI = "/?" + req.URL.RawQuery
+			resp := test.DoRequest(h, req)
+			if !c.expErr {
+				if resp.StatusCode != http.StatusOK {
+					t.Errorf("Paginate(%d, %d) rejected limit=%q, offset=%q, expected accept", c.maxLimit, c.defaultLimit, c.reqLimit, c.reqOffset)
+				}
+				return
 			}
+			test.AssertProblemDetails(t, resp, http.StatusBadRequest, "", nil)
 		})
 	}
 }

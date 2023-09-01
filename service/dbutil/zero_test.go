@@ -3,12 +3,20 @@ package dbutil
 import (
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestZeroNil(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
-	assert.Equal(t, now, ZeroNil(&now))
-	assert.Zero(t, ZeroNil((*time.Time)(nil)))
+	zero := time.Time{}
+	actual := ZeroNil(&now)
+	if now != actual {
+		t.Errorf("ZeroNil(&now) = %s, expected %s", actual, now)
+	}
+
+	actual = ZeroNil((*time.Time)(nil))
+	if actual != zero {
+		t.Errorf("ZeroNil(nil) = %s, expected zero value", actual)
+	}
 }

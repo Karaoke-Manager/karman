@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
@@ -26,13 +25,19 @@ func TestController_FetchSong(t *testing.T) {
 
 	h := c.FetchSong(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetSong(r.Context())
-		assert.True(t, ok, "Did not find a song in the context.")
+		if !ok {
+			t.Errorf("FetchSong() did not set a song in the context, expected song to be set")
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}))
 
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/songs/%s", simpleSong.UUID), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), simpleSong.UUID))
-		test.DoRequest(h, r)
+		resp := test.DoRequest(h, r)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Errorf("FetchSong() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
+		}
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
 		id := uuid.New()
@@ -50,12 +55,17 @@ func TestController_CheckModify(t *testing.T) {
 	simpleSong := model.Song{Model: model.Model{UUID: uuid.New()}}
 	songWithUpload := model.Song{Model: model.Model{UUID: uuid.New()}, InUpload: true}
 
-	h := c.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	h := c.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
 
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", simpleSong.UUID), nil)
 		r = r.WithContext(SetSong(r.Context(), simpleSong))
-		test.DoRequest(h, r)
+		resp := test.DoRequest(h, r)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Errorf("CheckModify() responded with status code %d, expected %d", resp.StatusCode, http.StatusNoContent)
+		}
 	})
 	t.Run("409 Conflict", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/v1/songs/%s/txt", songWithUpload.UUID), nil)

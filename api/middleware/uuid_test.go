@@ -2,17 +2,16 @@ package middleware
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/test"
 )
 
 func TestUUID(t *testing.T) {
@@ -26,25 +25,32 @@ func TestUUID(t *testing.T) {
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			handler := UUID("uuid")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				v := MustGetUUID(r.Context())
-				assert.Equal(t, uuid.MustParse(c.value), v)
+			h := UUID("uuid")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if c.expectError {
+					t.Errorf("UUID(%q) accepted %q, expected reject", "uuid", c.value)
+					return
+				}
+				v, ok := GetUUID(r.Context())
+				if !ok {
+					t.Errorf("UUID(%q)(%q) did not set UUID in context, expected UUID to be set", "uuid", c.value)
+				}
+				if v != uuid.MustParse(c.value) {
+					t.Errorf("UUID(%q)(%q) set UUID to %q, expected %q", "uuid", c.value, v, c.value)
+				}
+				w.WriteHeader(http.StatusOK)
 			}))
-			req := httptest.NewRequest(http.MethodGet, "/"+c.value, nil)
+			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%s", c.value), nil)
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("uuid", c.value)
 			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
-			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, req)
-			resp := w.Result()
-
-			if c.expectError {
-				var err apierror.ProblemDetails
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&err))
-				assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-				assert.Equal(t, http.StatusBadRequest, err.Status)
-				assert.Equal(t, apierror.TypeInvalidUUID, err.Type)
+			resp := test.DoRequest(h, req)
+			if !c.expectError {
+				if resp.StatusCode != http.StatusOK {
+					t.Errorf("UUID(%q) rejected %q, expected accept", "uuid", c.value)
+				}
+				return
 			}
+			test.AssertProblemDetails(t, resp, http.StatusBadRequest, apierror.TypeInvalidUUID, nil)
 		})
 	}
 }

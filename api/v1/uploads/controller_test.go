@@ -1,71 +1,69 @@
+//go:build database
+
 package uploads
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
+	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
-	"github.com/Karaoke-Manager/karman/model"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/upload"
 	"github.com/Karaoke-Manager/karman/test"
 )
 
-// setup prepares a test instance of the uploads.Controller.
-// The tests in this package are more integration tests than unit tests as we test against an in-memory SQLite database
-// instead of mocking service objects.
-// The reason for this approach is mainly reduced testing complexity.
-//
-// If withData is true, a test dataset will be created and stored in the DB.
-// Otherwise, data will be nil.
-func setup(t *testing.T, withData bool) (h http.Handler, c *Controller, data *test.Dataset) {
-	db := test.NewDB(t)
-	if withData {
-		data = test.NewDataset(db)
-	}
-
+// setupController prepares a test instance of the uploads.Controller.
+// The tests in this package are integration tests that run against an actual PostgreSQL database.
+// The database can use testcontainers or be an external service.
+func setupController(t *testing.T) (*Controller, pgxutil.DB) {
 	dir, err := os.MkdirTemp("", "karman-test-*")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = os.RemoveAll(dir)
-	})
-	store, err := upload.NewFileStore(dir)
-	require.NoError(t, err)
-
-	svc := upload.NewService(db, store)
-	if withData {
-		ctx := context.Background()
-		w, err := svc.CreateFile(ctx, data.OpenUpload, "foo/bar.txt")
-		require.NoError(t, err)
-		_, err = io.WriteString(w, "Hello World")
-		require.NoError(t, err)
-		require.NoError(t, w.Close())
-		w, err = svc.CreateFile(ctx, data.OpenUpload, "test.txt")
-		require.NoError(t, err)
-		_, err = io.WriteString(w, "Foobar")
-		require.NoError(t, err)
-		require.NoError(t, w.Close())
+	if err != nil {
+		t.Fatalf("MkdirTemp() returned an unexpected error: %s", err)
 	}
-
-	c = NewController(svc)
-	r := chi.NewRouter()
-	r.Route("/", c.Router)
-	return r, c, data
+	db := test.NewDB(t)
+	uploadRepo := upload.NewDBRepository(db)
+	uploadStore, err := upload.NewFileStore(dir)
+	if err != nil {
+		t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", dir, err)
+	}
+	c := NewController(uploadRepo, uploadStore)
+	return c, db
 }
 
-// uploadPath generates a request path for upload.
-// The suffix is the local request part after the {uuid} part.
-// suffix must start with a slash.
-func uploadPath(upload *model.Upload, suffix string) string {
-	return "/" + upload.UUID.String() + suffix
+// setupHandler is a convenience function that wraps c in a http.Handler.
+func setupHandler(c *Controller, prefix string) http.Handler {
+	r := chi.NewRouter()
+	r.Route(strings.TrimSuffix(prefix, "/")+"/", c.Router)
+	return r
+}
+
+// setupFiles creates files for testing in the store backing c.
+// The files are created for an upload with UUID id.
+// The files map maps filenames (or paths) to file contents.
+// File paths must be valid according to fs.ValidPath.
+func setupFiles(t *testing.T, c *Controller, id uuid.UUID, files map[string]string) {
+	for file, content := range files {
+		w, err := c.uploadStore.Create(context.TODO(), id, file)
+		if err != nil {
+			t.Fatalf("Create(ctx, %q, %q) returned an unexpected error: %s", id, file, err)
+		}
+		if _, err = io.WriteString(w, content); err != nil {
+			t.Fatalf("w.WriteString(w, %q) returned an unexpected error: %s", content, err)
+		}
+		if err = w.Close(); err != nil {
+			t.Fatalf("w.Close() returned an unexpected error: %s", err)
+		}
+	}
 }
 
 // testInvalidPath is a test, that performs a request using the specified method and request path.
@@ -83,9 +81,9 @@ func testInvalidPath(h http.Handler, method string, reqPath string, path string)
 
 // testInvalidState is a test that performs a request using the specified method and path.
 // It then asserts that the response indicates an invalid upload state and contains the specified UUID.
-func testInvalidState(h http.Handler, method string, path string, id uuid.UUID) func(t *testing.T) {
+func testInvalidState(h http.Handler, method string, pathFmt string, id uuid.UUID) func(t *testing.T) {
 	return func(t *testing.T) {
-		r := httptest.NewRequest(method, path, nil)
+		r := httptest.NewRequest(method, fmt.Sprintf(pathFmt, id), nil)
 		resp := test.DoRequest(h, r)
 		test.AssertProblemDetails(t, resp, http.StatusConflict, apierror.TypeUploadState, map[string]any{
 			"uuid": id.String(),

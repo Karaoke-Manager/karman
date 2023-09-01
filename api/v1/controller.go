@@ -30,7 +30,7 @@ func NewController(
 	return &Controller{
 		uploadController: uploads.NewController(uploadRepo, uploadStore),
 		songController:   songs.NewController(songRepo, songSvc, mediaStore, mediaSvc),
-		davController:    dav.NewController(songRepo, mediaStore),
+		davController:    dav.NewController(songRepo, songSvc, mediaStore),
 	}
 }
 

@@ -20,13 +20,14 @@ import (
 // Each song is contained in a folder that contains the TXT file and the media files.
 type flatFS struct {
 	songRepo   songsvc.Repository
+	songSvc    songsvc.Service
 	mediaStore media.Store
 }
 
 // NewFlatFS creates a new [webdav.FileSystem] that serves songs in a flat hierarchy:
 // The root directory contains a folder for each song which in turn contains all the song's files.
-func NewFlatFS(songRepo songsvc.Repository, mediaStore media.Store) webdav.FileSystem {
-	return &flatFS{songRepo, mediaStore}
+func NewFlatFS(songRepo songsvc.Repository, songSvc songsvc.Service, mediaStore media.Store) webdav.FileSystem {
+	return &flatFS{songRepo, songSvc, mediaStore}
 }
 
 // Mkdir is not allowed.
@@ -72,6 +73,7 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	} else if err != nil {
 		return nil, err
 	}
+	s.songSvc.Prepare(ctx, &song)
 
 	if !ok {
 		return songNode(song), nil

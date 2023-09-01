@@ -28,7 +28,9 @@ func MustOpen(t *testing.T, name string) *os.File {
 func DoRequest(h http.Handler, r *http.Request) *http.Response {
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
-	return w.Result()
+	resp := w.Result()
+	resp.Request = r
+	return resp
 }
 
 // AssertPagination validates that the response provides the expected pagination values.

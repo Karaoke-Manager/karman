@@ -2,7 +2,6 @@ package uploads
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
-	fmt.Printf("Put file at %q\n", path)
 	if path == "." {
 		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return

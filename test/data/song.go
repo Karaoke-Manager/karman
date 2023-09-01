@@ -31,6 +31,8 @@ func readSong(t *testing.T, name string) model.Song {
 	return model.Song{Song: s, Artists: []string{s.Artist}}
 }
 
+// insertSong inserts the song into the database.
+// You can specify additional column values via the extra map.
 func insertSong(db pgxutil.DB, song *model.Song, extra map[string]any) error {
 	values := map[string]any{
 		"title":    song.Title,
@@ -83,12 +85,15 @@ func NSongs(t *testing.T, db pgxutil.DB, n int) {
 //
 //go:generate go run ../../tools/gensong -output testdata/song-with-upload.txt
 func SongWithUpload(t *testing.T, db pgxutil.DB) model.Song {
-	_, uploadID := doneUpload(t, db, 1)
+	id, err := insertUpload(db, &model.Upload{State: model.UploadStateOpen}, nil)
+	if err != nil {
+		t.Fatalf("testdata.SongWithUpload() could not insert upload into the database: %s", err)
+	}
 	song := readSong(t, "song-with-upload.txt")
 	if err := insertSong(db, &song, map[string]any{
-		"upload_id": uploadID,
+		"upload_id": id,
 	}); err != nil {
-		t.Fatalf("testdata.SongWithUpload() could not insert into song the database: %s", err)
+		t.Fatalf("testdata.SongWithUpload() could not insert song into the database: %s", err)
 	}
 	song.InUpload = true
 	return song

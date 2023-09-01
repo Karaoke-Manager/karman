@@ -14,6 +14,8 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
+// insertFile inserts the file into the database and returns its ID.
+// You can specify additional column values via the extra map.
 func insertFile(db pgxutil.DB, file *model.File, extra map[string]any) (int, error) {
 	if file.Checksum == nil {
 		file.Checksum = make([]byte, 0)
@@ -55,6 +57,8 @@ func AudioFile(t *testing.T, db pgxutil.DB) model.File {
 	return file
 }
 
+// ImageFile inserts a model.File into the database that corresponds to an image file.
+// The file is only created in the database, no actual file contents are created.
 func ImageFile(t *testing.T, db pgxutil.DB) model.File {
 	file := model.File{
 		Type:   mediatype.ImagePNG,
@@ -69,6 +73,8 @@ func ImageFile(t *testing.T, db pgxutil.DB) model.File {
 	return file
 }
 
+// VideoFile inserts a model.File into the database that corresponds to a video file.
+// The file is only created in the database, no actual file contents are created.
 func VideoFile(t *testing.T, db pgxutil.DB) model.File {
 	file := model.File{
 		Type:     mediatype.VideoMP4,

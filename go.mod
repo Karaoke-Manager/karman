@@ -6,7 +6,7 @@ require (
 	codello.dev/ultrastar v0.0.0-20230831123740-fe28873c12af
 	github.com/abema/go-mp4 v0.13.0
 	github.com/ajg/form v1.5.1
-	github.com/brianvoe/gofakeit/v6 v6.23.1
+	github.com/brianvoe/gofakeit/v6 v6.23.2
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v5 v5.4.3

@@ -50,7 +50,7 @@ paths: {}
 x-tagGroups:
   - name: Library Management
     tags:
+      - auth
       - song
       - media
       - upload
-# TODO: ETag support (and If-None-Match, If-Modified-Since)

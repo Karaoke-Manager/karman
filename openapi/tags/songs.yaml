@@ -675,6 +675,7 @@ components:
                 The height of the image in **pixels**.
     AutoMedley:
       type: object
+      title: Auto
       properties:
         mode:
           enum: [ auto ]
@@ -682,6 +683,7 @@ components:
             `auto` medley mode enables automatic calculation of medleys by UltraStar. This is the default.
     ManualMedley:
       type: object
+      title: Manual
       required: [ medleyStartBeat, medleyEndBeat ]
       properties:
         mode:
@@ -704,6 +706,7 @@ components:
             This corresponds to the UltraStar `#MEDLEYENDBEAT` tag.
     OffMedley:
       type: object
+      title: Off
       properties:
         mode:
           enum: [ off ]

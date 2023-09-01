@@ -1,0 +1,217 @@
+openapi: 3.0.3
+info:
+  title: Karman Authentication
+  version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+tags:
+  - name: auth
+    x-displayName: Authentication
+    description: |-
+      The Karman API uses token-based authentication.
+      Most endpoints are protected and can only be accessed if a valid `Bearer` token is provided in the `Authorization` header.
+      Although these endpoints are intentionally similar to OAuth 2, the Karman API currently does not support OAuth.
+      There is currently no support for OAuth scopes but to preserve compatibility with OAuth libraries
+      this endpoint still accepts a `scope` parameter (and ignores it).
+      
+      Clients should treat tokens as opaque strings.
+      Even though specific known token formats may be used (such as JWT), the token format is not defined and may change at any time.
+      To preserve compatibility with OAuth libraries this endpoint also returns a `scope` for the token.
+      However, its value is meaningless.
+paths:
+  /auth/token:
+    post:
+      operationId: createToken
+      summary: Acquire an Access Token
+      tags: [ auth ]
+      description: |-
+        This is the *login* endpoint of the Karman API.
+        The login involves exchanging known credentials for a Karman API Token.
+        Known credentials can be usernames and passwords but could also for example be an id token for an OIDC provider.
+        There are multiple possible token exchanges, that loosely correspond to OAuth 2 flows.
+        Each token exchange has different requirements for the parameters in the request body.
+        See the request schema below for details.
+        
+        The response to a valid request contains an access token that can be used to authenticate request to the Karman API.
+        Depending on the exchange mechanism used, the response may also contain a refresh token.
+        
+        **Attention**: The error response format for this endpoint does not conform to
+        [RFC 9457](https://datatracker.ietf.org/doc/html/rfc9457) in order to be compatible with the OAuth 2 spec.
+      requestBody:
+        required: true
+        description: |-
+          The request body contains authentication information.
+          Depending on the `grant_type` different fields may be required or supported.
+          This request schema aims to be compatible with the OAuth token endpoint.
+          Note however, that the Karman API does not currently implement OAuth,
+          but similarity to the OAuth specification may mean that you can use OAuth libraries to work with this endpoint.
+          
+          Only the `grant_type`s documented below are supported.
+          In particular the `authorization_code` and `client_credentials` grants are **not** currently supported.
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              discriminator:
+                propertyName: grant_type
+                mapping:
+                  password: "#/components/schemas/UsernamePassword"
+                  refresh_token: "#/components/schemas/RefreshToken"
+                  urn:ietf:params:oauth:grant-type:token-exchange: "#/components/schemas/TokenExchange"
+              oneOf:
+                - $ref: "#/components/schemas/UsernamePassword"
+                - $ref: "#/components/schemas/RefreshToken"
+                - $ref: "#/components/schemas/TokenExchange"
+      responses:
+        200: { $ref: "#/components/responses/TokenResponse" }
+        400: { $ref: "#/components/responses/TokenError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+components:
+  schemas:
+    UsernamePassword:
+      type: object
+      title: Username & Password
+      required: [ grant_type, username, password ]
+      properties:
+        grant_type:
+          type: string
+          enum: [ password ]
+          description: |-
+            The `password` grant type indicates that you are requesting a username/password based token exchange.
+            This is the simplest way to acquire a token for the Karman API.
+            In most cases the user must exist in a local or remote user storage on the server before this grant type can succeed.
+        username:
+          type: string
+          minLength: 3
+          example: "mario"
+          description: |-
+            The unique username identifying the user trying to sing in.
+            The Karman API does not make restrictions on the username format.
+        password:
+          type: string
+          example: "hunter2"
+          description: |-
+            The password of the user.
+    RefreshToken:
+      type: object
+      title: Refresh Token
+      required: [ grant_type, refresh_token ]
+      properties:
+        grant_type:
+          type: string
+          enum: [ refresh_token ]
+          description: |-
+            The `refresh_token` grant type acquires a new access token using a previously issued refresh token.
+            The refresh token must have been issued by the Karman API and must not be expired.
+        refresh_token:
+          type: string
+          example: "2YotnFZFEjr1zCsicMWpAA"
+          description: |-
+            A valid refresh token, previously issued by the Karman API.
+    TokenExchange:
+      type: object
+      title: Token Exchange
+      required: [ grant_type, subject_token, subject_token_type ]
+      properties:
+        grant_type:
+          type: string
+          enum: [ urn:ietf:params:oauth:grant-type:token-exchange ]
+          description: |-
+            The token exchange grant type allows you to exchange a token from an external service for a Karman API token.
+            Through this mechanism you can implement SSO or social logins.
+            Use the value `urn:ietf:params:oauth:grant-type:token-exchange` for this grant type.
+            
+            Depending on the server settings, users may be created on-the-fly when using this grant type,
+            using data encoded in the provided token.
+            
+            The set of acceptable tokens depends on the server settings.
+        subject_token:
+          type: string
+          description: |-
+            The token of a third party service that should be exchanged for a Karman API token.
+            In most cases this would be an ID token of an OIDC provider but other token types may be supported as well.
+            The token must be valid and not expired.
+          example: "2YotnFZFEjr1zCsicMWpAA"
+        subject_token_type:
+          type: string
+          enum: [ urn:ietf:params:oauth:token-type:id_token ]
+          description: |-
+            Identifies the type of the `subject_token`.
+            Usually only a single value is valid for a single third party service provider.
+            Currently only OIDC ID tokens are supported.
+  responses:
+    TokenResponse:
+      x-summary: "OK"
+      description: |-
+        A token response contains the access token for the Karman API as well as information about the token's validity.
+      content:
+        application/json:
+          schema:
+            title: Token Response
+            type: object
+            required: [ access_token, token_type, expires_in ]
+            properties:
+              access_token:
+                type: string
+                example: "5ad5f22dd7c905198befcc3bbe56ee1afd4bbc71"
+                description: |-
+                  The access token.
+                  This token can be used to authenticate subsequent requests to the Karman API.
+              token_type:
+                type: string
+                enum: [ "Bearer" ]
+                description: |-
+                  The token type is always `Bearer`.
+              expires_in:
+                type: integer
+                example: 600
+                description: |-
+                  The number of seconds the access token is valid.
+                  If a `refresh_token` is present, you should refresh the access token shortly before it expires.
+              refresh_token:
+                type: string
+                example: "cb0f673acf5cdb2bd30b9d86ae3ffd87b5524d54"
+                description: |-
+                  In some cases a refresh token can be issued.
+                  Not all grant types will issue a refresh token.
+                  The token can be used to acquire a new access token (using the `refresh_token` grant type) before it expires.
+    TokenError:
+      x-summary: Bad Request
+      description: |-
+        This response indicates that the request was not successful because it was not formatted correctly
+        or because the server refused to accept the provided credentials.
+      content:
+        application/json:
+          schema:
+            title: Token Error
+            type: object
+            required: [ error ]
+            properties:
+              error:
+                type: string
+                enum: [ invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope, invalid_dpop_proof ]
+                example: "invalid_grant"
+                description: |-
+                  The type of error that occurred:
+                  
+                  - `invalid_request`: This error indicates that the request was incorrectly formatted, e.g. a required field was missing.
+                  - `invalid_client`: Not used by the Karman API.
+                  - `invalid_grant`: The provided credentials are invalid (for example the username and password did not match).
+                  - `unauthorized_client`: Not used by the Karman API.
+                  - `unsupported_grant_type`: The requested `grant_type` is not supported or has been disabled.
+                  - `invalid_scope`: Not used by the Karman API.
+                  - `invalid_dpop_proof`: Not used by the Karman API.
+              error_description:
+                type: string
+                example: "invalid username or password"
+                description: |-
+                  A description of the error.
+                  This value is intended for developers and should **not** be displayed to end users.
+              error_uri:
+                type: string
+                example: "https://example.com/more-infos"
+                format: uri
+                description: |-
+                  A URI where more information about this error is available.
+                  If present for the `invalid_grant` error, this may be presented as a link to the user.

@@ -16,15 +16,20 @@ import (
 	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
-func init() {
-	rootCmd.AddCommand(serverCmd)
-}
-
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the Karman server",
 	Long:  "The karman server runs the Karman backend API.",
 	RunE:  runServer,
+}
+
+var (
+	connStringServer string
+)
+
+func init() {
+	serverCmd.Flags().StringVarP(&connStringServer, "conn", "c", "postgres://karman:secret@localhost:5432/karman?sslmode=disable", "Connection String to PostgreSQL database")
+	rootCmd.AddCommand(serverCmd)
 }
 
 type Config struct {
@@ -40,7 +45,7 @@ var defaultConfig = &Config{
 func runServer(cmd *cobra.Command, args []string) error {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	dbConfig, err := pgxpool.ParseConfig("postgres://karman:secret@localhost:5432/karman?sslmode=disable")
+	dbConfig, err := pgxpool.ParseConfig(connStringServer)
 	if err != nil {
 		return err
 	}

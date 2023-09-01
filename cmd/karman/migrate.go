@@ -11,10 +11,6 @@ import (
 	"github.com/Karaoke-Manager/karman/migrations"
 )
 
-func init() {
-	rootCmd.AddCommand(migrateCmd)
-}
-
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run migrations",
@@ -22,10 +18,19 @@ var migrateCmd = &cobra.Command{
 	Run:   runMigrate,
 }
 
+var (
+	connString string
+)
+
+func init() {
+	migrateCmd.Flags().StringVarP(&connString, "conn", "c", "postgres://karman:secret@localhost:5432/karman?sslmode=disable", "Connection String to PostgreSQL database")
+	rootCmd.AddCommand(migrateCmd)
+}
+
 func runMigrate(cmd *cobra.Command, args []string) {
 	// TODO: build proper CLI
 	goose.SetBaseFS(migrations.FS)
-	db, err := goose.OpenDBWithDriver("pgx", "postgres://karman:secret@localhost:5432/karman?sslmode=disable")
+	db, err := goose.OpenDBWithDriver("pgx", connString)
 	if err != nil {
 		log.Fatalf("goose: failed to open DB: %s", err)
 	}

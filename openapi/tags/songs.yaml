@@ -141,12 +141,11 @@ paths:
       summary: Find Songs
       tags: [ song ]
       parameters:
+        - $ref: "#/components/parameters/query"
         - $ref: "../common/pagination.yaml#/components/parameters/limit"
         - $ref: "../common/pagination.yaml#/components/parameters/offset"
-        - $ref: "#/components/parameters/query"
       description: |-
         List all songs in the database.
-      # TODO: Add filter and sort options
       responses:
         200:
           x-summary: Success
@@ -404,7 +403,6 @@ components:
       in: path
       name: uuid
       required: true
-      allowReserved: true
       schema:
         type: string
         format: uuid

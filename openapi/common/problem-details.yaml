@@ -124,18 +124,19 @@ components:
               title: "Unprocessable Entity"
               status: 422
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+              fields:
+                medley.medleyStartBeat: "number expected"
             allOf:
               - $ref: "#/components/schemas/ProblemDetails"
               - type: object
                 properties:
-                  field:
-                    type: string
-                    example: "medley.medleyStartBeat"
+                  fields:
+                    type: object
+                    additionalProperties: { type: string }
                     description: |-
                       A `Unprocessable Entity` response may or may not contain information about the JSON field that caused the error.
-                      The value of this property is the path to the field causing the error.
                       
-                      The `fields` object might contain a mapping from field paths to error messages.
+                      The value of this property is a mapping from field paths to error messages.
     UnexpectedError:
       x-summary: Unexpected Error
       description: |-

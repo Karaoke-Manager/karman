@@ -1,0 +1,571 @@
+openapi: 3.0.3
+info:
+  title: User Management
+  version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+tags:
+  - name: user
+    x-displayName: User Management
+    description: |-
+      These API endpoints can be used to manage the user accounts of Karman.
+      Users in Karman have two identifying properties: A username and a UUID.
+      The username is the primary way of identifying a user, but a username can change.
+      The UUID of a user is fixed and will remain constant even through username changes.
+      
+      User management can be supplemented by additional technologies such as LDAP.
+      These may impact the availability of some of the endpoints below.
+      If an endpoint is disabled due to to server configuration, a 403 response will be generated for these endpoints.
+paths:
+  /v1/users:
+    post:
+      operationId: createUser
+      summary: Create User
+      tags: [ user ]
+      description: |-
+        Create a new user account.
+        The specified username must be unique.
+        The new user will have a randomly generated password and will not be able to sign in
+        unless other authentication methods are available.
+        Use the `/v1/users/{id}/password` endpoint to set a password manually.
+      requestBody:
+        description: |-
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/User"
+                - type: object
+                  required: [ uuid, username ]
+      responses:
+        201:
+          x-summary: Success
+          description: |-
+            The user was created successfully.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        403: { $ref: "#/components/responses/EndpointDisabled" }
+        409: { $ref: "#/components/responses/UsernameNotAvailable" }
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    get:
+      operationId: listUsers
+      summary: List Users
+      tags: [ user ]
+      description: |-
+        List all users Karman knows about.
+      parameters:
+        - in: query
+          name: search
+          required: false
+          schema: { type: string }
+          example: "foobar"
+          description: |-
+            A search string.
+            Searches do not only match against usernames but may match additional attributes as well (such as emails).
+        - $ref: "../common/pagination.yaml#/components/parameters/limit"
+        - $ref: "../common/pagination.yaml#/components/parameters/offset"
+      responses:
+        200:
+          x-summary: Success
+          description: |-
+            A successful request returns a paginated collection of users.
+            If the search filter did not match any users, the results will be empty.
+            A `404` status code will not be returned.
+          headers:
+            Pagination-Count: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Count" }
+            Pagination-Offset: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Offset" }
+            Pagination-Limit: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Limit" }
+            Pagination-Total: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Total" }
+          content:
+            application/json:
+              schema:
+                type: array
+                description: |-
+                  An array of `User` resources.
+                items:
+                  $ref: '#/components/schemas/User'
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/users/{id}:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    get:
+      operationId: getUser
+      summary: Get User
+      tags: [ user ]
+      description: |-
+        Fetch information about a single user.
+      responses:
+        200:
+          x-summary: Success
+          description: |-
+            When the request completes successfully the response contains the requested user resource.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        404: { $ref: "#/components/responses/UserNotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    patch:
+      operationId: updateUser
+      summary: Update User
+      tags: [ user ]
+      description: |-
+        Perform a partial update of the user.
+        Only fields present in the request will be updated.
+      requestBody:
+        description: |-
+          The request body contains the fields you want to update.
+          Not all fields may be able to be updated at the same time.
+          If fields cannot be updated simultaneously, a 422 error will be returned.
+          
+          The `username` must be updated individually and cannot be updated with other fields.
+          
+          Changing the `email` will immediately perform an update without verification.
+          In most cases the `/v1/users/{id}/email` endpoint should be preferred.
+        required: true
+        content:
+          application/json:
+            examples:
+              updateUsername:
+                summary: Change Username
+                description: |-
+                  Change the username of a user.
+                value:
+                  username: "wario"
+              updateEmail:
+                summary: Update E-Mail Address
+                description: |-
+                  Change the E-Mail address of a user.
+                value:
+                  email: "wario@example.com"
+              disableUser:
+                summary: Disable a User
+                description: |-
+                  Set a user inactive.
+                value:
+                  active: false
+            schema: { $ref: '#/components/schemas/User' }
+      responses:
+        204:
+          x-summary: No Content
+          description: |-
+            This response indicates that the update was successful.
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        403: { $ref: "#/components/responses/EndpointDisabled" }
+        409: { $ref: "#/components/responses/UsernameNotAvailable" }
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+    delete:
+      operationId: deleteUser
+      summary: Delete User
+      tags: [ user ]
+      description: |-
+        Deletes the user with the specified `id`.
+        If no user with the requested `id` exists, the response will have code `204`.
+      responses:
+        202:
+          x-summary: Accepted
+          description: |-
+            This response indicates that the deletion request was successful.
+            The user may not be deleted instantly.
+            The deletion cannot be reversed at this point.
+        403: { $ref: "#/components/responses/EndpointDisabled" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/users/{id}/password:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    post:
+      operationId: updatePassword
+      summary: Update a Password
+      tags: [ user ]
+      description: |-
+        This endpoint handles password changes by users or admins.
+        A successful request to this endpoint immediately changes the password.
+      requestBody:
+        description: |-
+          The request contains information about the password change.
+        required: true
+        content:
+          application/json:
+            examples:
+              changeKnownPassword:
+                summary: Change a known Password
+                description: |-
+                  Users can change their password by providing the current password.
+                value:
+                  oldPassword: "hunter2"
+                  newPassword: "hunter3"
+              passwordReset:
+                summary: Complete Password Reset
+                description: |-
+                  Complete a password reset.
+                value:
+                  token: "6b5d5b038aa48ce99844515dcee97a0ac435c43d"
+                  newPassword: "hunter3"
+            schema:
+              type: object
+              title: Password Change
+              required: [ newPassword ]
+              properties:
+                token:
+                  type: string
+                  example: "6b5d5b038aa48ce99844515dcee97a0ac435c43d"
+                  description: |-
+                    A password reset token for the user.
+                    If the user does not have admin privileges either `token` or `oldPassword` is required.
+                oldPassword:
+                  type: string
+                  minLength: 6
+                  example: "hunter2"
+                  description: |-
+                    The current password of the user.
+                    If the user does not have admin privileges either `token` or `oldPassword` is required.
+                newPassword:
+                  type: string
+                  minLength: 6
+                  example: "hunter3"
+                  description: |-
+                    The new password for the user.
+      responses:
+        204: { description: Success }
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        404: { $ref: "#/components/responses/UserNotFound" }
+        403:
+          x-summary: Forbidden
+          description: |-
+            Either the provided credentials are not valid or the endpoint is disabled on the server.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/InvalidCredentials"
+                  - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/users/password-reset:
+    post:
+      operationId: resetPassword
+      summary: Reset a Password
+      tags: [ user ]
+      description: |-
+        This endpoint initiates a password reset.
+        As opposed to a password change this will generate a password reset token that can then be used to change the password.
+        This endpoint should be used for a "Forgot Password" functionality.
+        
+        The password reset token will be sent to the user in the form of a link.
+        The link can be specified by the caller of this endpoint, however link targets must be whitelisted on the server to be accepted.
+        The password reset token as well as the user UUID will be appended as URL parameters.
+      requestBody:
+        description: |-
+          The request must contain some information about the user whose password should be reset.
+        required: true
+        content:
+          application/json:
+            examples:
+              resetByUsername:
+                summary: Reset By Username
+                description: |-
+                  Reset the password of a known username
+                value:
+                  username: mario
+                  linkURL: "https://example.com/reset-password"
+              resetByEmail:
+                summary: Reset By Email
+                description: |-
+                  Reset the password of a known email
+                value:
+                  email: "mario@example.com"
+                  linkURL: "https://example.com/reset-password"
+            schema:
+              type: object
+              title: Password Reset
+              required: [ linkURL ]
+              properties:
+                uuid:
+                  type: string
+                  format: uuid
+                  example: "9A9C79B6-A2D1-4968-9A0D-AA6479542114"
+                  description: |-
+                    The UUID of the user whose password should be reset.
+                    Exactly one of `username`, `uuid`, or `email` is required.
+                username:
+                  type: string
+                  minLength: 3
+                  example: "mario"
+                  description: |-
+                    The username whose password should be reset.
+                    Exactly one of `username`, `uuid`, or `email` is required.
+                email:
+                  type: string
+                  format: email
+                  minLength: 3
+                  example: "mario@example.com"
+                  description: |-
+                    The email of the user whose password should be reset.
+                    Exactly one of `username`, `uuid`, or `email` is required.
+                linkURL:
+                  type: string
+                  format: url
+                  minLength: 10
+                  example: "https://example.com/password-reset-callback"
+                  description: |-
+                    The URL that will be sent to the user to perform a password reset.
+                    The following query parameters will be added to this url:
+                    
+                    - `uuid`: The UUID of the user.
+                    - `token`: A password reset token that can be used on the `/v1/users/{id}/password` endpoint.
+                    
+                    A URL used here must be whitelistet by the server.
+      responses:
+        202:
+          x-summary: Success
+          description: |-
+            The password reset has been initiated successfully.
+            This response does not indicate that the password reset link has already reached the user.
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        404: { $ref: "#/components/responses/UserNotFound" }
+        403:
+          x-summary: Forbidden
+          description: |-
+            Either the requested `linkURL` is not whitelisted for password resets or
+            the password reset endpoint is disabled on the server.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - type: object
+                    title: URL Not Whitelisted
+                    example:
+                      type: "codello.dev/karman/problems/forbidden-password-reset-url"
+                      title: "Password Reset URL not Allowed"
+                      status: 403
+                      detail: "The requested password reset URL has not been whitelisted on the server."
+                    allOf:
+                      - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+                  - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/users/{id}/email:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+    post:
+      operationId: UpdateEmail
+      summary: Change E-Mail
+      tags: [ user ]
+      description: |-
+        This endpoint updates the E-Mail of a user.
+        An email update is not immediate but requires a confirmation.
+      requestBody:
+        description: |-
+          This endpoint has two forms:
+
+          - If no `token` is present, an email update request is created.
+            This causes a verification email to be sent to the email.
+            The verification email contains a link constructed from the provided `linkURL`.
+          - If a `token` is present, this endpoint verifies the token and - if it is valid - updates the user's email.
+        required: true
+        content:
+          application/json:
+            examples:
+              newEmail:
+                summary: Initiate E-Mail Confirmation
+                description: |-
+                  Send a confirmation email to the new address.
+                value:
+                  email: "wario@example.com"
+                  linkURL: "https://example.com/confirm-email"
+              confirmEmail:
+                summary: Confirm a new E-Mail
+                description: |-
+                  Confirm a previously requested E-Mail.
+                value:
+                  email: "wario@example.com"
+                  token: "447118706cefd63bd372a4025e256dfff6cb0ede"
+            schema:
+              type: object
+              title: E-Mail Change
+              required: [ email ]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  minLength: 3
+                  example: "wario@example.com"
+                  description: |-
+                    The new email that is requested.
+                token:
+                  type: string
+                  example: "447118706cefd63bd372a4025e256dfff6cb0ede"
+                  description: |-
+                    An email confirmation token.
+                    If this is present and valid, the user's email is updated immediately.
+                linkURL:
+                  type: string
+                  format: url
+                  example: "https://example.com/confirm-email"
+                  description: |-
+                    The URL that will be sent to the user to confirm the email.
+                    The following query parameters will be added to this url:
+                    
+                    - `uuid`: The UUID of the user.
+                    - `token`: An email confirmation token that can be used to confirm the updated email.
+                    
+                    A URL used here must be whitelisted by the server.
+                    
+                    The `linkURL` is required if no `token` is specified.
+      responses:
+        202:
+          x-summary: Accepted
+          description: |-
+            The request was accepted and a confirmation email was sent.
+            This response does not indicate that the confirmation email has already reached the user.
+        204:
+          x-summary: Success
+          description: |-
+            The email was changed successfully.
+        400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        404: { $ref: "#/components/responses/UserNotFound" }
+        403:
+          x-summary: Forbidden
+          description: |-
+            Either the provided `token` was not valid or the endpoint is disabled on the server.
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/InvalidCredentials"
+                  - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
+        422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+components:
+  parameters:
+    userID:
+      in: path
+      name: id
+      required: true
+      schema: { type: string }
+      example: "mario"
+      description: |-
+        An identification of the user. This can be:
+        
+        - The special parameter `"me"` identifying user performing the request.
+        - The `uuid` of the user
+        - The `username` of the user
+        
+        Values are matched in this order.
+        In particular UUID-based lookups take precedence over username based lookups.
+  schemas:
+    User:
+      type: object
+      x-tags: [ user ]
+      description: |-
+        A single User.
+      required: [ uuid ]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          minLength: 36
+          maxLength: 36
+          example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
+          readOnly: true
+          description: |-
+            The UUID of the user.
+            The UUID uniquely identifies a user even through username changes.
+        username:
+          type: string
+          minLength: 3
+          example: "mario"
+          description: |-
+            The username of this user.
+            This should be the primary way of user identification
+            The username can be displayed in the UI to identify different users.
+        active:
+          type: boolean
+          example: true
+          description: |-
+            The state of the user.
+            If `active` is `false` the user is disabled and cannot sign in.
+        email:
+          type: string
+          format: email
+          example: "mario@example.com"
+          description: |-
+            The E-Mail address of the user.
+            This field is only included in responses if the requesting user has permissions to view the address.
+    InvalidCredentials:
+      title: Invalid Credentials
+      example:
+        type: "codello.dev/karman/problems/invalid-credentials"
+        title: "Invalid Credentials"
+        status: 403
+      allOf:
+        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+  responses:
+    UsernameNotAvailable:
+      x-summary: Conflict
+      description: |-
+        The requested username is already in use by a different user.
+      content:
+        application/problem+json:
+          schema:
+            title: Username Not Available
+            example:
+              type: "codello.dev/karman/problems/username-not-available"
+              title: "Username Not Available"
+              status: 409
+              detail: "This username is already taken."
+              username: "wario"
+            allOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+              - type: object
+                properties:
+                  username:
+                    type: string
+                    minLength: 3
+                    example: "wario"
+                    description: |-
+                      The requested username that was already taken.
+    UserNotFound:
+      x-summary: Not Found
+      description: |-
+        The requested user was not found.
+      content:
+        application/problem+json:
+          schema:
+            title: User Not Found
+            example:
+              type: "codello.dev/karman/problems/user-not-found"
+              title: "User Not Found"
+              status: 404
+              username: "maro"
+            allOf:
+              - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+              - type: object
+                properties:
+                  uuid:
+                    type: string
+                    format: uuid
+                    minLength: 36
+                    maxLength: 36
+                    example: "F0481266-E081-4E28-BB20-4D6221C90C2F"
+                    description: |-
+                      The requested UUID for which no user was found.
+                      Only included if a UUID-based lookup was performed.
+                  username:
+                    type: string
+                    example: "maro"
+                    description: |-
+                      The requested username for which no user was found.
+                      Only included if a username-based lookup was performed.
+    EndpointDisabled:
+      x-summary: Endpoint Disabled
+      description: |-
+        This error indicates that the endpoint is disabled due to server configuration.
+      content:
+        application/problem+json:
+          schema: { $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError" }

@@ -62,6 +62,15 @@ components:
         instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
       allOf:
         - $ref: "#/components/schemas/ProblemDetails"
+    EndpointDisabledError:
+      title: Endpoint Disabled
+      example:
+        type: "codello.dev/karman/problems/endpoint-disabled"
+        title: "Endpoint Disabled"
+        status: 403
+        detail: "This feature has been disabled by the server administrator."
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
   responses:
     BadRequest:
       x-summary: Bad Request

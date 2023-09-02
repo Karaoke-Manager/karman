@@ -246,14 +246,14 @@ paths:
                     If the user does not have admin privileges either `token` or `oldPassword` is required.
                 oldPassword:
                   type: string
-                  minLength: 6
+                  minLength: 1
                   example: "hunter2"
                   description: |-
                     The current password of the user.
                     If the user does not have admin privileges either `token` or `oldPassword` is required.
                 newPassword:
                   type: string
-                  minLength: 6
+                  minLength: 1
                   example: "hunter3"
                   description: |-
                     The new password for the user.
@@ -317,7 +317,7 @@ paths:
                     Exactly one of `username`, `uuid`, or `email` is required.
                 username:
                   type: string
-                  minLength: 3
+                  minLength: 1
                   example: "mario"
                   description: |-
                     The username whose password should be reset.
@@ -325,7 +325,7 @@ paths:
                 email:
                   type: string
                   format: email
-                  minLength: 3
+                  minLength: 1
                   example: "mario@example.com"
                   description: |-
                     The email of the user whose password should be reset.
@@ -418,7 +418,7 @@ paths:
                 email:
                   type: string
                   format: email
-                  minLength: 3
+                  minLength: 1
                   example: "wario@example.com"
                   description: |-
                     The new email that is requested.
@@ -475,7 +475,8 @@ paths:
                       email:
                         type: string
                         format: email
-                        minLength: 3
+                        minLength: 1
+                        example: "mario@example.com"
                         description: |-
                           The E-Mail address that is already in use.
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
@@ -507,7 +508,6 @@ components:
       x-tags: [ user ]
       description: |-
         A single User.
-      required: [ uuid ]
       properties:
         uuid:
           type: string
@@ -521,7 +521,7 @@ components:
             The UUID uniquely identifies a user even through username changes.
         username:
           type: string
-          minLength: 3
+          minLength: 1
           example: "mario"
           description: |-
             The username of this user.
@@ -563,7 +563,7 @@ components:
                 properties:
                   username:
                     type: string
-                    minLength: 3
+                    minLength: 1
                     example: "wario"
                     description: |-
                       The requested username that was already taken.
@@ -600,14 +600,6 @@ components:
                     description: |-
                       The requested username for which no user was found.
                       Only included if a username-based lookup was performed.
-
-    EndpointDisabled:
-      x-summary: Endpoint Disabled
-      description: |-
-        This error indicates that the endpoint is disabled due to server configuration.
-      content:
-        application/problem+json:
-          schema: { $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError" }
 
     PermissionDeniedOrEndpointDisabled:
       x-summary: Forbidden

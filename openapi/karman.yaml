@@ -86,3 +86,4 @@ components:
         password:
           tokenUrl: /auth/token
           refreshUrl: /auth/token
+          scopes: {}

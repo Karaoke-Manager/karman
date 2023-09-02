@@ -82,7 +82,7 @@ paths:
               example:
                 uuid: "205F5B79-9B05-4D54-B5A1-4943894E7501"
                 status: "open"
-              schema: { $ref: '#/components/schemas/Upload' }
+              schema: { $ref: '#/components/schemas/OpenUpload' }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
@@ -277,9 +277,10 @@ paths:
           content:
             application/json:
               example:
+                uuid: "4FED7DDD-778E-4C9E-B9BD-15D767825ACA"
                 status: pending
               schema:
-                $ref: '#/components/schemas/Upload'
+                $ref: '#/components/schemas/PendingUpload'
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
@@ -308,11 +309,12 @@ paths:
           content:
             application/json:
               example:
+                uuid: "4FED7DDD-778E-4C9E-B9BD-15D767825ACA"
                 status: processing
                 songsTotal: -1
                 songsProcessed: 0
               schema:
-                $ref: '#/components/schemas/Upload'
+                $ref: '#/components/schemas/ProcessingUpload'
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
@@ -462,6 +464,7 @@ components:
         - $ref: "#/components/schemas/PendingUpload"
         - $ref: "#/components/schemas/ProcessingUpload"
         - $ref: "#/components/schemas/DoneUpload"
+
     OpenUpload:
       type: object
       required: [ uuid, status ]
@@ -469,11 +472,16 @@ components:
         uuid:
           type: string
           format: uuid
+          minLength: 36
+          maxLength: 36
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
           description: |-
             The UUID of the upload.
         status:
           enum: [ "open" ]
+          type: string
+          minLength: 1
+          example: "open"
           description: |-
             The `open` status indicates that the upload accepts file uploads and deletes.
             An upload in this status will not be processed automatically.
@@ -485,11 +493,16 @@ components:
         uuid:
           type: string
           format: uuid
+          minLength: 36
+          maxLength: 36
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
           description: |-
             The UUID of the upload.
         status:
           enum: [ "pending" ]
+          type: string
+          minLength: 1
+          example: "pending"
           description: |-
             The `pending` status indicates that the upload has been marked for processing but processing has not started yet.
             An upload in this status will not accept file uploads.
@@ -501,11 +514,16 @@ components:
         uuid:
           type: string
           format: uuid
+          minLength: 36
+          maxLength: 36
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
           description: |-
             The UUID of the upload.
         status:
           enum: [ "processing" ]
+          type: string
+          minLength: 1
+          example: "processing"
           description: |-
             The `processing` status indicates that an upload is currently being processed.
             The response contains additional fields indicating the progress of the processing.
@@ -539,11 +557,16 @@ components:
         uuid:
           type: string
           format: uuid
+          minLength: 36
+          maxLength: 36
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
           description: |-
             The UUID of the upload.
         status:
+          type: string
+          minLength: 1
           enum: [ "done" ]
+          example: "done"
           description: |-
             The `done` status indicates that the upload has been analyzed and it is now possible to import songs.
         songsTotal:
@@ -564,11 +587,13 @@ components:
       properties:
         file:
           type: string
+          minLength: 1
           example: "folder/file.txt"
           description: |-
             The file that caused the error, relative to the root of the upload.
         message:
           type: string
+          minLength: 1
           example: "could not parse"
           description: |-
             A message describing the cause of the error.
@@ -616,6 +641,7 @@ components:
           items: { $ref: '#/components/schemas/File' }
         nextMarker:
           type: string
+          example: "foobar.mp3"
           description: |-
             If the list of children has been truncated because of its size, a marker will be included in the response.
             You can use the marker in a subsequent request to get the next batch of children.

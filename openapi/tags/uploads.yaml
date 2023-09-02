@@ -70,11 +70,12 @@ paths:
           x-summary: Success
           description: |-
             Upon creation the new upload instance is returned.
-            The upload resource will have a `status` of `created`, indicating that it is ready to accept files.
+            The upload resource will have a `status` of `open`, indicating that it is ready to accept files.
           content:
             application/json:
               example:
-                status: created
+                uuid: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+                status: "open"
               schema: { $ref: '#/components/schemas/Upload' }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
   /v1/uploads/{uuid}:
@@ -131,6 +132,20 @@ paths:
       description: |-
         Fetches information about the file at `path` within the upload.
         It is not currently possible to retrieve the file contents.
+      parameters:
+        - name: marker
+          in: query
+          description: |-
+            A file name that indicates where to start when listing the children of a folder.
+            The file name indicated by the marker does not need to actually exist in the folder.
+            The file indicated by the marker will not be included in the results, even if such a file exists.
+            
+            If a folder has many children and needs to be truncated, a `nextMarker` field will be present.
+            Use that value to get the next batch of children from that folder.
+            
+            A marker is only valid for one specific folder in an upload.
+          schema:
+            type: string
       responses:
         200:
           description: Success
@@ -139,22 +154,29 @@ paths:
               examples:
                 file:
                   summary: Regular File
-                  description: A regular file has no `children`.
+                  description: |-
+                    A regular file has no `children`.
                   value:
                     name: foo.txt
                     size: 1337
+                    dir: false
                 folder:
                   summary: Directory
-                  description: A directory contains its `children`
+                  description: |-
+                    A directory contains its `children`. Nested items do not include their `children`.
                   value:
                     name: mydir
+                    dir: true
                     children:
-                      - name: file.txt
-                        size: 1346
                       - name: another file.mp3
                         size: 1755329
+                        dir: false
+                      - name: file.txt
+                        size: 1346
+                        dir: false
                       - name: subfolder
-                        children: [ ]
+                        dir: true
+                    nextMarker: subfolder
               schema:
                 $ref: '#/components/schemas/File'
         400: { $ref: "#/components/responses/InvalidPathOrUUID" }
@@ -196,7 +218,7 @@ paths:
       tags: [ upload ]
       description: |-
         Deletes the file at `path` from the upload.
-        If `path` is a folder the folder is deleted recursively.
+        If `path` is a folder, the folder is deleted recursively.
         
         After deleting the `file` at path the upload may also remove any empty folders.
         
@@ -271,7 +293,7 @@ paths:
       summary: List all Songs in an Upload
       tags: [ upload ]
       description: |-
-        When an upload is in state `ready` you can use this endpoint to get a paginated view of songs
+        When an upload is in state `done` you can use this endpoint to get a paginated view of songs
         that were discovered in the upload.
         
         You can query details for these songs using the `/v1/songs/{uuid}` endpoints.
@@ -292,7 +314,39 @@ paths:
                 description: |-
                   An array of `Song` resources.
                 items:
-                  $ref: 'songs.yaml#/components/schemas/Song'
+                  $ref: "songs.yaml#/components/schemas/Song"
+        400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        404: { $ref: "#/components/responses/UploadNotFound" }
+        409: { $ref: "#/components/responses/UploadStateError" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+  /v1/uploads/{uuid}/errors:
+    parameters:
+      - $ref: "#/components/parameters/uploadUUID"
+      - $ref: "../common/pagination.yaml#/components/parameters/limit"
+      - $ref: "../common/pagination.yaml#/components/parameters/offset"
+    get:
+      operationId: getUploadErrors
+      summary: Get Processing Errors
+      tags: [ upload ]
+      description: |-
+        Fetch a paginated list of errors that occurred during processing of the upload.
+        The result might be empty.
+      responses:
+        200:
+          description: Success
+          headers:
+            Pagination-Count: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Count" }
+            Pagination-Offset: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Offset" }
+            Pagination-Limit: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Limit" }
+            Pagination-Total: { $ref: "../common/pagination.yaml#/components/headers/Pagination-Total" }
+          content:
+            application/json:
+              schema:
+                type: array
+                description:
+                  An array of `UploadError` resources.
+                items:
+                  $ref: "#/components/schemas/UploadError"
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
@@ -347,33 +401,40 @@ components:
       discriminator:
         propertyName: status
         mapping:
-          created: "#/components/schemas/CreatedUpload"
+          open: "#/components/schemas/OpenUpload"
           pending: "#/components/schemas/PendingUpload"
           processing: "#/components/schemas/ProcessingUpload"
-          ready: "#/components/schemas/ReadyUpload"
+          done: "#/components/schemas/DoneUpload"
       oneOf:
-        - $ref: "#/components/schemas/CreatedUpload"
+        - $ref: "#/components/schemas/OpenUpload"
         - $ref: "#/components/schemas/PendingUpload"
         - $ref: "#/components/schemas/ProcessingUpload"
-        - $ref: "#/components/schemas/ReadyUpload"
+        - $ref: "#/components/schemas/DoneUpload"
+    OpenUpload:
+      type: object
+      required: [ uuid, status ]
       properties:
         uuid:
           type: string
           format: uuid
           example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
-    CreatedUpload:
-      type: object
-      required: [ status ]
-      properties:
-        status:
-          enum: [ "created" ]
           description: |-
-            The `created` status indicates that the upload accepts file uploads and deletes.
+            The UUID of the upload.
+        status:
+          enum: [ "open" ]
+          description: |-
+            The `open` status indicates that the upload accepts file uploads and deletes.
             An upload in this status will not be processed automatically.
     PendingUpload:
       type: object
-      required: [ status ]
+      required: [ uuid, status ]
       properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "pending" ]
           description: |-
@@ -381,8 +442,14 @@ components:
             An upload in this status will not accept file uploads.
     ProcessingUpload:
       type: object
-      required: [ status, songsTotal, songsProcessed ]
+      required: [ uuid, status, songsTotal, songsProcessed ]
       properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
         status:
           enum: [ "processing" ]
           description: |-
@@ -406,20 +473,51 @@ components:
             Usually the number of songs processed only increases.
             It is however possible that due to unexpected server behavior a upload might need to be re-processed
             causing the number of total and processed songs to reset.
-    ReadyUpload:
-      type: object
-      required: [ status ]
-      properties:
-        status:
-          enum: [ "ready" ]
+        errors:
+          type: integer
+          example: 2
           description: |-
-            The `ready` status indicates that the upload has been analyzed and it is now possible to import songs.
+            The number of errors that occurred during processing (e.g. invalid file formats).
+    DoneUpload:
+      type: object
+      required: [ uuid, status, songsTotal ]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
+          description: |-
+            The UUID of the upload.
+        status:
+          enum: [ "done" ]
+          description: |-
+            The `done` status indicates that the upload has been analyzed and it is now possible to import songs.
         songsTotal:
           type: integer
           example: 125
           description: |-
             The total number of song files discovered in the uploaded files.
-      # TODO: information about processing errors
+        errors:
+          type: integer
+          example: 5
+          description: |-
+            The number of errors that occurred during processing (e.g. invalid file formats).
+    UploadError:
+      type: object
+      description: |-
+        This resource describes an error that occurred during processing of an upload.
+      required: [ file, message ]
+      properties:
+        file:
+          type: string
+          example: "folder/file.txt"
+          description: |-
+            The file that caused the error, relative to the root of the upload.
+        message:
+          type: string
+          example: "could not parse"
+          description: |-
+            A message describing the cause of the error.
     File:
       type: object
       description: |-
@@ -441,17 +539,35 @@ components:
             The size of the file in bytes.
             
             For directories this may not be accurate or not included in the response at all.
+        dir:
+          type: boolean
+          example: true
+          description: |-
+            A boolean value indicating whether this is a directory.
         children:
           type: array
           description: |-
-            An array of `File`s contained within the folder.
+            An array of `File`s contained within the folder, in alphabetical order.
             
-            For regular files this field will be `null` or absent.
-            For folders this field will be non-`null`.
+            This field is only non-`null` for folders, for regular files this field will `null` or absent.
             If a folder does not contain any children, this field will be an empty array.
-          nullable: true
+            
+            If a folder contains a lot of children, the results may be truncated.
+            In that case a `nextMarker` will be included in the response that can be used as value for the `marker` parameter
+            to get the next batch of children.
+            
+            If no `nextMarker` is included, there are no more children.
+            A presence of a `nextMarker` does not necessarily mean that more children exist.
+            A subsequent query using the marker might result in an empty list of children (and no further marker).
           items: { $ref: '#/components/schemas/File' }
-          # TODO: Pagination maybe?
+        nextMarker:
+          type: string
+          description: |-
+            If the list of children has been truncated because of its size, a marker will be included in the response.
+            You can use the marker in a subsequent request to get the next batch of children.
+            If this field is not present, there are no more children.
+            
+            This field is only set for folders and never for regular files.
     UploadNotFoundError:
       title: Upload Not Found
       example:

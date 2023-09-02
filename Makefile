@@ -13,7 +13,8 @@ build/openapi.yaml: .redocly.yaml $(OPENAPI_FILES)
 	@echo "Build OpenAPI Document"
 	@redocly join --output "$@" $(OPENAPI_SPECS)
 	@echo "Inserting Tag Groups"
-	@yq -i '.x-tagGroups = ($(shell yq -j .x-tagGroups < ./openapi/karman.yaml))' "$@"
+	@yq -i '.x-tagGroups = ($(shell yq -o=json .x-tagGroups < ./openapi/karman.yaml))' "$@"
+	@yq -i '.security = ($(shell yq -o=json .security < ./openapi/karman.yaml))' "$@"
 
 build/openapi.html: build/openapi.yaml
 	@echo "Build HTML Documentation"

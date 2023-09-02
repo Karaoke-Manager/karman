@@ -5,6 +5,8 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+
+
 tags:
   - name: song
     x-displayName: Managing Songs
@@ -92,6 +94,8 @@ tags:
       - `has:audio`: Filters songs with audio
       - `has:video`: Filters songs with video
       - `has:background`: Filters songs with background
+      
+
 paths:
   /v1/songs:
     post:
@@ -135,11 +139,17 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/InvalidTXTError"
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     get:
       operationId: findSongs
       summary: Find Songs
       tags: [ song ]
+      security:
+        - {}
+        - OAuth2: []
       parameters:
         - $ref: "#/components/parameters/query"
         - $ref: "../common/pagination.yaml#/components/parameters/limit"
@@ -166,14 +176,21 @@ paths:
                   An array of `Song` resources.
                 items:
                   $ref: '#/components/schemas/Song'
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/songs/{uuid}:
     parameters:
       - $ref: "#/components/parameters/songUUID"
+
     get:
       operationId: getSong
       summary: Get Song by UUID
       tags: [ song ]
+      security:
+        - {}
+        - OAuth2: []
       description: |-
         Fetches a song by the specified `uuid`.
       responses:
@@ -185,8 +202,11 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Song' }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     patch:
       operationId: updateSong
       summary: |-
@@ -228,10 +248,13 @@ paths:
             The song was updated successfully.
             Future `GET /v1/songs/{uuid}` requests will reflect the changes.
         400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequestOrInvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/SongNotFound" }
         409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     delete:
       operationId: deleteSong
       summary: Delete Song by UUID
@@ -242,14 +265,22 @@ paths:
       responses:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/songs/{uuid}/txt:
     parameters:
       - $ref: "#/components/parameters/songUUID"
+
     get:
       operationId: getSongTxt
       summary: Generate a TXT file
       tags: [ song ]
+      security:
+        - {}
+        - OAuth2: []
       description: |-
         Generate a representation of the song identified by `uuid` in the UltraStar TXT format.
         The resulting TXT will include metadata tags as well as the karaoke data.
@@ -291,8 +322,11 @@ paths:
                 ...
                 E
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/SongNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     put:
       operationId: replaceSongTxt
       summary: Replace Song with TXT
@@ -339,12 +373,17 @@ paths:
                 oneOf:
                   - $ref: "../common/problem-details.yaml#/components/schemas/InvalidUUIDError"
                   - $ref: "#/components/schemas/InvalidTXTError"
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/SongNotFound" }
         409: { $ref: "#/components/responses/UploadSongCannotBeModified" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/songs/{uuid}/archive:
     parameters:
       - $ref: "#/components/parameters/songUUID"
+
     get:
       operationId: getSongArchive
       summary: |-
@@ -372,6 +411,8 @@ paths:
                 type: string
                 format: binary
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/SongNotFound" }
         406:
           x-summary: Not Acceptable
@@ -387,6 +428,8 @@ paths:
                 allOf:
                   - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
 components:
   parameters:
     query:
@@ -399,6 +442,7 @@ components:
       description: |-
         A query used for filtering and searching results.
         The syntax and semantics are described in [Search Queries](#tag/song/Search-Queries).
+
     songUUID:
       in: path
       name: uuid
@@ -411,6 +455,8 @@ components:
       example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
       description: |-
         The UUID of the song to operate on.
+        
+
   schemas:
     Song:
       type: object
@@ -671,6 +717,7 @@ components:
               example: 1080
               description: |-
                 The height of the image in **pixels**.
+
     AutoMedley:
       type: object
       title: Auto
@@ -679,6 +726,7 @@ components:
           enum: [ auto ]
           description: |-
             `auto` medley mode enables automatic calculation of medleys by UltraStar. This is the default.
+
     ManualMedley:
       type: object
       title: Manual
@@ -702,6 +750,7 @@ components:
             The **beat** at which the medley should end.
 
             This corresponds to the UltraStar `#MEDLEYENDBEAT` tag.
+
     OffMedley:
       type: object
       title: Off
@@ -710,6 +759,7 @@ components:
           enum: [ off ]
           description: |-
             `off` mode disables medley calculation completely. No medley will be available.
+
     SongNotFoundError:
       title: Song Not Found
       example:
@@ -730,6 +780,7 @@ components:
               example: "F0481266-E081-4E28-BB20-4D6221C90C2F"
               description: |-
                 The requested UUID for which no song was found.
+
     InvalidTXTError:
       title: Invalid TXT
       example:
@@ -748,6 +799,8 @@ components:
               description: |-
                 The line of the input on which the error occurred.
               example: 73
+
+
   responses:
     SongNotFound:
       x-summary: Not Found
@@ -757,6 +810,7 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/SongNotFoundError"
+
     UploadSongCannotBeModified:
       x-summary: "Conflict"
       description: |-

@@ -6,6 +6,8 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+
+
 tags:
   - name: upload
     x-displayName: Importing Songs
@@ -24,6 +26,8 @@ tags:
       4. Importing discovered songs via `POST /v1/uploads/{uuid}/import`.
       
       Songs that were not imported will be deleted when the upload gets deleted.
+      
+
 paths:
   /v1/uploads:
     get:
@@ -56,7 +60,9 @@ paths:
                   An array of `Song` resources.
                 items:
                   $ref: '#/components/schemas/Upload'
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     post:
       operationId: createUpload
       summary: Create Upload
@@ -77,10 +83,15 @@ paths:
                 uuid: "205F5B79-9B05-4D54-B5A1-4943894E7501"
                 status: "open"
               schema: { $ref: '#/components/schemas/Upload' }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
+
     get:
       operationId: getUpload
       summary: Get Upload by UUID
@@ -96,8 +107,11 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Upload' }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     delete:
       operationId: deleteUpload
       summary: Delete Upload by UUID
@@ -108,7 +122,11 @@ paths:
       responses:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/files/{path}:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
@@ -125,6 +143,7 @@ paths:
         schema:
           type: string
           format: path
+
     get:
       operationId: getUploadFile
       summary: Get File Info in an Upload
@@ -180,9 +199,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/File'
         400: { $ref: "#/components/responses/InvalidPathOrUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/FileOrUploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     put:
       operationId: replaceUploadFile
       summary: Upload a File into an Upload
@@ -209,9 +231,12 @@ paths:
           x-summary: Success
           description: The file was successfully uploaded.
         400: { $ref: "#/components/responses/InvalidPathOrUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     delete:
       operationId: deleteUploadFile
       summary: Delete a File from an Upload
@@ -226,12 +251,17 @@ paths:
       responses:
         204: { description: Success }
         400: { $ref: "#/components/responses/InvalidPathOrUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/mark-for-processing:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
+
     post:
       operationId: markForProcessing
       summary: Mark an Upload for Processing
@@ -251,12 +281,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/Upload'
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/start-processing:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
+
     post:
       operationId: startProcessing
       summary: Begin Processing an Upload
@@ -279,15 +314,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/Upload'
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/songs:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
       - $ref: "./songs.yaml#/components/parameters/query"
       - $ref: "../common/pagination.yaml#/components/parameters/limit"
       - $ref: "../common/pagination.yaml#/components/parameters/offset"
+
     get:
       operationId: getUploadSongs
       summary: List all Songs in an Upload
@@ -316,9 +356,13 @@ paths:
                 items:
                   $ref: "songs.yaml#/components/schemas/Song"
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/errors:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
@@ -348,12 +392,17 @@ paths:
                 items:
                   $ref: "#/components/schemas/UploadError"
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         404: { $ref: "#/components/responses/UploadNotFound" }
         409: { $ref: "#/components/responses/UploadStateError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/uploads/{uuid}/import:
     parameters:
       - $ref: "#/components/parameters/uploadUUID"
+
     post:
       operationId: importSongs
       summary: Import songs
@@ -379,6 +428,7 @@ paths:
                     format: uuid
       responses: { } # TODO
 
+
 components:
   parameters:
     uploadUUID:
@@ -391,6 +441,8 @@ components:
       example: "A37FCD49-40A2-4FB4-83AA-49A57B62317F"
       description: |-
         The UUID of the upload to operate on.
+        
+
   schemas:
     Upload:
       type: object
@@ -425,6 +477,7 @@ components:
           description: |-
             The `open` status indicates that the upload accepts file uploads and deletes.
             An upload in this status will not be processed automatically.
+
     PendingUpload:
       type: object
       required: [ uuid, status ]
@@ -440,6 +493,7 @@ components:
           description: |-
             The `pending` status indicates that the upload has been marked for processing but processing has not started yet.
             An upload in this status will not accept file uploads.
+
     ProcessingUpload:
       type: object
       required: [ uuid, status, songsTotal, songsProcessed ]
@@ -588,6 +642,7 @@ components:
               example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
               description: |-
                 The requested UUID for which no upload was found.
+
     UploadStateError:
       title: Invalid Upload State
       example:
@@ -609,6 +664,8 @@ components:
               example: "205F5B79-9B05-4D54-B5A1-4943894E7501"
               description: |-
                 The UUID of the affected upload.
+                
+
   responses:
     UploadNotFound:
       x-summary: Not Found
@@ -617,6 +674,7 @@ components:
       content:
         application/problem+json:
           schema: { $ref: "#/components/schemas/UploadNotFoundError" }
+
     FileOrUploadNotFound:
       x-summary: Not Found
       description: |-
@@ -653,6 +711,7 @@ components:
                         example: "some/path"
                         description: |-
                           The path that was requested but at which no file was found.
+
     InvalidPathOrUUID:
       x-summary: Bad Request
       description: |-
@@ -692,6 +751,7 @@ components:
                         example: "some:invalid/path"
                         description: |-
                           The path that was requested but rejected.
+
     UploadStateError:
       x-summary: Conflict
       description: |-

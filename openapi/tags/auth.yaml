@@ -5,47 +5,46 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+
+
 tags:
   - name: auth
     x-displayName: Authentication
     description: |-
       The Karman API uses token-based authentication.
       Most endpoints are protected and can only be accessed if a valid `Bearer` token is provided in the `Authorization` header.
-      Although these endpoints are intentionally similar to OAuth 2, the Karman API currently does not support OAuth.
-      There is currently no support for OAuth scopes but to preserve compatibility with OAuth libraries
-      this endpoint still accepts a `scope` parameter (and ignores it).
+      Acquiring a token is done through OAuth 2.
       
-      Clients should treat tokens as opaque strings.
-      Even though specific known token formats may be used (such as JWT), the token format is not defined and may change at any time.
-      To preserve compatibility with OAuth libraries this endpoint also returns a `scope` for the token.
-      However, its value is meaningless.
+      Technically Karman currently supports only a limited subset of the OAuth specification.
+      In particular:
+      
+      - Only a limited set of flows is supported. The Authorization Code flow is not supported.
+      - OAuth `scopes` are currently not supported.
+      - Client Authentication is currently not supported.
+
+
 paths:
   /auth/token:
     post:
       operationId: createToken
       summary: Acquire an Access Token
       tags: [ auth ]
+      security: []
       description: |-
         This is the *login* endpoint of the Karman API.
         The login involves exchanging known credentials for a Karman API Token.
         Known credentials can be usernames and passwords but could also for example be an id token for an OIDC provider.
-        There are multiple possible token exchanges, that loosely correspond to OAuth 2 flows.
-        Each token exchange has different requirements for the parameters in the request body.
-        See the request schema below for details.
+        This endpoint implements the OAuth 2 token endpoint but only supports a limited number of flows.
         
         The response to a valid request contains an access token that can be used to authenticate request to the Karman API.
         Depending on the exchange mechanism used, the response may also contain a refresh token.
-        
-        **Attention**: The error response format for this endpoint does not conform to
-        [RFC 9457](https://datatracker.ietf.org/doc/html/rfc9457) in order to be compatible with the OAuth 2 spec.
       requestBody:
         required: true
         description: |-
           The request body contains authentication information.
           Depending on the `grant_type` different fields may be required or supported.
-          This request schema aims to be compatible with the OAuth token endpoint.
-          Note however, that the Karman API does not currently implement OAuth,
-          but similarity to the OAuth specification may mean that you can use OAuth libraries to work with this endpoint.
+          The request schema corresponds to the OAuth 2 spec, however not all features are supported.
+          In particular the `scope` field is not supported and will be ignored.
           
           Only the `grant_type`s documented below are supported.
           In particular the `authorization_code` and `client_credentials` grants are **not** currently supported.
@@ -67,6 +66,7 @@ paths:
         400: { $ref: "#/components/responses/TokenError" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
+
 components:
   schemas:
     UsernamePassword:
@@ -78,7 +78,7 @@ components:
           type: string
           enum: [ password ]
           description: |-
-            The `password` grant type indicates that you are requesting a username/password based token exchange.
+            The `password` grant type indicates that you want to exchange a username/password pair for a Karman token.
             This is the simplest way to acquire a token for the Karman API.
             In most cases the user must exist in a local or remote user storage on the server before this grant type can succeed.
         username:
@@ -93,6 +93,7 @@ components:
           example: "hunter2"
           description: |-
             The password of the user.
+
     RefreshToken:
       type: object
       title: Refresh Token
@@ -109,6 +110,7 @@ components:
           example: "2YotnFZFEjr1zCsicMWpAA"
           description: |-
             A valid refresh token, previously issued by the Karman API.
+
     TokenExchange:
       type: object
       title: Token Exchange
@@ -140,6 +142,7 @@ components:
             Identifies the type of the `subject_token`.
             Usually only a single value is valid for a single third party service provider.
             Currently only OIDC ID tokens are supported.
+
   responses:
     TokenResponse:
       x-summary: "OK"
@@ -176,6 +179,7 @@ components:
                   In some cases a refresh token can be issued.
                   Not all grant types will issue a refresh token.
                   The token can be used to acquire a new access token (using the `refresh_token` grant type) before it expires.
+
     TokenError:
       x-summary: Bad Request
       description: |-

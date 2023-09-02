@@ -5,6 +5,8 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+
+
 tags:
   - name: user
     x-displayName: User Management
@@ -17,6 +19,8 @@ tags:
       User management can be supplemented by additional technologies such as LDAP.
       These may impact the availability of some of the endpoints below.
       If an endpoint is disabled due to to server configuration, a 403 response will be generated for these endpoints.
+      
+
 paths:
   /v1/users:
     post:
@@ -48,14 +52,18 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/User" }
         400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
-        403: { $ref: "#/components/responses/EndpointDisabled" }
+        403: { $ref: "#/components/responses/PermissionDeniedOrEndpointDisabled" }
         409: { $ref: "#/components/responses/UsernameNotAvailable" }
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     get:
       operationId: listUsers
       summary: List Users
       tags: [ user ]
+      security:
+        - {}
+        - OAuth2: []
       description: |-
         List all users Karman knows about.
       parameters:
@@ -89,14 +97,21 @@ paths:
                   An array of `User` resources.
                 items:
                   $ref: '#/components/schemas/User'
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/users/{id}:
     parameters:
       - $ref: "#/components/parameters/userID"
+
     get:
       operationId: getUser
       summary: Get User
       tags: [ user ]
+      security:
+        - {}
+        - OAuth2: []
       description: |-
         Fetch information about a single user.
       responses:
@@ -108,7 +123,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/User' }
         404: { $ref: "#/components/responses/UserNotFound" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     patch:
       operationId: updateUser
       summary: Update User
@@ -155,10 +173,12 @@ paths:
           description: |-
             This response indicates that the update was successful.
         400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
-        403: { $ref: "#/components/responses/EndpointDisabled" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "#/components/responses/PermissionDeniedOrEndpointDisabled" }
         409: { $ref: "#/components/responses/UsernameNotAvailable" }
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
     delete:
       operationId: deleteUser
       summary: Delete User
@@ -173,15 +193,22 @@ paths:
             This response indicates that the deletion request was successful.
             The user may not be deleted instantly.
             The deletion cannot be reversed at this point.
-        403: { $ref: "#/components/responses/EndpointDisabled" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "#/components/responses/PermissionDeniedOrEndpointDisabled" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/users/{id}/password:
     parameters:
       - $ref: "#/components/parameters/userID"
+
     post:
       operationId: updatePassword
       summary: Update a Password
       tags: [ user ]
+      security:
+        - {}
+        - OAuth2: []
       description: |-
         This endpoint handles password changes by users or admins.
         A successful request to this endpoint immediately changes the password.
@@ -234,23 +261,19 @@ paths:
         204: { description: Success }
         400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
         404: { $ref: "#/components/responses/UserNotFound" }
-        403:
-          x-summary: Forbidden
-          description: |-
-            Either the provided credentials are not valid or the endpoint is disabled on the server.
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/InvalidCredentials"
-                  - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "#/components/responses/PermissionDeniedOrEndpointDisabled" }
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/users/password-reset:
     post:
       operationId: resetPassword
       summary: Reset a Password
       tags: [ user ]
+      security:
+        - {}
       description: |-
         This endpoint initiates a password reset.
         As opposed to a password change this will generate a password reset token that can then be used to change the password.
@@ -349,6 +372,8 @@ paths:
                   - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
   /v1/users/{id}/email:
     parameters:
       - $ref: "#/components/parameters/userID"
@@ -428,19 +453,35 @@ paths:
           description: |-
             The email was changed successfully.
         400: { $ref: "../common/problem-details.yaml#/components/responses/BadRequest" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "#/components/responses/PermissionDeniedOrEndpointDisabled" }
         404: { $ref: "#/components/responses/UserNotFound" }
-        403:
-          x-summary: Forbidden
+        409:
+          x-summary: Conflict
           description: |-
-            Either the provided `token` was not valid or the endpoint is disabled on the server.
+            The requested email is already in use by another user.
           content:
             application/problem+json:
               schema:
-                oneOf:
-                  - $ref: "#/components/schemas/InvalidCredentials"
-                  - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"
+                example:
+                  type: "codello.dev/karman/problems/email-already-in-use"
+                  title: "E-Mail Address Already In Use"
+                  status: 409
+                allOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+                  - type: object
+                    required: [ email ]
+                    properties:
+                      email:
+                        type: string
+                        format: email
+                        minLength: 3
+                        description: |-
+                          The E-Mail address that is already in use.
         422: { $ref: "../common/problem-details.yaml#/components/responses/UnprocessableEntity" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
 components:
   parameters:
     userID:
@@ -458,6 +499,8 @@ components:
         
         Values are matched in this order.
         In particular UUID-based lookups take precedence over username based lookups.
+        
+
   schemas:
     User:
       type: object
@@ -497,14 +540,8 @@ components:
           description: |-
             The E-Mail address of the user.
             This field is only included in responses if the requesting user has permissions to view the address.
-    InvalidCredentials:
-      title: Invalid Credentials
-      example:
-        type: "codello.dev/karman/problems/invalid-credentials"
-        title: "Invalid Credentials"
-        status: 403
-      allOf:
-        - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+
+
   responses:
     UsernameNotAvailable:
       x-summary: Conflict
@@ -530,6 +567,7 @@ components:
                     example: "wario"
                     description: |-
                       The requested username that was already taken.
+
     UserNotFound:
       x-summary: Not Found
       description: |-
@@ -562,6 +600,7 @@ components:
                     description: |-
                       The requested username for which no user was found.
                       Only included if a username-based lookup was performed.
+
     EndpointDisabled:
       x-summary: Endpoint Disabled
       description: |-
@@ -569,3 +608,15 @@ components:
       content:
         application/problem+json:
           schema: { $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError" }
+
+    PermissionDeniedOrEndpointDisabled:
+      x-summary: Forbidden
+      description: |-
+        This error indicates that either the user performing the request does not have the required permissions
+        or the endpoint has been disabled due to server configuration.
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref : "../common/problem-details.yaml#/components/schemas/PermissionDeniedError"
+              - $ref: "../common/problem-details.yaml#/components/schemas/EndpointDisabledError"

@@ -19,13 +19,13 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestController_FetchUpload(t *testing.T) {
+func TestHandler_FetchUpload(t *testing.T) {
 	t.Parallel()
 
-	c, db := setupController(t)
+	h, db := setupHandler(t, "")
 	openUpload := testdata.OpenUpload(t, db)
 
-	h := c.FetchUpload(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m := h.FetchUpload(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, ok := GetUpload(r.Context())
 		if !ok {
 			t.Errorf("FetchUpload() did not set an upload in the context, expected upload to be set")
@@ -35,18 +35,18 @@ func TestController_FetchUpload(t *testing.T) {
 	t.Run("OK", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", openUpload.UUID), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), openUpload.UUID))
-		test.DoRequest(h, r) //nolint:bodyclose
+		test.DoRequest(m, r) //nolint:bodyclose
 	})
 	t.Run("404 Not Found", func(t *testing.T) {
 		id := uuid.New()
 		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/uploads/%s", id), nil)
 		r = r.WithContext(middleware.SetUUID(r.Context(), id))
-		resp := test.DoRequest(h, r) //nolint:bodyclose
+		resp := test.DoRequest(m, r) //nolint:bodyclose
 		test.AssertProblemDetails(t, resp, http.StatusNotFound, "", nil)
 	})
 }
 
-func TestController_ValidateFilePath(t *testing.T) {
+func TestHandler_ValidateFilePath(t *testing.T) {
 	t.Parallel()
 
 	h := ValidateFilePath(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func TestController_ValidateFilePath(t *testing.T) {
 	})
 }
 
-func TestController_UploadState(t *testing.T) {
+func TestHandler_UploadState(t *testing.T) {
 	t.Parallel()
 
 	openUpload := model.Upload{

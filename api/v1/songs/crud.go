@@ -13,15 +13,15 @@ import (
 )
 
 // Create implements the POST /v1/songs endpoint.
-func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	data, err := txt.NewReader(r.Body).ReadSong()
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
 	song := model.Song{Song: data}
-	c.songSvc.ParseArtists(r.Context(), &song)
-	if err = c.songRepo.CreateSong(r.Context(), &song); err != nil {
+	h.songSvc.ParseArtists(r.Context(), &song)
+	if err = h.songRepo.CreateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}
@@ -31,9 +31,9 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Find implements the GET /v1/songs endpoint.
-func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
-	songs, total, err := c.songRepo.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
+	songs, total, err := h.songRepo.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
@@ -53,14 +53,14 @@ func (c *Controller) Find(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get implements the GET /v1/songs/{uuid} endpoint.
-func (c *Controller) Get(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	resp := schema.FromSong(song)
 	_ = render.Render(w, r, &resp)
 }
 
 // Update implements the PATCH /v1/songs/{uuid} endpoint.
-func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	update := schema.FromSong(song)
 	if err := render.Bind(r, &update); err != nil {
@@ -68,7 +68,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	update.Apply(&song)
-	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
@@ -77,9 +77,9 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete implements the DELETE /v1/songs/{uuid} endpoint.
-func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
-	if _, err := c.songRepo.DeleteSong(r.Context(), id); err != nil {
+	if _, err := h.songRepo.DeleteSong(r.Context(), id); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

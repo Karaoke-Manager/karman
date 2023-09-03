@@ -6,9 +6,11 @@ require (
 	codello.dev/ultrastar v0.0.0-20230902191652-78b46d211dd9
 	github.com/abema/go-mp4 v0.13.0
 	github.com/ajg/form v1.5.1
+	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/brianvoe/gofakeit/v6 v6.23.2
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.3.1
+	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jackc/pgxutil v0.0.0-20230722221055-3c9f5efec167
 	github.com/pressly/goose/v3 v3.15.0
@@ -23,9 +25,12 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/containerd v1.7.3 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v24.0.5+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -46,14 +51,19 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc4 // indirect
 	github.com/opencontainers/runc v1.1.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/redis/go-redis/v9 v9.0.3 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/yuin/gopher-lua v1.1.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
 	google.golang.org/grpc v1.57.0 // indirect

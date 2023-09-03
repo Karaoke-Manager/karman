@@ -22,10 +22,10 @@ import (
 	"github.com/Karaoke-Manager/karman/test"
 )
 
-// setupController prepares a test instance of the uploads.Controller.
+// setupHandler prepares a test instance of Handler.
 // The tests in this package are integration tests that run against an actual PostgreSQL database.
 // The database can use testcontainers or be an external service.
-func setupController(t *testing.T) (*Controller, pgxutil.DB) {
+func setupHandler(t *testing.T, prefix string) (*Handler, pgxutil.DB) {
 	dir, err := os.MkdirTemp("", "karman-test-*")
 	if err != nil {
 		t.Fatalf("MkdirTemp() returned an unexpected error: %s", err)
@@ -36,24 +36,22 @@ func setupController(t *testing.T) (*Controller, pgxutil.DB) {
 	if err != nil {
 		t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", dir, err)
 	}
-	c := NewController(uploadRepo, uploadStore)
-	return c, db
-}
 
-// setupHandler is a convenience function that wraps c in a http.Handler.
-func setupHandler(c *Controller, prefix string) http.Handler {
+	// workaround to support the prefix
+	h := NewHandler(uploadRepo, uploadStore)
 	r := chi.NewRouter()
-	r.Route(strings.TrimSuffix(prefix, "/")+"/", c.Router)
-	return r
+	r.Mount(strings.TrimSuffix(prefix, "/")+"/", h.r)
+	h.r = r
+	return h, db
 }
 
 // setupFiles creates files for testing in the store backing c.
 // The files are created for an upload with UUID id.
 // The files map maps filenames (or paths) to file contents.
 // File paths must be valid according to fs.ValidPath.
-func setupFiles(t *testing.T, c *Controller, id uuid.UUID, files map[string]string) {
+func setupFiles(t *testing.T, h *Handler, id uuid.UUID, files map[string]string) {
 	for file, content := range files {
-		w, err := c.uploadStore.Create(context.TODO(), id, file)
+		w, err := h.uploadStore.Create(context.TODO(), id, file)
 		if err != nil {
 			t.Fatalf("Create(ctx, %q, %q) returned an unexpected error: %s", id, file, err)
 		}

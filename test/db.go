@@ -79,17 +79,25 @@ func NewDB(t *testing.T) pgxutil.DB {
 // runPostgresContainer starts a new testcontainers instance of PostgreSQL.
 // This function sets up pgHost, pgPort, etc. to point to this container.
 func runPostgresContainer() error {
-	image := pgImage
-	if image == "" {
-		image = fmt.Sprintf("postgres:%s-alpine", strings.TrimPrefix(pgVersion, "v"))
+	if pgVersion == "" {
+		pgVersion = "15"
+	}
+	if pgImage == "" {
+		pgImage = fmt.Sprintf("postgres:%s-alpine", strings.TrimPrefix(pgVersion, "v"))
+	}
+	if pgUser == "" {
+		pgUser = "postgres"
+	}
+	if pgPass == "" {
+		pgPass = "postgres"
 	}
 	container, err := postgres.RunContainer(context.TODO(),
-		testcontainers.WithImage(image),
+		testcontainers.WithImage(pgImage),
 		testcontainers.WithWaitStrategy(wait.ForExposedPort()),
 		postgres.WithUsername(pgUser),
 		postgres.WithPassword(pgPass),
 		testcontainers.CustomizeRequestOption(func(req *testcontainers.GenericContainerRequest) {
-			req.Name = "karman-tests-" + strings.ReplaceAll(strings.ReplaceAll(image, ":", "_"), "/", "-")
+			req.Name = "karman-tests-" + strings.ReplaceAll(strings.ReplaceAll(pgImage, ":", "_"), "/", "-")
 			req.Reuse = true
 			// container is terminated by Reaper/Ryuk
 		}),

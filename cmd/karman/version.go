@@ -52,7 +52,10 @@ func runVersion(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	if info.GitVersion == "" {
+	if info.GitVersion != "" && info.GitTreeState != "dirty" {
+		fmt.Printf("Karman Version %s (built with %s)\n", info.GitVersion, info.GoVersion)
+	}
+	if info.GitTreeState == "" {
 		fmt.Printf("Karman Development Build (built with %s)\n", info.GoVersion)
 		return
 	}
@@ -63,7 +66,7 @@ func runVersion(_ *cobra.Command, _ []string) {
 	if info.GitTreeState == "dirty" {
 		dirty = ".dirty"
 	}
-	fmt.Printf("Karman Version %s+git.%s%s (built with %s)\n", info.GitVersion, info.GitCommit, dirty, info.GoVersion)
+	fmt.Printf("Karman Version git.%s%s (built with %s)\n", info.GitCommit, dirty, info.GoVersion)
 }
 
 // versionInfo is the JSON schema for the version command output.
@@ -109,6 +112,7 @@ func getVersionInfo() *versionInfo {
 	}
 
 	var goos, goarch string
+	fmt.Printf("%v", info.Settings)
 	for _, setting := range info.Settings {
 		switch setting.Key {
 		case "-compiler":

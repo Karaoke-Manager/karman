@@ -61,11 +61,9 @@ paths:
       operationId: listUsers
       summary: List Users
       tags: [ user ]
-      security:
-        - {}
-        - OAuth2: []
       description: |-
         List all users Karman knows about.
+        Depending on the user performing the request, some fields may be omitted from the results.
       parameters:
         - in: query
           name: search
@@ -98,6 +96,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/User'
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
 
@@ -109,11 +108,9 @@ paths:
       operationId: getUser
       summary: Get User
       tags: [ user ]
-      security:
-        - {}
-        - OAuth2: []
       description: |-
         Fetch information about a single user.
+        Depending on the user performing the request, some fields may be omitted from the results.
       responses:
         200:
           x-summary: Success

@@ -1,0 +1,58 @@
+# This file instructs Redocly's linter to ignore the rules contained for specific parts of your API.
+# See https://redoc.ly/docs/cli/ for more information.
+openapi/karman.yaml:
+  spec:
+    - >-
+      #/components/securitySchemes/OAuth2/flows/urn:ietf:params:oauth:grant-type:token-exchange
+openapi/tags/auth.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - '#/components/responses/TokenError'
+  path-segment-plural:
+    - '#/paths/~1auth~1token'
+openapi/tags/songs.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - '#/components/schemas/SongNotFoundError/allOf/1/properties/type'
+    - '#/components/schemas/SongNotFoundError/allOf/1/properties/title'
+    - >-
+      #/components/responses/UploadSongCannotBeModified/content/application~1problem+json/schema/allOf/1/properties/type
+    - >-
+      #/components/responses/UploadSongCannotBeModified/content/application~1problem+json/schema/allOf/1/properties/title
+    - '#/components/schemas/InvalidTXTError/allOf/1/properties/type'
+    - '#/components/schemas/InvalidTXTError/allOf/1/properties/title'
+openapi/tags/media.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - '#/components/schemas/FileNotFoundError/allOf/1/properties/type'
+    - '#/components/schemas/FileNotFoundError/allOf/1/properties/title'
+openapi/common/problem-details.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - >-
+      #/components/responses/UnprocessableEntity/content/application~1problem+json/schema/allOf/1/properties/type
+    - >-
+      #/components/responses/UnprocessableEntity/content/application~1problem+json/schema/allOf/1/properties/title
+openapi/tags/uploads.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - '#/components/schemas/UploadNotFoundError/allOf/1/properties/type'
+    - '#/components/schemas/UploadNotFoundError/allOf/1/properties/title'
+    - >-
+      #/components/responses/InvalidPathOrUUID/content/application~1problem+json/schema/oneOf/1/allOf/1/properties/type
+    - >-
+      #/components/responses/InvalidPathOrUUID/content/application~1problem+json/schema/oneOf/1/allOf/1/properties/title
+    - >-
+      #/components/responses/FileOrUploadNotFound/content/application~1problem+json/schema/oneOf/1/allOf/1/properties/type
+    - >-
+      #/components/responses/FileOrUploadNotFound/content/application~1problem+json/schema/oneOf/1/allOf/1/properties/title
+    - '#/components/responses/UploadStateError'
+openapi/tags/user.yaml:
+  operation-4xx-problem-details-rfc7807:
+    - >-
+      #/components/responses/UsernameNotAvailable/content/application~1problem+json/schema/allOf/1/properties/type
+    - >-
+      #/components/responses/UsernameNotAvailable/content/application~1problem+json/schema/allOf/1/properties/title
+    - >-
+      #/components/responses/UserNotFound/content/application~1problem+json/schema/allOf/1/properties/type
+    - >-
+      #/components/responses/UserNotFound/content/application~1problem+json/schema/allOf/1/properties/title
+    - >-
+      #/paths/~1v1~1users~1{id}~1email/post/responses/409/content/application~1problem+json/schema/allOf/1/properties/type
+    - >-
+      #/paths/~1v1~1users~1{id}~1email/post/responses/409/content/application~1problem+json/schema/allOf/1/properties/title

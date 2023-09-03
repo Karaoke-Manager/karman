@@ -2,7 +2,11 @@ openapi: 3.0.3
 info:
   title: Pagination Schema
   version: v1
+
+
 paths: {}
+
+
 components:
   parameters:
     limit:
@@ -23,6 +27,7 @@ components:
         minimum: 0
         maximum: 100
         example: 50
+
     offset:
       in: query
       name: offset
@@ -36,6 +41,8 @@ components:
         default: 0
         minimum: 0
         example: 25
+
+
   headers:
     Pagination-Count:
       description: |-
@@ -45,6 +52,7 @@ components:
         type: integer
         example: 25
       required: true
+
     Pagination-Offset:
       description: |-
         The index of the first returned element within the collection of all result elements.
@@ -52,6 +60,7 @@ components:
         type: integer
         example: 513
       required: true
+
     Pagination-Limit:
       description: |-
         The result size limit specified in the request.
@@ -60,6 +69,7 @@ components:
         default: 25
         example: 35
       required: true
+
     Pagination-Total:
       description: |-
         The total number of elements in the result (not only the results contained in the items).

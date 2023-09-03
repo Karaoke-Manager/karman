@@ -2,7 +2,11 @@ openapi: 3.0.3
 info:
   title: Error Schemas
   version: v1
+
+
 paths: {}
+
+
 components:
   schemas:
     ProblemDetails:
@@ -13,6 +17,7 @@ components:
           Unless documented these additional fields should not be relied upon.
       description: |-
         A problem details object as specified in [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807).
+      required: [ status ]
       properties:
         type:
           type: string
@@ -46,6 +51,7 @@ components:
             It may or may not yield further information if dereferenced.
             This field is usually absent but may be used for tracing information.
           example: "/traces/481CF77B-3099-445C-A789-58F997233681"
+
     InvalidUUIDError:
       title: Invalid UUID
       example:
@@ -54,6 +60,7 @@ components:
         status: 400
       allOf:
         - $ref: "#/components/schemas/ProblemDetails"
+
     BadRequestError:
       title: Bad Request Body
       example:
@@ -62,6 +69,29 @@ components:
         instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
       allOf:
         - $ref: "#/components/schemas/ProblemDetails"
+
+    PermissionDeniedError:
+      title: PermissionDenied
+      example:
+        type: "codello.dev/karman/problems/permission-denied"
+        title: "Permission Denied"
+        status: 403
+        detail: "You must be an administrator to perform this action."
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
+
+
+    EndpointDisabledError:
+      title: Endpoint Disabled
+      example:
+        type: "codello.dev/karman/problems/endpoint-disabled"
+        title: "Endpoint Disabled"
+        status: 403
+        detail: "This feature has been disabled by the server administrator."
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
+
+
   responses:
     BadRequest:
       x-summary: Bad Request
@@ -74,6 +104,7 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/BadRequestError"
+
     InvalidUUID:
       x-summary: Invalid UUID
       description: |-
@@ -82,6 +113,7 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/InvalidUUIDError"
+
     BadRequestOrInvalidUUID:
       x-summary: Bad Request
       description: |-
@@ -97,6 +129,37 @@ components:
             oneOf:
               - $ref: "#/components/schemas/BadRequestError"
               - $ref: "#/components/schemas/InvalidUUIDError"
+
+    Unauthorized:
+      x-summary: Unauthorized
+      description: |-
+        The endpoint requires authentication, but a valid authentication token was not provided.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            enum: [ "Bearer"]
+          description: |-
+            This header contains information about the supported authentication schemes for this endpoint.
+      content:
+        application/problem+json:
+          schema:
+            example:
+              title: "Unauthorized"
+              status: 401
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"
+
+    PermissionDenied:
+      x-summary: Permission Denied
+      description: |-
+        This error indicates that the user performing the request does not have the required permissions.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/PermissionDeniedError"
+
     UnprocessableEntity:
       x-summary: Unprocessable Entity
       description: |-
@@ -115,18 +178,20 @@ components:
               title: "Unprocessable Entity"
               status: 422
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+              fields:
+                medley.medleyStartBeat: "number expected"
             allOf:
               - $ref: "#/components/schemas/ProblemDetails"
               - type: object
                 properties:
-                  field:
-                    type: string
-                    example: "medley.medleyStartBeat"
+                  fields:
+                    type: object
+                    additionalProperties: { type: string }
                     description: |-
                       A `Unprocessable Entity` response may or may not contain information about the JSON field that caused the error.
-                      The value of this property is the path to the field causing the error.
                       
-                      The `fields` object might contain a mapping from field paths to error messages.
+                      The value of this property is a mapping from field paths to error messages.
+
     UnexpectedError:
       x-summary: Unexpected Error
       description: |-
@@ -141,6 +206,7 @@ components:
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
             allOf:
               - $ref: "#/components/schemas/ProblemDetails"
+
     UnsupportedMediaType:
       x-summary: Unsupported Media Type
       description: |-

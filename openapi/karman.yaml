@@ -46,11 +46,44 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+
+
 paths: {}
+
+
 x-tagGroups:
   - name: Library Management
     tags:
+      - auth
       - song
       - media
       - upload
-# TODO: ETag support (and If-None-Match, If-Modified-Since)
+      - user
+
+
+security:
+  - OAuth2: []
+
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: |-
+        In order to access this endpoint you must provide a valid `Bearer` token
+        in the `Authorization` header.
+        
+        See the [`/auth/token`](#tag/auth/operation/createToken) endpoint for more information on how to acquire a token.
+      flows:
+        # noinspection YAMLSchemaValidation
+        urn:ietf:params:oauth:grant-type:token-exchange: {}
+          # Semantically these should be uncommented.
+          # However, visually Redoc only shows the refreshUrl which might be misleading.
+          # The urls from the password flow display in a way that it can also be applied to this flow.
+
+          # tokenUrl: /auth/token
+          # refreshUrl: /auth/token
+        password:
+          tokenUrl: /auth/token
+          refreshUrl: /auth/token
+          scopes: {}

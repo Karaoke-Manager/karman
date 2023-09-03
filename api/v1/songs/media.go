@@ -16,9 +16,9 @@ import (
 )
 
 // GetTxt implements the GET /v1/songs/{uuid}/txt endpoint.
-func (c *Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
-	c.songSvc.Prepare(r.Context(), &song)
+	h.songSvc.Prepare(r.Context(), &song)
 
 	t := render.MustGetNegotiatedContentType(r)
 	if t.Equals(mediatype.TextPlain) {
@@ -31,7 +31,7 @@ func (c *Controller) GetTxt(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReplaceTxt implements the PUT /v1/songs/{uuid}/txt endpoint.
-func (c *Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 	var err error
 	song := MustGetSong(r.Context())
 	song.Song, err = txt.NewReader(r.Body).ReadSong()
@@ -39,70 +39,70 @@ func (c *Controller) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
-	c.songSvc.ParseArtists(r.Context(), &song)
-	err = c.songRepo.UpdateSong(r.Context(), &song)
+	h.songSvc.ParseArtists(r.Context(), &song)
+	err = h.songRepo.UpdateSong(r.Context(), &song)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
-	c.songSvc.Prepare(r.Context(), &song)
+	h.songSvc.Prepare(r.Context(), &song)
 	s := schema.FromSong(song)
 	_ = render.Render(w, r, &s)
 }
 
 // GetCover implements the GET /v1/songs/{uuid}/cover endpoint.
-func (c *Controller) GetCover(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.CoverFile == nil {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "cover"))
 		return
 	}
-	c.songSvc.Prepare(r.Context(), &song)
-	c.sendFile(w, r, song.CoverFile, song.CoverFileName)
+	h.songSvc.Prepare(r.Context(), &song)
+	h.sendFile(w, r, song.CoverFile, song.CoverFileName)
 }
 
 // GetBackground implements the GET /v1/songs/{uuid}/background endpoint.
-func (c *Controller) GetBackground(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.BackgroundFile == nil {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "background"))
 		return
 	}
-	c.songSvc.Prepare(r.Context(), &song)
-	c.sendFile(w, r, song.BackgroundFile, song.BackgroundFileName)
+	h.songSvc.Prepare(r.Context(), &song)
+	h.sendFile(w, r, song.BackgroundFile, song.BackgroundFileName)
 }
 
 // GetAudio implements the GET /v1/songs/{uuid}/audio endpoint.
-func (c *Controller) GetAudio(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAudio(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.AudioFile == nil {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "audio"))
 		return
 	}
-	c.songSvc.Prepare(r.Context(), &song)
-	c.sendFile(w, r, song.AudioFile, song.AudioFileName)
+	h.songSvc.Prepare(r.Context(), &song)
+	h.sendFile(w, r, song.AudioFile, song.AudioFileName)
 }
 
 // GetVideo implements the GET /v1/songs/{uuid}/video endpoint.
-func (c *Controller) GetVideo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetVideo(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	if song.VideoFile == nil {
 		_ = render.Render(w, r, apierror.MediaFileNotFound(song, "video"))
 		return
 	}
-	c.songSvc.Prepare(r.Context(), &song)
-	c.sendFile(w, r, song.VideoFile, song.VideoFileName)
+	h.songSvc.Prepare(r.Context(), &song)
+	h.sendFile(w, r, song.VideoFile, song.VideoFileName)
 }
 
 // sendFile sends the file as response to r.
 // This method makes sure that the required headers are set.
-func (c *Controller) sendFile(w http.ResponseWriter, r *http.Request, file *model.File, name string) {
+func (h *Handler) sendFile(w http.ResponseWriter, r *http.Request, file *model.File, name string) {
 	contentType := render.NegotiateContentType(r, file.Type)
 	if contentType.IsNil() {
 		render.NotAcceptable(w, r)
 		return
 	}
-	f, err := c.mediaStore.Open(r.Context(), file.Type, file.UUID)
+	f, err := h.mediaStore.Open(r.Context(), file.Type, file.UUID)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -116,17 +116,17 @@ func (c *Controller) sendFile(w http.ResponseWriter, r *http.Request, file *mode
 }
 
 // ReplaceCover implements the PUT /v1/songs/{uuid}/cover endpoint.
-func (c *Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
-	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	song.CoverFile = &file
-	if err = c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err = h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -134,17 +134,17 @@ func (c *Controller) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReplaceBackground implements the PUT /v1/songs/{uuid}/background endpoint.
-func (c *Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
-	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	song.BackgroundFile = &file
-	if err = c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err = h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -152,17 +152,17 @@ func (c *Controller) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReplaceAudio implements the PUT /v1/songs/{uuid}/audio endpoint.
-func (c *Controller) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
-	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	song.AudioFile = &file
-	if err = c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err = h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -170,17 +170,17 @@ func (c *Controller) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReplaceVideo implements the PUT /v1/songs/{uuid}/video endpoint.
-func (c *Controller) ReplaceVideo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReplaceVideo(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
-	file, err := c.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
+	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
 		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	song.VideoFile = &file
-	if err = c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err = h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -188,10 +188,10 @@ func (c *Controller) ReplaceVideo(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteCover implements the DELETE /v1/songs/{uuid}/cover endpoint.
-func (c *Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteCover(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.CoverFile = nil
-	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -199,10 +199,10 @@ func (c *Controller) DeleteCover(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteBackground implements the DELETE /v1/songs/{uuid}/background endpoint.
-func (c *Controller) DeleteBackground(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteBackground(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.BackgroundFile = nil
-	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -210,10 +210,10 @@ func (c *Controller) DeleteBackground(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteAudio implements the DELETE /v1/songs/{uuid}/audio endpoint.
-func (c *Controller) DeleteAudio(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteAudio(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.AudioFile = nil
-	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -221,10 +221,10 @@ func (c *Controller) DeleteAudio(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteVideo implements the DELETE /v1/songs/{uuid}/video endpoint.
-func (c *Controller) DeleteVideo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteVideo(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.VideoFile = nil
-	if err := c.songRepo.UpdateSong(r.Context(), &song); err != nil {
+	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}

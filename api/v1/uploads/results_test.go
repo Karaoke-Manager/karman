@@ -16,11 +16,10 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestController_GetErrors(t *testing.T) {
+func TestHandler_GetErrors(t *testing.T) {
 	t.Parallel()
 
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	uploadWithErrors := testdata.DoneUploadWithErrors(t, db)
 

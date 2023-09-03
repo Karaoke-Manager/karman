@@ -24,10 +24,9 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestController_GetTxt(t *testing.T) {
+func TestHandler_GetTxt(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithCover := testdata.SongWithCover(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/txt", songWithCover.UUID)
 
@@ -55,10 +54,9 @@ func TestController_GetTxt(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, fmt.Sprintf("/v1/songs/%s/txt", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_ReplaceTxt(t *testing.T) {
+func TestHandler_ReplaceTxt(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithCover := testdata.SongWithCover(t, db)
 	songWithUpload := testdata.SongWithUpload(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/txt", songWithCover.UUID)
@@ -141,11 +139,10 @@ func testGetFile(h http.Handler, path string, file model.File) func(t *testing.T
 	}
 }
 
-func TestController_GetCover(t *testing.T) {
+func TestHandler_GetCover(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("hello world")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("hello world")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithCover := testdata.SongWithCover(t, db)
 	songWithCover.CoverFile.Size = int64(len("hello world"))
@@ -156,11 +153,10 @@ func TestController_GetCover(t *testing.T) {
 	t.Run("404 Not Found (Media)", testMediaNotFound(h, simpleSong, "cover"))
 }
 
-func TestController_GetBackground(t *testing.T) {
+func TestHandler_GetBackground(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("foobar")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("foobar")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithBackground := testdata.SongWithBackground(t, db)
 	songWithBackground.BackgroundFile.Size = int64(len("foobar"))
@@ -171,11 +167,10 @@ func TestController_GetBackground(t *testing.T) {
 	t.Run("404 Not Found (Media)", testMediaNotFound(h, simpleSong, "background"))
 }
 
-func TestController_GetAudio(t *testing.T) {
+func TestHandler_GetAudio(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("some text")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("some text")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithAudio := testdata.SongWithAudio(t, db)
 	songWithAudio.AudioFile.Size = int64(len("some text"))
@@ -186,11 +181,10 @@ func TestController_GetAudio(t *testing.T) {
 	t.Run("404 Not Found (Media)", testMediaNotFound(h, simpleSong, "audio"))
 }
 
-func TestController_GetVideo(t *testing.T) {
+func TestHandler_GetVideo(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithVideo := testdata.SongWithVideo(t, db)
 	songWithVideo.VideoFile.Size = int64(len(""))
@@ -212,11 +206,10 @@ func testPutFile(h http.Handler, path string, contentType string, content io.Rea
 	}
 }
 
-func TestController_ReplaceCover(t *testing.T) {
+func TestHandler_ReplaceCover(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("foobar")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("foobar")
 	songWithUpload := testdata.SongWithUpload(t, db)
 	songWithCover := testdata.SongWithCover(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/cover", songWithCover.UUID)
@@ -229,11 +222,10 @@ func TestController_ReplaceCover(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPut, url, "video/mp4", "image/*"))
 }
 
-func TestController_ReplaceBackground(t *testing.T) {
+func TestHandler_ReplaceBackground(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("barfoo")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("barfoo")
 	songWithUpload := testdata.SongWithUpload(t, db)
 	songWithBackground := testdata.SongWithBackground(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/background", songWithBackground.UUID)
@@ -246,11 +238,10 @@ func TestController_ReplaceBackground(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPut, url, "video/mp4", "image/*"))
 }
 
-func TestController_ReplaceAudio(t *testing.T) {
+func TestHandler_ReplaceAudio(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("")
 	songWithUpload := testdata.SongWithUpload(t, db)
 	songWithAudio := testdata.SongWithAudio(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/audio", songWithAudio.UUID)
@@ -263,11 +254,10 @@ func TestController_ReplaceAudio(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPut, url, "video/mp4", "audio/*"))
 }
 
-func TestController_ReplaceVideo(t *testing.T) {
+func TestHandler_ReplaceVideo(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	c.mediaStore = media.NewMockStore("")
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
+	h.mediaStore = media.NewMockStore("")
 	songWithUpload := testdata.SongWithUpload(t, db)
 	songWithVideo := testdata.SongWithVideo(t, db)
 	url := fmt.Sprintf("/v1/songs/%s/video", songWithVideo.UUID)
@@ -297,10 +287,9 @@ func testDeleteFile(h http.Handler, path string) func(t *testing.T) {
 	}
 }
 
-func TestController_DeleteCover(t *testing.T) {
+func TestHandler_DeleteCover(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithCover := testdata.SongWithCover(t, db)
 
 	t.Run("204 No Content", testDeleteFile(h, fmt.Sprintf("/v1/songs/%s/cover", songWithCover.UUID)))
@@ -308,10 +297,9 @@ func TestController_DeleteCover(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodDelete, fmt.Sprintf("/v1/songs/%s/cover", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_DeleteBackground(t *testing.T) {
+func TestHandler_DeleteBackground(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithBackground := testdata.SongWithBackground(t, db)
 
 	t.Run("204 No Content", testDeleteFile(h, fmt.Sprintf("/v1/songs/%s/background", songWithBackground.UUID)))
@@ -319,10 +307,9 @@ func TestController_DeleteBackground(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodDelete, fmt.Sprintf("/v1/songs/%s/background", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_DeleteAudio(t *testing.T) {
+func TestHandler_DeleteAudio(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithAudio := testdata.SongWithAudio(t, db)
 
 	t.Run("204 No Content", testDeleteFile(h, fmt.Sprintf("/v1/songs/%s/audio", songWithAudio.UUID)))
@@ -330,10 +317,9 @@ func TestController_DeleteAudio(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodDelete, fmt.Sprintf("/v1/songs/%s/audio", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_DeleteVideo(t *testing.T) {
+func TestHandler_DeleteVideo(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	songWithVideo := testdata.SongWithVideo(t, db)
 
 	t.Run("204 No Content", testDeleteFile(h, fmt.Sprintf("/v1/songs/%s/video", songWithVideo.UUID)))

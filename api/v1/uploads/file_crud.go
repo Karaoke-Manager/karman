@@ -13,14 +13,14 @@ import (
 )
 
 // PutFile implements the PUT /v1/uploads/{uuid}/files/* endpoint.
-func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PutFile(w http.ResponseWriter, r *http.Request) {
 	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
 	if path == "." {
 		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return
 	}
-	f, err := c.uploadStore.Create(r.Context(), u.UUID, path)
+	f, err := h.uploadStore.Create(r.Context(), u.UUID, path)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
@@ -39,19 +39,19 @@ func (c *Controller) PutFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetFile implements the GET /v1/uploads/{uuid}/files/* endpoint.
-func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
 	marker := r.URL.Query().Get("marker")
 
-	stat, err := c.uploadStore.Stat(r.Context(), u.UUID, path)
+	stat, err := h.uploadStore.Stat(r.Context(), u.UUID, path)
 	if errors.Is(err, fs.ErrNotExist) {
 		_ = render.Render(w, r, apierror.UploadFileNotFound(u, path))
 		return
 	}
 	var children []fs.FileInfo
 	if stat.IsDir() {
-		f, err := c.uploadStore.Open(r.Context(), u.UUID, path)
+		f, err := h.uploadStore.Open(r.Context(), u.UUID, path)
 		if err != nil {
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 		}
@@ -79,14 +79,14 @@ func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteFile implements the DELETE /v1/uploads/{uuid}/files/* endpoint.
-func (c *Controller) DeleteFile(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	u := MustGetUpload(r.Context())
 	path := MustGetFilePath(r.Context())
 	if path == "." {
 		_ = render.Render(w, r, apierror.InvalidUploadPath("."))
 		return
 	}
-	if err := c.uploadStore.Delete(r.Context(), u.UUID, path); err != nil {
+	if err := h.uploadStore.Delete(r.Context(), u.UUID, path); err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

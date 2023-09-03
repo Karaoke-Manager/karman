@@ -18,11 +18,10 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestController_PutFile(t *testing.T) {
+func TestHandler_PutFile(t *testing.T) {
 	t.Parallel()
 
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	processingUpload := testdata.ProcessingUpload(t, db)
 	url := fmt.Sprintf("/v1/uploads/%s/files/foobar.txt", openUpload.UUID)
@@ -44,14 +43,13 @@ func TestController_PutFile(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPut, url, "video/mp4", "application/octet-stream"))
 }
 
-func TestController_GetFile(t *testing.T) {
+func TestHandler_GetFile(t *testing.T) {
 	t.Parallel()
 
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	processingUpload := testdata.ProcessingUpload(t, db)
-	setupFiles(t, c, openUpload.UUID, map[string]string{
+	setupFiles(t, h, openUpload.UUID, map[string]string{
 		"foo/bar.txt": "Hello World",
 		"test.txt":    "Nothing",
 	})
@@ -136,14 +134,13 @@ func TestController_GetFile(t *testing.T) {
 	t.Run("409 Conflict", testInvalidState(h, http.MethodGet, "/v1/uploads/%s/files/test.txt", processingUpload.UUID))
 }
 
-func TestController_DeleteFile(t *testing.T) {
+func TestHandler_DeleteFile(t *testing.T) {
 	t.Parallel()
 
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	processingUpload := testdata.ProcessingUpload(t, db)
-	setupFiles(t, c, openUpload.UUID, map[string]string{
+	setupFiles(t, h, openUpload.UUID, map[string]string{
 		"foo/bar.txt": "Hello World",
 		"test.txt":    "Nothing",
 	})

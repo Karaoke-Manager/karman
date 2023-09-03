@@ -10,10 +10,10 @@ import (
 )
 
 // GetErrors implements the GET /v1/uploads/{uuid}/errors endpoint.
-func (c *Controller) GetErrors(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetErrors(w http.ResponseWriter, r *http.Request) {
 	upload := MustGetUpload(r.Context())
 	pagination := middleware.MustGetPagination(r.Context())
-	errors, total, err := c.uploadRepo.GetErrors(r.Context(), upload.UUID, pagination.Limit, pagination.Offset)
+	errors, total, err := h.uploadRepo.GetErrors(r.Context(), upload.UUID, pagination.Limit, pagination.Offset)
 	if err != nil {
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return

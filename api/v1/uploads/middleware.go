@@ -40,11 +40,11 @@ func MustGetUpload(ctx context.Context) model.Upload {
 }
 
 // FetchUpload is a middleware that fetches the model.Upload instance identified by the request and stores it in the request context.
-func (c *Controller) FetchUpload(next http.Handler) http.Handler {
+func (h *Handler) FetchUpload(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		id := middleware.MustGetUUID(r.Context())
 		// TODO: Maybe support 410 for soft deleted?
-		upload, err := c.uploadRepo.GetUpload(r.Context(), id)
+		upload, err := h.uploadRepo.GetUpload(r.Context(), id)
 		if err != nil {
 			_ = render.Render(w, r, apierror.ServiceError(err))
 			return

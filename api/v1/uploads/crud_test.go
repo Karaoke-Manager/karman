@@ -17,10 +17,9 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestController_Create(t *testing.T) {
+func TestHandler_Create(t *testing.T) {
 	t.Parallel()
-	c, _ := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, _ := setupHandler(t, "/v1/uploads/")
 	url := "/v1/uploads/"
 
 	t.Run("201 Created", func(t *testing.T) {
@@ -44,10 +43,9 @@ func TestController_Create(t *testing.T) {
 	})
 }
 
-func TestController_Find(t *testing.T) {
+func TestHandler_Find(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	testdata.NOpenUploads(t, db, 15)
 	testdata.NPendingUploads(t, db, 15)
 	url := "/v1/uploads/"
@@ -69,10 +67,9 @@ func TestController_Find(t *testing.T) {
 	t.Run("400 Bad Request (Pagination)", test.InvalidPagination(h, http.MethodGet, url))
 }
 
-func TestController_Get(t *testing.T) {
+func TestHandler_Get(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	pendingUpload := testdata.PendingUpload(t, db)
 	processingUpload := testdata.ProcessingUpload(t, db)
@@ -177,10 +174,9 @@ func TestController_Get(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, fmt.Sprintf("/v1/uploads/%s", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_Delete(t *testing.T) {
+func TestHandler_Delete(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/uploads/")
+	h, db := setupHandler(t, "/v1/uploads/")
 	openUpload := testdata.OpenUpload(t, db)
 	url := fmt.Sprintf("/v1/uploads/%s", openUpload.UUID)
 

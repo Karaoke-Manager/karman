@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/alicebob/miniredis/v2"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 
@@ -35,28 +37,33 @@ func init() {
 
 type Config struct {
 	Address string
-	Prefix  string
 }
 
 var defaultConfig = &Config{
 	Address: ":8080",
-	Prefix:  "/api",
 }
 
-func runServer(_ *cobra.Command, _ []string) error {
+func runServer(_ *cobra.Command, _ []string) (err error) {
 	// TODO: Config management, maybe with Viper
 	// TODO: Proper error handling on startup
-	dbConfig, err := pgxpool.ParseConfig(connStringServer)
-	if err != nil {
-		return err
-	}
-	pool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
+
+	pool, err := pgxpool.New(context.Background(), connStringServer)
 	if err != nil {
 		return err
 	}
 	defer pool.Close()
 
-	// TODO: Check DB Connection before startup
+	redis := miniredis.NewMiniRedis()
+	if err = redis.Start(); err != nil {
+		return err
+	}
+	redisConn := asynq.RedisClientOpt{Addr: redis.Addr()}
+	client := asynq.NewClient(redisConn)
+	defer func() {
+		if cErr := client.Close(); err == nil {
+			err = cErr
+		}
+	}()
 
 	songRepo := song.NewDBRepository(pool)
 	songSvc := song.NewService()
@@ -69,17 +76,49 @@ func runServer(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	mediaRepo := media.NewDBRepository(pool)
 	mediaService := media.NewService(media.NewDBRepository(pool), mediaStore)
 
-	apiController := api.NewController(songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore)
+	srv := asynq.NewServer(redisConn, asynq.Config{
+		// we expect tasks to not be primarily CPU bound but mostly IO bound by the database
+		Concurrency: 2 * runtime.NumCPU(),
+		Queues: map[string]int{
+			"default":       1,
+			media.TaskQueue: 1,
+		},
+		ErrorHandler:    nil, // probably error logging
+		Logger:          nil,
+		HealthCheckFunc: nil, // record errors and provide then to a /healthz endpoint.
+	})
+	mux := asynq.NewServeMux()
+	mux.Handle(media.NewTaskHandler(mediaRepo, mediaStore))
+	// FIXME: this must run in background
+	if err = srv.Start(mux); err != nil {
+		log.Fatalln(err)
+	}
 
-	r := chi.NewRouter()
-	r.Route(defaultConfig.Prefix+"/", apiController.Router)
+	periodicTaskConfigProvider := media.NewPeriodicTaskConfigProvider()
+	scheduler, err := asynq.NewPeriodicTaskManager(asynq.PeriodicTaskManagerOpts{
+		PeriodicTaskConfigProvider: periodicTaskConfigProvider,
+		RedisConnOpt:               redisConn,
+		SchedulerOpts: &asynq.SchedulerOpts{
+			Logger:          nil,
+			Location:        nil, // probably use TZ environment
+			PostEnqueueFunc: nil, // probably error logging
+		},
+	})
+	// FIXME: This must run in background
+	if err = scheduler.Start(); err != nil {
+		log.Fatalln(err)
+	}
+
+	apiHandler := api.NewHandler(songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore)
 	server := &http.Server{
 		Addr:              defaultConfig.Address,
 		ReadHeaderTimeout: 3 * time.Second,
-		Handler:           r,
+		Handler:           apiHandler,
 	}
+	// TODO: gracefully terminate server on Ctrl-C
 	fmt.Printf("Running on %s\n", defaultConfig.Address)
 	log.Fatalln(server.ListenAndServe())
 	return nil

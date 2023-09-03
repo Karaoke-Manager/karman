@@ -19,10 +19,9 @@ import (
 )
 
 //go:generate go run ../../../../tools/gensong -output testdata/valid-song.txt
-func TestController_Create(t *testing.T) {
+func TestHandler_Create(t *testing.T) {
 	t.Parallel()
-	c, _ := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, _ := setupHandler(t, "/v1/songs/")
 	url := "/v1/songs/"
 
 	t.Run("200 OK", func(t *testing.T) {
@@ -56,10 +55,9 @@ func TestController_Create(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPost, url, "application/json", "text/plain", "text/x-ultrastar"))
 }
 
-func TestController_Find(t *testing.T) {
+func TestHandler_Find(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	testdata.NSongs(t, db, 150)
 	url := "/v1/songs/"
 
@@ -80,10 +78,9 @@ func TestController_Find(t *testing.T) {
 	t.Run("400 Bad Request (Pagination)", test.InvalidPagination(h, http.MethodGet, url))
 }
 
-func TestController_Get(t *testing.T) {
+func TestHandler_Get(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
 
@@ -107,10 +104,9 @@ func TestController_Get(t *testing.T) {
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodGet, fmt.Sprintf("/v1/songs/%s", uuid.New()), http.StatusNotFound))
 }
 
-func TestController_Update(t *testing.T) {
+func TestHandler_Update(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	songWithUpload := testdata.SongWithUpload(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
@@ -148,10 +144,9 @@ func TestController_Update(t *testing.T) {
 	})
 }
 
-func TestController_Delete(t *testing.T) {
+func TestHandler_Delete(t *testing.T) {
 	t.Parallel()
-	c, db := setupController(t)
-	h := setupHandler(c, "/v1/songs/")
+	h, db := setupHandler(t, "/v1/songs/")
 	simpleSong := testdata.SimpleSong(t, db)
 	url := fmt.Sprintf("/v1/songs/%s", simpleSong.UUID)
 

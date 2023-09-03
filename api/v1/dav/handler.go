@@ -1,6 +1,8 @@
 package dav
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/net/webdav"
 
@@ -21,26 +23,24 @@ func init() {
 	chi.RegisterMethod("UNLOCK")
 }
 
-// Controller implements the /v1/dav endpoints.
-type Controller struct {
-	songRepo   song.Repository
-	songSvc    song.Service
-	mediaStore media.Store
+// Handler implements the /v1/dav endpoints.
+type Handler struct {
+	wh *webdav.Handler
 }
 
-// NewController creates a new controller instance using the specified services.
-func NewController(songRepo song.Repository, songSvc song.Service, mediaStore media.Store) *Controller {
-	return &Controller{songRepo, songSvc, mediaStore}
-}
-
-// Router sets up the routing for the endpoint.
-func (c *Controller) Router(r chi.Router) {
-	h := &webdav.Handler{
+// NewHandler creates a new Handler instance using the specified services.
+func NewHandler(songRepo song.Repository, songSvc song.Service, mediaStore media.Store) *Handler {
+	wh := &webdav.Handler{
 		// TODO: Make this configurable/dynamic
-		Prefix:     "/api/v1/dav/",
-		FileSystem: internal.NewFlatFS(c.songRepo, c.songSvc, c.mediaStore),
+		Prefix:     "/v1/dav/",
+		FileSystem: internal.NewFlatFS(songRepo, songSvc, mediaStore),
 		LockSystem: webdav.NewMemLS(),
 		Logger:     nil,
 	}
-	r.Handle("/*", h)
+	return &Handler{wh}
+}
+
+// ServeHTTP processes HTTP requests for h.
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.wh.ServeHTTP(w, r)
 }

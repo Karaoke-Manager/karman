@@ -48,21 +48,51 @@ info:
     url: https://opensource.org/license/mit/
 
 
-paths: {}
+tags:
+  - name: server
+    x-displayName: Server Management
+    description: |-
+      Endpoints in this section are not usually used by API clients directly.
+
+
+paths:
+  /healthz:
+    get:
+      operationId: getHealthz
+      summary: Server Health
+      tags: [ server ]
+      security: []
+      description: |-
+        Get information about the health of the server.
+        Applications should only consider the response code of the response.
+      responses:
+        200:
+          x-summary: OK
+          description: |-
+            The server is healthy.
+        5XX:
+          x-summary: Error
+          description: |-
+            The server is not healthy.
 
 
 x-tagGroups:
-  - name: Library Management
+  - name: Authentication
     tags:
       - auth
+      - user
+  - name: Library Management
+    tags:
       - song
       - media
       - upload
-      - user
+  - name: Server Management
+    tags:
+      - server
 
 
 security:
-  - OAuth2: []
+  - OAuth2: [ ]
 
 
 components:
@@ -76,14 +106,14 @@ components:
         See the [`/auth/token`](#tag/auth/operation/createToken) endpoint for more information on how to acquire a token.
       flows:
         # noinspection YAMLSchemaValidation
-        urn:ietf:params:oauth:grant-type:token-exchange: {}
+        urn:ietf:params:oauth:grant-type:token-exchange: { }
           # Semantically these should be uncommented.
           # However, visually Redoc only shows the refreshUrl which might be misleading.
           # The urls from the password flow display in a way that it can also be applied to this flow.
 
           # tokenUrl: /auth/token
-          # refreshUrl: /auth/token
+        # refreshUrl: /auth/token
         password:
           tokenUrl: /auth/token
           refreshUrl: /auth/token
-          scopes: {}
+          scopes: { }

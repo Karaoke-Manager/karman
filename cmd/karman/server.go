@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,8 +14,8 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgxutil"
 	"github.com/lmittmann/tint"
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -27,6 +26,7 @@ import (
 	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
+// serverCmd implements the "server" command.
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start the Karman server",
@@ -35,6 +35,7 @@ var serverCmd = &cobra.Command{
 	RunE:  runServer,
 }
 
+// init sets up the command line flags for the server command.
 func init() {
 	serverCmd.Flags().StringP("address", "l", ":8080", "The address on which the server listens for HTTP requests.")
 	viper.SetDefault("api.address", ":8080")
@@ -55,8 +56,9 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
+// runServer starts the server and all of its components.
 func runServer(_ *cobra.Command, _ []string) (rErr error) {
-	db, closeFn, err := setupDatabase()
+	closeFn, err := setupDatabase()
 	if err != nil {
 		return err
 	}
@@ -81,22 +83,22 @@ func runServer(_ *cobra.Command, _ []string) (rErr error) {
 	mediaRepo := media.NewDBRepository(db)
 	mediaService := media.NewService(media.NewDBRepository(db), mediaStore)
 
-	redis, closeFn, err := setupRedis()
+	closeFn, err = setupRedis()
 	if err != nil {
 		return err
 	}
 	defer closeFn()
 
-	_, closeFn = setupAsynqClient(redis)
+	closeFn = setupTaskQueue(redisConn)
 	defer closeFn()
 
-	serverCtx, closeFn, err := setupTaskServer(redis, mediaRepo, mediaStore)
+	serverCtx, closeFn, err := setupTaskRunner(mediaRepo, mediaStore)
 	if err != nil {
 		return err
 	}
 	defer closeFn()
 
-	schedulerCtx, closeFn, err := setupTaskScheduler(redis)
+	schedulerCtx, closeFn, err := setupTaskScheduler()
 	if err != nil {
 		return err
 	}
@@ -106,7 +108,7 @@ func runServer(_ *cobra.Command, _ []string) (rErr error) {
 	server := &http.Server{
 		Addr:              config.API.Address,
 		ReadHeaderTimeout: 3 * time.Second,
-		Handler:           api.NewHandler(songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore),
+		Handler:           api.NewHandler(logger, api.HealthCheckFunc(healthcheck), songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore),
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -140,64 +142,103 @@ func runServer(_ *cobra.Command, _ []string) (rErr error) {
 		logger.Error("Could not start HTTP server", tint.Err(err))
 		return fmt.Errorf("starting HTTP server: %w", err)
 	}
-	return nil
+	// there is no way the server terminates by itself without some kind of error.
+	// some errors are only logged so we return a catch-all error here.
+	return errors.New("")
 }
 
-func setupDatabase() (pgxutil.DB, func(), error) {
+var (
+	// db is the database connection pool.
+	db *pgxpool.Pool
+	// redisConn defines how to connect to redis
+	redisConn asynq.RedisConnOpt
+	// taskQueue is the background task service
+	taskQueue *asynq.Client
+	// taskRunner is the background task processing sever.
+	taskRunner *asynq.Server
+	// taskServerHealth is the last result of the taskRunner healthcheck.
+	taskServerHealth error
+)
+
+// healthcheck performs a health check on all system components
+func healthcheck(ctx context.Context) bool {
+	// TODO: Check migrations in database
+	redisClient := redisConn.MakeRedisClient().(redis.UniversalClient)
+	redisErr := redisClient.Ping(ctx).Err()
+	if err := redisClient.Close(); err != nil {
+		// The connection will probably be closed by the asynq client before this is called.
+		logger.Error("Could not close redis connection", tint.Err(err))
+		if redisErr == nil {
+			redisErr = err
+		}
+	}
+	if redisErr != nil {
+		logger.Error("Redis health check failed", tint.Err(redisErr))
+		return false
+	}
+	if err := db.Ping(ctx); err != nil {
+		logger.Error("Database health check failed", tint.Err(redisErr))
+		return false
+	}
+	if taskServerHealth != nil {
+		logger.Error("Task server health check failed", tint.Err(redisErr))
+		return false
+	}
+	return true
+}
+
+// setupDatabase create a database connection pool.
+func setupDatabase() (func(), error) {
 	logger.Info("Setting up database connection pool")
-	db, err := pgxpool.New(context.Background(), config.DBConnection)
+	var err error
+	db, err = pgxpool.New(context.Background(), config.DBConnection)
 	if err != nil {
 		logger.Error("Could not setup database connection pool", tint.Err(err))
-		return nil, nil, fmt.Errorf("creating database connection: %w", err)
+		return nil, fmt.Errorf("creating database connection: %w", err)
 	}
 	conf := db.Config().ConnConfig
 	logger.Debug("Database connection", "host", conf.Host, "port", conf.Port, "user", conf.User, "database", conf.Database)
-	return db, func() {
+	return func() {
 		logger.Info("Closing database connections")
 		db.Close()
 	}, nil
 }
 
-func setupRedis() (asynq.RedisConnOpt, func(), error) {
+// setupRedis either starts the embedded redis instance or prepares a connection to an external redis.
+func setupRedis() (func(), error) {
+	// TODO: Support external redis
 	logger.Info("Starting embedded redis server")
-	redis := miniredis.NewMiniRedis()
-	if err := redis.Start(); err != nil {
+	miniRedis := miniredis.NewMiniRedis()
+	if err := miniRedis.Start(); err != nil {
 		logger.Error("Could not start embedded redis server", tint.Err(err))
-		return nil, nil, fmt.Errorf("starting embedded redis server: %w", err)
+		return nil, fmt.Errorf("starting embedded redis server: %w", err)
 	}
-	return asynq.RedisClientOpt{Addr: redis.Addr()}, func() {
+
+	redisConn = asynq.RedisClientOpt{Addr: miniRedis.Addr()}
+	return func() {
 		logger.Info("Stopping embedded redis server")
-		redis.Close()
+		miniRedis.Close()
 	}, nil
 }
 
-func setupAsynqClient(redis asynq.RedisConnOpt) (*asynq.Client, func()) {
-	logger.Info("Setting up asynq client")
-	client := asynq.NewClient(redis)
-	return client, func() {
-		logger.Info("Closing asynq client")
-		if err := client.Close(); err != nil {
-			logger.Error("Could not close asynq client", tint.Err(err))
+// setupTaskQueue sets up the asynq.Client for enqueuing tasks.
+func setupTaskQueue(redis asynq.RedisConnOpt) func() {
+	logger.Info("Setting up task queue")
+	taskQueue = asynq.NewClient(redis)
+	return func() {
+		logger.Info("Closing task queue")
+		if err := taskQueue.Close(); err != nil {
+			logger.Error("Could not close task queue", tint.Err(err))
 		}
 	}
 }
 
-func setupTaskServer(redis asynq.RedisConnOpt, mediaRepo media.Repository, mediaStore media.Store) (context.Context, func(), error) {
-	// we expect tasks to not be primarily CPU bound but mostly IO bound by the database
-	logger.Info("Starting task server", "workers", config.TaskServer.Workers)
-	serverLogger := internal.NewAsynqLogger(logger, "task-server")
-	var logLevel asynq.LogLevel
-	if config.Log.Level >= slog.LevelWarn {
-		logLevel = asynq.ErrorLevel
-	} else if config.Log.Level >= slog.LevelInfo {
-		logLevel = asynq.WarnLevel
-	} else if config.Log.Level >= slog.LevelDebug {
-		logLevel = asynq.InfoLevel
-	} else {
-		logLevel = asynq.DebugLevel
-	}
-	srv := asynq.NewServer(redis, asynq.Config{
-		Concurrency: config.TaskServer.Workers,
+// setupTaskRunner sets up the task runner that executes background tasks.
+func setupTaskRunner(mediaRepo media.Repository, mediaStore media.Store) (context.Context, func(), error) {
+	logger.Info("Starting task runner", "workers", config.TaskRunner.Workers)
+	taskRunnerLogger := internal.NewAsynqLogger(logger, "runner")
+	taskRunner = asynq.NewServer(redisConn, asynq.Config{
+		Concurrency: config.TaskRunner.Workers,
 		Queues: map[string]int{
 			"default":       1,
 			media.TaskQueue: 1,
@@ -211,46 +252,41 @@ func setupTaskServer(redis asynq.RedisConnOpt, mediaRepo media.Repository, media
 				logger.WarnContext(ctx, "Task failed. Will be retried shortly", "task", task.Type(), "retried", retried, "maxRetry", maxRetry, tint.Err(err))
 			}
 		}),
-		Logger:          serverLogger,
-		LogLevel:        logLevel,
-		HealthCheckFunc: nil, // TODO: record errors and provide then to a /healthz endpoint.
+		Logger:   taskRunnerLogger,
+		LogLevel: internal.AsynqLogLevel(config.Log.Level),
+		HealthCheckFunc: func(err error) {
+			taskServerHealth = err
+		},
 	})
 	mux := asynq.NewServeMux()
 	mux.Handle(media.NewTaskHandler(mediaRepo, mediaStore))
-	if err := srv.Start(mux); err != nil {
-		logger.Error("Could not start task server", tint.Err(err))
+	if err := taskRunner.Start(mux); err != nil {
+		logger.Error("Could not start task runner", tint.Err(err))
 		return nil, nil, fmt.Errorf("starting task server: %w", err)
 	}
-	return serverLogger.Context(), func() {
-		logger.Info("Stopping task server")
-		srv.Shutdown()
+	return taskRunnerLogger.Context(), func() {
+		logger.Info("Stopping task runner")
+		taskRunner.Shutdown()
 	}, nil
 }
 
-func setupTaskScheduler(redis asynq.RedisConnOpt) (context.Context, func(), error) {
+// setupTaskScheduler sets up the task scheduler that creates specific task instances for scheduled tasks.
+func setupTaskScheduler() (context.Context, func(), error) {
 	logger.Info("Starting task scheduler")
-	schedulerLogger := internal.NewAsynqLogger(logger, "cron")
-	var logLevel asynq.LogLevel
-	if config.Log.Level >= slog.LevelWarn {
-		logLevel = asynq.ErrorLevel
-	} else if config.Log.Level >= slog.LevelInfo {
-		logLevel = asynq.WarnLevel
-	} else if config.Log.Level >= slog.LevelDebug {
-		logLevel = asynq.InfoLevel
-	} else {
-		logLevel = asynq.DebugLevel
-	}
-	periodicTaskConfigProvider := media.NewPeriodicTaskConfigProvider()
+	taskSchedulerLogger := internal.NewAsynqLogger(logger, "scheduler")
+	schedulerConfig := internal.MergePeriodicTaskConfigProviders(
+		media.NewPeriodicTaskConfigProvider(),
+	)
 	scheduler, err := asynq.NewPeriodicTaskManager(asynq.PeriodicTaskManagerOpts{
-		PeriodicTaskConfigProvider: periodicTaskConfigProvider,
-		RedisConnOpt:               redis,
+		PeriodicTaskConfigProvider: schedulerConfig,
+		RedisConnOpt:               redisConn,
 		SchedulerOpts: &asynq.SchedulerOpts{
-			Logger:   schedulerLogger,
-			LogLevel: logLevel,
+			Logger:   taskSchedulerLogger,
+			LogLevel: internal.AsynqLogLevel(config.Log.Level),
 			Location: time.Local,
 			PostEnqueueFunc: func(info *asynq.TaskInfo, err error) {
 				if err != nil {
-					logger.Error("Could not enqueue task", "component", "cron", "task", info.Type, tint.Err(err))
+					logger.Error("Could not enqueue scheduled task", "component", "scheduler", "task", info.Type, tint.Err(err))
 				}
 			},
 		},
@@ -261,11 +297,11 @@ func setupTaskScheduler(redis asynq.RedisConnOpt) (context.Context, func(), erro
 		panic(err)
 	}
 	if err = scheduler.Start(); err != nil {
-		logger.Error("Could not start cron manager", tint.Err(err))
+		logger.Error("Could not start task scheduler", tint.Err(err))
 		return nil, nil, fmt.Errorf("starting cron manager: %w", err)
 	}
-	return schedulerLogger.Context(), func() {
-		logger.Info("Stopping cron manager")
+	return taskSchedulerLogger.Context(), func() {
+		logger.Info("Stopping task scheduler")
 		scheduler.Shutdown()
 	}, nil
 }

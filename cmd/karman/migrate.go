@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -11,10 +13,10 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
 	"github.com/Karaoke-Manager/karman/migrations"
 )
 
+// migrateCmd represents the "migrate" subcommand.
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run migrations",
@@ -23,6 +25,7 @@ var migrateCmd = &cobra.Command{
 	RunE:  runMigrate,
 }
 
+// init sets up command line flags for the "migrate" command.
 func init() {
 	migrateCmd.Flags().BoolVarP(&status, "status", "s", false, "Show current migration status.")
 	migrateCmd.Flags().BoolVar(&allowMissing, "allow-missing", false, "Applies missing (out-of-order) migrations.")
@@ -30,13 +33,16 @@ func init() {
 }
 
 var (
+	// allowMissing indicates whether migrations can be applied out of order.
 	allowMissing bool
-	status       bool
+	// status indicates whether the --status flag was set.
+	status bool
 )
 
+// runMigrate executes the "migrate" command.
 func runMigrate(_ *cobra.Command, args []string) (rErr error) {
-	// TODO: The CLI could probably be more consistent
-	goose.SetLogger(internal.NewGooseLogger())
+	// TODO: The CLI could probably be more consistent...
+	goose.SetLogger(log.New(os.Stdout, "", 0))
 	goose.SetBaseFS(migrations.FS)
 	db, err := goose.OpenDBWithDriver("pgx", config.DBConnection)
 	if err != nil {

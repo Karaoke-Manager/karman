@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding"
 	"errors"
 	"fmt"
 	"log/slog"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/lmittmann/tint"
@@ -14,8 +12,12 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
 )
 
+// rootCmd represents the main "karman" command.
+// The command cannot be executed by itself.
 var rootCmd = &cobra.Command{
 	Use:               "karman",
 	Short:             "Karman - The Karaoke Manager",
@@ -24,11 +26,29 @@ var rootCmd = &cobra.Command{
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
 	Version:           version,
-	PersistentPreRunE: loadConfig,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if cmd == versionCmd {
+			// do not load config for version command
+			return nil
+		}
+		if err := loadConfig(); err != nil {
+			return err
+		}
+		if err := setupLogger(); err != nil {
+			return err
+		}
+		if viper.ConfigFileUsed() != "" {
+			logger.Info("Loaded configuration file", "file", viper.ConfigFileUsed())
+		} else {
+			logger.Info("No configuration file found")
+		}
+		return nil
+	},
 }
 
+// init sets up common flags for all other commands.
 func init() {
-	rootCmd.PersistentFlags().StringP("config", "c", "", "Custom config file")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Custom config file")
 
 	rootCmd.PersistentFlags().String("log-level", slog.LevelInfo.String(), "The logging verbosity. Can be set to DEBUG, INFO, WARN, ERROR or an integer where lower numbers mean more logging.")
 	_ = viper.BindPFlag("log.level", rootCmd.Flag("log-level"))
@@ -44,6 +64,9 @@ func init() {
 }
 
 var (
+	// configFile is a path to a config file passed as CLI argument.
+	configFile string
+	// config is the parsed configuration from files, environment and flags.
 	config struct {
 		Log struct {
 			Level  slog.Level `mapstructure:"level"`
@@ -53,7 +76,7 @@ var (
 		API          struct {
 			Address string `mapstructure:"address"`
 		} `mapstructure:"api"`
-		TaskServer struct {
+		TaskRunner struct {
 			Workers int `mapstructure:"workers"`
 		} `mapstructure:"task-server"`
 		Uploads struct {
@@ -63,21 +86,20 @@ var (
 			Dir string `mapstructure:"dir"`
 		} `mapstructure:"media"`
 	}
-	logger *slog.Logger
 )
 
-func loadConfig(cmd *cobra.Command, _ []string) error {
-	if cmd == versionCmd {
-		// do not load config for version command
-		return nil
-	}
+// logger is the global logger.
+var logger *slog.Logger
+
+// loadConfig parses the configuration file and merges it with configuration data
+// from the environment and CLI flags.
+func loadConfig() error {
 	// we don't allow HCL-style configs
 	viper.SupportedExts = []string{"json", "toml", "yaml", "yml", "env", "ini"}
 	viper.AllowEmptyEnv(true)
 	viper.SetEnvPrefix("karman")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	viper.AutomaticEnv()
-	configFile := cmd.Flag("config").Value.String()
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
 	} else {
@@ -85,7 +107,6 @@ func loadConfig(cmd *cobra.Command, _ []string) error {
 		viper.AddConfigPath("/etc/karman/")
 	}
 
-	// TODO: Hot Reloading
 	if err := viper.ReadInConfig(); err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
 		return err
 	}
@@ -94,35 +115,7 @@ func loadConfig(cmd *cobra.Command, _ []string) error {
 	if err := viper.Unmarshal(&config, func(config *mapstructure.DecoderConfig) {
 		config.WeaklyTypedInput = true
 		config.Metadata = &meta
-		config.DecodeHook = mapstructure.DecodeHookFunc(func(from reflect.Value, to reflect.Value) (interface{}, error) {
-			if to.CanAddr() {
-				to = to.Addr()
-			}
-			// If the destination implements the unmarshaling interface
-			u, ok := to.Interface().(encoding.TextUnmarshaler)
-			if !ok {
-				return from.Interface(), nil
-			}
-			// If it is nil and a pointer, create and assign the target value first
-			if to.IsNil() && to.Type().Kind() == reflect.Ptr {
-				to.Set(reflect.New(to.Type().Elem()))
-				u = to.Interface().(encoding.TextUnmarshaler)
-			}
-			var text []byte
-			switch v := from.Interface().(type) {
-			case string:
-				text = []byte(v)
-			case []byte:
-				text = v
-			default:
-				return v, nil
-			}
-
-			if err := u.UnmarshalText(text); err != nil {
-				return to.Interface(), err
-			}
-			return to.Interface(), nil
-		})
+		config.DecodeHook = internal.TextUnmarshalerDecodeHook
 	}); err != nil {
 		return fmt.Errorf("unable to decode config file: %w", err)
 	}
@@ -131,7 +124,11 @@ func loadConfig(cmd *cobra.Command, _ []string) error {
 	} else if len(meta.Unused) > 0 {
 		return fmt.Errorf("invalid keys in config file: %s", strings.Join(meta.Unused, ", "))
 	}
+	return nil
+}
 
+// setupLogger sets up the global logger using the app's configuration.
+func setupLogger() error {
 	config.Log.Format = strings.ToLower(config.Log.Format)
 	if config.Log.Format == "text" {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: config.Log.Level}))
@@ -141,12 +138,6 @@ func loadConfig(cmd *cobra.Command, _ []string) error {
 		logger = slog.New(tint.NewHandler(colorable.NewColorableStdout(), &tint.Options{Level: config.Log.Level}))
 	} else {
 		return fmt.Errorf("invalid log format: %s", viper.GetString("log.format"))
-	}
-
-	if viper.ConfigFileUsed() != "" {
-		logger.Info("Loaded configuration file", "file", viper.ConfigFileUsed())
-	} else {
-		logger.Info("No configuration file found")
 	}
 	return nil
 }

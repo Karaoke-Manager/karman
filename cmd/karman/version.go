@@ -20,6 +20,7 @@ var versionCmd = &cobra.Command{
 	Run:   runVersion,
 }
 
+// init sets up CLI flags for the version command.
 func init() {
 	versionCmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "print version in JSON format")
 	rootCmd.AddCommand(versionCmd)

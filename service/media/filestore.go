@@ -45,6 +45,11 @@ func NewFileStore(root string) (*FileStore, error) {
 	}, nil
 }
 
+// Root returns the absolute path to the root directory for the store.
+func (s *FileStore) Root() string {
+	return s.root
+}
+
 // Create opens a writer for file.
 // Any necessary intermediate directories are created before this method returns.
 func (s *FileStore) Create(_ context.Context, _ mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {

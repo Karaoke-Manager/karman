@@ -44,6 +44,11 @@ func NewFileStore(root string) (*FileStore, error) {
 	}, nil
 }
 
+// Root returns the absolute path to the root directory of the store.
+func (s *FileStore) Root() string {
+	return s.root
+}
+
 // Create opens a writer to the named file.
 func (s *FileStore) Create(_ context.Context, upload uuid.UUID, name string) (io.WriteCloser, error) {
 	if !fs.ValidPath(name) || name == "." {

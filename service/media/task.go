@@ -11,8 +11,14 @@ const (
 	TaskTypePrune = "media:prune"
 )
 
+type taskProvider struct{}
+
 func NewPeriodicTaskConfigProvider() asynq.PeriodicTaskConfigProvider {
-	return nil
+	return &taskProvider{}
+}
+
+func (*taskProvider) GetConfigs() ([]*asynq.PeriodicTaskConfig, error) {
+	return nil, nil
 }
 
 type taskHandler struct {

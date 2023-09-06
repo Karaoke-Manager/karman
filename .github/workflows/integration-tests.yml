@@ -64,4 +64,4 @@ jobs:
           PGHOST: localhost
           PGPORT: 5432
           PGUSER: karman
-          PGPASS: secret
+          PGPASSWORD: secret

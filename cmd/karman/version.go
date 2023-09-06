@@ -11,11 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	versionCmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "print version in JSON format")
-	rootCmd.AddCommand(versionCmd)
-}
-
 // versionCmd is the command instance for the version command.
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -23,6 +18,11 @@ var versionCmd = &cobra.Command{
 	Long:  "Print information about the currently running version of Karman.",
 	Args:  cobra.NoArgs,
 	Run:   runVersion,
+}
+
+func init() {
+	versionCmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "print version in JSON format")
+	rootCmd.AddCommand(versionCmd)
 }
 
 var (
@@ -55,7 +55,7 @@ func runVersion(_ *cobra.Command, _ []string) {
 	if info.GitVersion != "" && info.GitTreeState != "dirty" {
 		fmt.Printf("Karman Version %s (built with %s)\n", info.GitVersion, info.GoVersion)
 	}
-	if info.GitTreeState == "" {
+	if info.GitCommit == "" || info.GitTreeState == "" {
 		fmt.Printf("Karman Development Build (built with %s)\n", info.GoVersion)
 		return
 	}
@@ -112,7 +112,6 @@ func getVersionInfo() *versionInfo {
 	}
 
 	var goos, goarch string
-	fmt.Printf("%v", info.Settings)
 	for _, setting := range info.Settings {
 		switch setting.Key {
 		case "-compiler":

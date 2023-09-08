@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/upload"
 	"github.com/Karaoke-Manager/karman/test"
@@ -31,14 +32,14 @@ func setupHandler(t *testing.T, prefix string) (*Handler, pgxutil.DB) {
 		t.Fatalf("MkdirTemp() returned an unexpected error: %s", err)
 	}
 	db := test.NewDB(t)
-	uploadRepo := upload.NewDBRepository(db)
-	uploadStore, err := upload.NewFileStore(dir)
+	uploadRepo := upload.NewDBRepository(nolog.Logger, db)
+	uploadStore, err := upload.NewFileStore(nolog.Logger, dir)
 	if err != nil {
 		t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", dir, err)
 	}
 
 	// workaround to support the prefix
-	h := NewHandler(uploadRepo, uploadStore)
+	h := NewHandler(nolog.Logger, uploadRepo, uploadStore)
 	r := chi.NewRouter()
 	r.Mount(strings.TrimSuffix(prefix, "/")+"/", h.r)
 	h.r = r

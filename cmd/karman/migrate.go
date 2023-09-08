@@ -30,6 +30,8 @@ func init() {
 	migrateCmd.Flags().BoolVarP(&status, "status", "s", false, "Show current migration status.")
 	migrateCmd.Flags().BoolVar(&allowMissing, "allow-missing", false, "Applies missing (out-of-order) migrations.")
 	rootCmd.AddCommand(migrateCmd)
+
+	goose.SetBaseFS(migrations.FS)
 }
 
 var (
@@ -43,7 +45,6 @@ var (
 func runMigrate(_ *cobra.Command, args []string) (rErr error) {
 	// TODO: The CLI could probably be more consistent...
 	goose.SetLogger(log.New(os.Stdout, "", 0))
-	goose.SetBaseFS(migrations.FS)
 	db, err := goose.OpenDBWithDriver("pgx", config.DBConnection)
 	if err != nil {
 		// This error indicates an unsupported or invalid driver.

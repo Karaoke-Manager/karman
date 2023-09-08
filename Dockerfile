@@ -15,3 +15,4 @@ USER karman:karman
 EXPOSE 8080
 VOLUME /usr/local/share/karman
 ENTRYPOINT ["karman", "server"]
+CMD ["--migrate"]

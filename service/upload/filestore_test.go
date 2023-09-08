@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 )
 
 // fileStore creates a new FileStore using a temporary directory.
@@ -23,7 +25,7 @@ func fileStore(t *testing.T) (*FileStore, string) {
 	t.Cleanup(func() {
 		_ = os.RemoveAll(dir)
 	})
-	store, err := NewFileStore(dir)
+	store, err := NewFileStore(nolog.Logger, dir)
 	if err != nil {
 		t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", dir, err)
 	}
@@ -42,7 +44,7 @@ func TestNewFileStore(t *testing.T) {
 	})
 
 	t.Run("missing root directory", func(t *testing.T) {
-		_, err = NewFileStore(filepath.Join(dir, "test1"))
+		_, err = NewFileStore(nolog.Logger, filepath.Join(dir, "test1"))
 		if err == nil {
 			t.Errorf("NewFileStore(<missing>) did not return an error, but an error was expected")
 		}
@@ -52,7 +54,7 @@ func TestNewFileStore(t *testing.T) {
 		if err = os.WriteFile(path, []byte("Hello"), 0600); err != nil {
 			t.Fatalf("WriteFile(%q, %q, 0600) returned an unexpected error: %s", path, "Hello", err)
 		}
-		_, err = NewFileStore(path)
+		_, err = NewFileStore(nolog.Logger, path)
 		if err == nil {
 			t.Errorf("NewFileStore(<file>) did not return an error, but an error was expected")
 		}
@@ -62,7 +64,7 @@ func TestNewFileStore(t *testing.T) {
 		if err = os.Mkdir(path, 0770); err != nil {
 			t.Fatalf("Mkdir(%q, 0770) returned an unexpected error: %s", path, err)
 		}
-		_, err = NewFileStore(path)
+		_, err = NewFileStore(nolog.Logger, path)
 		if err != nil {
 			t.Fatalf("NewFileStore(%q) returned an unexpected error: %s", path, err)
 		}
@@ -354,7 +356,7 @@ func TestFolderDir_Marker(t *testing.T) {
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
 
-	store, _ := NewFileStore("./testdata")
+	store, _ := NewFileStore(nolog.Logger, "./testdata")
 	f, err := store.Open(ctx, id, ".")
 	if err != nil {
 		t.Errorf("Open(ctx, %q, %q) returned an unexpected error: %s", id, ".", err)
@@ -379,7 +381,7 @@ func TestFolderDir_SkipTo(t *testing.T) {
 
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
-	store, _ := NewFileStore("./testdata")
+	store, _ := NewFileStore(nolog.Logger, "./testdata")
 
 	f, err := store.Open(ctx, id, ".")
 	if err != nil {
@@ -401,7 +403,7 @@ func TestFolderDir_ReadDir(t *testing.T) {
 
 	ctx := context.Background()
 	id := uuid.MustParse("e4d7ec99-77e0-4595-815a-18f3811c1b9d")
-	store, _ := NewFileStore("./testdata")
+	store, _ := NewFileStore(nolog.Logger, "./testdata")
 
 	cases := map[string]struct {
 		marker    string

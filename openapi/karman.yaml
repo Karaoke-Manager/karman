@@ -66,14 +66,23 @@ paths:
         Get information about the health of the server.
         Applications should only consider the response code of the response.
       responses:
-        200:
+        204:
           x-summary: OK
           description: |-
-            The server is healthy.
-        5XX:
-          x-summary: Error
+            This response indicates that the server is healthy.
+        503:
+          x-summary: Unhealthy
           description: |-
-            The server is not healthy.
+            This response indicates that the server is not healthy.
+          content:
+            application/problem+json:
+              schema:
+                example:
+                  title: "Service Unavailable"
+                  status: 503
+                allOf:
+                  - $ref: "./common/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX: { $ref: "./common/problem-details.yaml#/components/responses/UnexpectedError" }
 
 
 x-tagGroups:

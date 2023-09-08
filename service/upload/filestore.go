@@ -6,17 +6,20 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
 
 	"github.com/google/uuid"
+	"github.com/lmittmann/tint"
 )
 
 // FileStore is an implementation of the Store interface that saves files in the local filesystem.
 // Each upload is stored in a separate folder that contains its files.
 type FileStore struct {
-	root string
+	logger *slog.Logger
+	root   string
 
 	// These modes are applied to new files and directories.
 	FileMode fs.FileMode
@@ -25,7 +28,7 @@ type FileStore struct {
 
 // NewFileStore creates a new FileStore rooted at root.
 // The root directory must exist.
-func NewFileStore(root string) (*FileStore, error) {
+func NewFileStore(logger *slog.Logger, root string) (*FileStore, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -38,6 +41,7 @@ func NewFileStore(root string) (*FileStore, error) {
 		return nil, fmt.Errorf("%s is not a directory", root)
 	}
 	return &FileStore{
+		logger:   logger,
 		root:     root,
 		FileMode: 0640,
 		DirMode:  0750,
@@ -50,20 +54,28 @@ func (s *FileStore) Root() string {
 }
 
 // Create opens a writer to the named file.
-func (s *FileStore) Create(_ context.Context, upload uuid.UUID, name string) (io.WriteCloser, error) {
+func (s *FileStore) Create(ctx context.Context, upload uuid.UUID, name string) (io.WriteCloser, error) {
 	if !fs.ValidPath(name) || name == "." {
+		s.logger.WarnContext(ctx, "Could not create upload file at invalid path.", "uuid", upload, "path", name)
 		return nil, fs.ErrInvalid
 	}
 	name = filepath.Join(s.root, upload.String(), name)
 	if err := os.MkdirAll(filepath.Dir(name), s.DirMode); err != nil {
+		s.logger.ErrorContext(ctx, "Could not create intermediate directories for upload file.", "uuid", upload, "path", name, tint.Err(err))
 		return nil, err
 	}
-	return os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, s.FileMode)
+	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, s.FileMode)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Could not open upload file for writing.", "uuid", upload, "path", name, tint.Err(err))
+		return f, err
+	}
+	return f, nil
 }
 
 // Stat fetches information about a named file.
-func (s *FileStore) Stat(_ context.Context, upload uuid.UUID, name string) (fs.FileInfo, error) {
+func (s *FileStore) Stat(ctx context.Context, upload uuid.UUID, name string) (fs.FileInfo, error) {
 	if !fs.ValidPath(name) {
+		s.logger.WarnContext(ctx, "Could not stat upload file at invalid path.", "uuid", upload, "path", name)
 		return nil, fs.ErrInvalid
 	}
 	path := filepath.Join(s.root, upload.String(), name)
@@ -75,21 +87,27 @@ func (s *FileStore) Stat(_ context.Context, upload uuid.UUID, name string) (fs.F
 		}
 		stat, err = os.Stat(path)
 	}
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Could not stat upload file.", "uuid", upload, "path", name, tint.Err(err))
+	}
 	return stat, err
 }
 
 // Open opens the named file or directory.
-func (s *FileStore) Open(_ context.Context, upload uuid.UUID, name string) (fs.File, error) {
+func (s *FileStore) Open(ctx context.Context, upload uuid.UUID, name string) (fs.File, error) {
 	if !fs.ValidPath(name) {
+		s.logger.WarnContext(ctx, "Could not open upload file at invalid path.", "uuid", upload, "path", name)
 		return nil, fs.ErrInvalid
 	}
 	name = filepath.Join(s.root, upload.String(), name)
 	f, err := os.Open(name)
 	if err != nil {
+		s.logger.ErrorContext(ctx, "Could not open upload file.", "uuid", upload, "path", name, tint.Err(err))
 		return f, err
 	}
 	stat, err := f.Stat()
 	if err != nil {
+		s.logger.ErrorContext(ctx, "Could not stat opened upload file.", "uuid", upload, "path", name, tint.Err(err))
 		return f, err
 	}
 	if stat.IsDir() {
@@ -100,12 +118,17 @@ func (s *FileStore) Open(_ context.Context, upload uuid.UUID, name string) (fs.F
 
 // Delete recursively deletes the named file.
 // Empty directories are not cleaned.
-func (s *FileStore) Delete(_ context.Context, upload uuid.UUID, name string) error {
+func (s *FileStore) Delete(ctx context.Context, upload uuid.UUID, name string) error {
 	if !fs.ValidPath(name) {
+		s.logger.WarnContext(ctx, "Could not delete upload file at invalid path.", "uuid", upload, "path", name)
 		return fs.ErrInvalid
 	}
 	name = filepath.Join(s.root, upload.String(), name)
-	return os.RemoveAll(name)
+	if err := os.RemoveAll(name); err != nil {
+		s.logger.ErrorContext(ctx, "Could not delete upload file.", "uuid", upload, "path", name, tint.Err(err))
+		return err
+	}
+	return nil
 }
 
 // folderDir implements the Dir interface for FileStore.

@@ -3,12 +3,14 @@ package upload
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgxutil"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/service/dbutil"
@@ -16,13 +18,14 @@ import (
 
 // dbRepo is the main Repository implementation, backed by a PostgreSQL database.
 type dbRepo struct {
-	db pgxutil.DB
+	logger *slog.Logger
+	db     pgxutil.DB
 }
 
 // NewDBRepository creates a new Repository backed by the specified database connection.
 // db can be a single connection or a connection pool.
-func NewDBRepository(db pgxutil.DB) Repository {
-	return &dbRepo{db}
+func NewDBRepository(logger *slog.Logger, db pgxutil.DB) Repository {
+	return &dbRepo{logger, db}
 }
 
 // uploadRow is the data returned by a SELECT query for uploads.
@@ -71,6 +74,7 @@ func (r *dbRepo) CreateUpload(ctx context.Context, upload *model.Upload) error {
 		"open": true,
 	}, "uuid, created_at, updated_at, deleted_at, open, songs_total, songs_processed, 0 AS errors", pgx.RowToStructByName[uploadRow])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not create upload.", tint.Err(err))
 		return err
 	}
 	*upload = row.toModel()
@@ -87,6 +91,9 @@ func (r *dbRepo) GetUpload(ctx context.Context, id uuid.UUID) (model.Upload, err
 	WHERE uuid = $1
 	GROUP BY uploads.id`, []any{id}, pgx.RowToStructByName[uploadRow])
 	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.ErrorContext(ctx, "Could not fetch upload.", tint.Err(err))
+		}
 		return model.Upload{}, dbutil.Error(err)
 	}
 	return row.toModel(), nil
@@ -96,6 +103,7 @@ func (r *dbRepo) GetUpload(ctx context.Context, id uuid.UUID) (model.Upload, err
 func (r *dbRepo) FindUploads(ctx context.Context, limit int, offset int64) ([]model.Upload, int64, error) {
 	total, err := pgxutil.SelectRow(ctx, r.db, `SELECT COUNT(*) FROM uploads`, nil, pgx.RowTo[int64])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not count uploads.", "limit", limit, "offset", offset, tint.Err(err))
 		return nil, 0, err
 	}
 	uploads, err := pgxutil.Select(ctx, r.db, `SELECT
@@ -109,6 +117,7 @@ func (r *dbRepo) FindUploads(ctx context.Context, limit int, offset int64) ([]mo
 		return data.toModel(), err
 	})
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not list uploads.", "limit", limit, "offset", offset, tint.Err(err))
 		return nil, total, err
 	}
 	return uploads, total, nil
@@ -122,6 +131,7 @@ func (r *dbRepo) DeleteUpload(ctx context.Context, id uuid.UUID) (bool, error) {
 		return false, nil
 	}
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not delete upload.", tint.Err(err))
 		return false, err
 	}
 	return true, nil
@@ -139,6 +149,9 @@ func (r *dbRepo) GetErrors(ctx context.Context, id uuid.UUID, limit int, offset 
 		Total int64
 	}])
 	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.ErrorContext(ctx, "Could not count upload errors.", "uuid", id, "limit", limit, "offset", offset, tint.Err(err))
+		}
 		return nil, 0, dbutil.Error(err)
 	}
 	uploadErrors, err := pgxutil.Select(ctx, r.db, `SELECT
@@ -147,6 +160,7 @@ func (r *dbRepo) GetErrors(ctx context.Context, id uuid.UUID, limit int, offset 
 	WHERE upload_id = $1
 	LIMIT CASE WHEN $2 < 0 THEN NULL ELSE $2 END OFFSET $3`, []any{row.ID, limit, offset}, pgx.RowToStructByName[model.UploadProcessingError])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not list upload errors.", "uuid", id, "limit", limit, "offset", offset, tint.Err(err))
 		return nil, row.Total, err
 	}
 	return uploadErrors, row.Total, nil

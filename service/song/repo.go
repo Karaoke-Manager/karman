@@ -3,6 +3,7 @@ package song
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"codello.dev/ultrastar"
@@ -10,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgxutil"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
@@ -18,13 +20,14 @@ import (
 
 // dbRepo is the main Repository implementation, backed by a PostgreSQL database.
 type dbRepo struct {
-	db pgxutil.DB // database connection
+	logger *slog.Logger
+	db     pgxutil.DB // database connection
 }
 
 // NewDBRepository creates a new Repository backed by the specified database connection.
 // db can be a single connection or a connection pool.
-func NewDBRepository(db pgxutil.DB) Repository {
-	return &dbRepo{db}
+func NewDBRepository(logger *slog.Logger, db pgxutil.DB) Repository {
+	return &dbRepo{logger, db}
 }
 
 // songRow is the data returned by a SELECT query for songs.
@@ -245,6 +248,7 @@ func (r *dbRepo) CreateSong(ctx context.Context, song *model.Song) error {
 		UpdatedAt time.Time `db:"updated_at"`
 	}])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not create song.", tint.Err(err))
 		return err
 	}
 	song.UUID = row.UUID
@@ -272,6 +276,9 @@ func (r *dbRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error) 
     	LEFT OUTER JOIN files AS b ON s.background_file_id = b.id
     WHERE S.uuid = $1`, []any{id}, pgx.RowToStructByName[songRow])
 	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.ErrorContext(ctx, "Could not fetch song.", "uuid", id, tint.Err(err))
+		}
 		return model.Song{}, dbutil.Error(err)
 	}
 	return row.toModel(), nil
@@ -284,6 +291,7 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
 	FROM songs AS s
 	WHERE s.upload_id IS NULL`, nil, pgx.RowTo[int64])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not count songs.", "limit", limit, "offset", offset, tint.Err(err))
 		return nil, 0, err
 	}
 
@@ -307,6 +315,9 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
 		data, err := pgx.RowToStructByName[songRow](row)
 		return data.toModel(), err
 	})
+	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not list songs.", "limit", limit, "offset", offset, tint.Err(err))
+	}
 	return songs, total, err
 }
 
@@ -351,6 +362,7 @@ func (r *dbRepo) UpdateSong(ctx context.Context, song *model.Song) error {
 		BackgroundFileID pgtype.Int4 `db:"background_file_id"`
 	}])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not update song.", "uuid", song.UUID, tint.Err(err))
 		return dbutil.Error(err)
 	}
 	song.UpdatedAt = row.UpdatedAt
@@ -377,6 +389,7 @@ func (r *dbRepo) DeleteSong(ctx context.Context, id uuid.UUID) (bool, error) {
 		return false, nil
 	}
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not delete song.", "uuid", id, tint.Err(err))
 		return false, err
 	}
 	return true, nil

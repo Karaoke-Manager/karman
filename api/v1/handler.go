@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -20,10 +21,10 @@ type Handler struct {
 
 // NewHandler creates a new handler using the specified services.
 // This function will create the required sub-handlers automatically.
-func NewHandler(songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store) *Handler {
-	uploadsHandler := uploads.NewHandler(uploadRepo, uploadStore)
-	songsHandler := songs.NewHandler(songRepo, songSvc, mediaStore, mediaSvc)
-	davHandler := dav.NewHandler(songRepo, songSvc, mediaStore)
+func NewHandler(logger *slog.Logger, songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store) *Handler {
+	uploadsHandler := uploads.NewHandler(logger, uploadRepo, uploadStore)
+	songsHandler := songs.NewHandler(logger, songRepo, songSvc, mediaStore, mediaSvc)
+	davHandler := dav.NewHandler(logger, songRepo, songSvc, mediaStore)
 
 	r := chi.NewRouter()
 	h := &Handler{r}

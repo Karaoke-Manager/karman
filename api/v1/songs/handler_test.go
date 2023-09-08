@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
@@ -25,14 +26,14 @@ import (
 // The database can use testcontainers or be an external service.
 func setupHandler(t *testing.T, prefix string) (*Handler, pgxutil.DB) {
 	db := test.NewDB(t)
-	songRepo := song.NewDBRepository(db)
+	songRepo := song.NewDBRepository(nolog.Logger, db)
 	songSvc := song.NewService()
 	mediaStore := media.NewMemStore()
-	mediaRepo := media.NewDBRepository(db)
+	mediaRepo := media.NewDBRepository(nolog.Logger, db)
 	mediaService := media.NewFakeService(mediaRepo)
 
 	// workaround to support the prefix
-	h := NewHandler(songRepo, songSvc, mediaStore, mediaService)
+	h := NewHandler(nolog.Logger, songRepo, songSvc, mediaStore, mediaService)
 	r := chi.NewRouter()
 	r.Mount(strings.TrimSuffix(prefix, "/")+"/", h.r)
 	h.r = r

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
@@ -19,7 +20,7 @@ func TestService_CreateUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 
 	upload := model.Upload{}
 	err := repo.CreateUpload(context.TODO(), &upload)
@@ -38,7 +39,7 @@ func TestService_GetUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 
 	t.Run("missing", func(t *testing.T) {
 		id := uuid.New()
@@ -91,7 +92,7 @@ func TestService_FindUploads(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	testdata.NOpenUploads(t, db, 10)
 	testdata.NPendingUploads(t, db, 3)
 
@@ -112,7 +113,7 @@ func TestService_DeleteUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	upload := testdata.OpenUpload(t, db)
 
 	t.Run("success", func(t *testing.T) {
@@ -147,7 +148,7 @@ func TestService_GetErrors(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	upload := testdata.DoneUploadWithErrors(t, db)
 
 	errs, total, err := repo.GetErrors(context.TODO(), upload.UUID, -1, 0)

@@ -1,6 +1,7 @@
 package dav
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -29,11 +30,11 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler instance using the specified services.
-func NewHandler(songRepo song.Repository, songSvc song.Service, mediaStore media.Store) *Handler {
+func NewHandler(logger *slog.Logger, songRepo song.Repository, songSvc song.Service, mediaStore media.Store) *Handler {
 	wh := &webdav.Handler{
 		// TODO: Make this configurable/dynamic
 		Prefix:     "/v1/dav/",
-		FileSystem: internal.NewFlatFS(songRepo, songSvc, mediaStore),
+		FileSystem: internal.NewFlatFS(logger.With("log", "dav"), songRepo, songSvc, mediaStore),
 		LockSystem: webdav.NewMemLS(),
 		Logger:     nil,
 	}

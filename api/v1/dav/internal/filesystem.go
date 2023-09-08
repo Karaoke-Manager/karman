@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 // flatFS implements a [webdav.FileSystem] that serves songs in a flat hierarchy:
 // Each song is contained in a folder that contains the TXT file and the media files.
 type flatFS struct {
+	logger     *slog.Logger
 	songRepo   songsvc.Repository
 	songSvc    songsvc.Service
 	mediaStore media.Store
@@ -26,22 +28,25 @@ type flatFS struct {
 
 // NewFlatFS creates a new [webdav.FileSystem] that serves songs in a flat hierarchy:
 // The root directory contains a folder for each song which in turn contains all the song's files.
-func NewFlatFS(songRepo songsvc.Repository, songSvc songsvc.Service, mediaStore media.Store) webdav.FileSystem {
-	return &flatFS{songRepo, songSvc, mediaStore}
+func NewFlatFS(logger *slog.Logger, songRepo songsvc.Repository, songSvc songsvc.Service, mediaStore media.Store) webdav.FileSystem {
+	return &flatFS{logger, songRepo, songSvc, mediaStore}
 }
 
 // Mkdir is not allowed.
-func (s *flatFS) Mkdir(_ context.Context, _ string, _ fs.FileMode) error {
+func (s *flatFS) Mkdir(ctx context.Context, name string, _ fs.FileMode) error {
+	s.logger.WarnContext(ctx, "Creating WebDAV directories is not allowed.", "path", name)
 	return fs.ErrPermission
 }
 
 // RemoveAll is not allowed.
-func (s *flatFS) RemoveAll(_ context.Context, _ string) error {
+func (s *flatFS) RemoveAll(ctx context.Context, name string) error {
+	s.logger.WarnContext(ctx, "Deleting WebDAV files is not allowed.", "path", name)
 	return fs.ErrPermission
 }
 
 // Rename is not allowed.
-func (s *flatFS) Rename(_ context.Context, _, _ string) error {
+func (s *flatFS) Rename(ctx context.Context, name, _ string) error {
+	s.logger.WarnContext(ctx, "Renaming WebDAV files is not allowed.", "path", name)
 	return fs.ErrPermission
 }
 
@@ -55,15 +60,18 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	folder, filename, ok := strings.Cut(name, "/")
 
 	if !strings.HasSuffix(folder, ")") {
+		s.logger.WarnContext(ctx, "Tried to access unexpected WebDAV song.", "path", name)
 		return nil, fs.ErrNotExist
 	}
 	idx := strings.LastIndex(folder, " (")
 	if idx < 0 {
+		s.logger.WarnContext(ctx, "Tried to access unexpected WebDAV song.", "path", name)
 		return nil, fs.ErrNotExist
 	}
 	rawUUID := folder[idx+2 : len(folder)-1]
 	id, err := uuid.Parse(rawUUID)
 	if err != nil {
+		s.logger.WarnContext(ctx, "Tried to access unexpected WebDAV song.", "path", name)
 		return nil, fs.ErrNotExist
 	}
 
@@ -93,6 +101,8 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 		file = song.VideoFile
 	case song.BackgroundFileName:
 		file = song.BackgroundFile
+	default:
+		s.logger.WarnContext(ctx, "Tried to access unexpected WebDAV song file.", "path", name)
 	}
 	if file != nil {
 		return &mediaNode{

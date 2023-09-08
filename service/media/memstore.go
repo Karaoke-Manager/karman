@@ -27,6 +27,7 @@ type memStore struct {
 }
 
 // NewMemStore returns a new Store implementation that holds file contents in memory.
+// This implementation is intended for testing purposes and should not be used in the actual application.
 func NewMemStore() Store {
 	return &memStore{make(map[uuid.UUID]*closeBuffer)}
 }

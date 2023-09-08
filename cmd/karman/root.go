@@ -38,9 +38,12 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		if viper.ConfigFileUsed() != "" {
-			logger.Info("Loaded configuration file", "file", viper.ConfigFileUsed())
+			mainLogger.Info(fmt.Sprintf("Using configuration file %s.", viper.ConfigFileUsed()))
 		} else {
-			logger.Info("No configuration file found")
+			mainLogger.Info("No configuration file found.")
+		}
+		if config.Debug {
+			mainLogger.Warn("Debug mode is enabled.")
 		}
 		return nil
 	},
@@ -49,6 +52,10 @@ var rootCmd = &cobra.Command{
 // init sets up common flags for all other commands.
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Custom config file")
+
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode.")
+	_ = viper.BindPFlag("debug", rootCmd.Flag("debug"))
+	viper.SetDefault("debug", false)
 
 	rootCmd.PersistentFlags().String("log-level", slog.LevelInfo.String(), "The logging verbosity. Can be set to DEBUG, INFO, WARN, ERROR or an integer where lower numbers mean more logging.")
 	_ = viper.BindPFlag("log.level", rootCmd.Flag("log-level"))
@@ -68,7 +75,8 @@ var (
 	configFile string
 	// config is the parsed configuration from files, environment and flags.
 	config struct {
-		Log struct {
+		Debug bool `mapstructure:"debug"`
+		Log   struct {
 			Level  slog.Level `mapstructure:"level"`
 			Format string     `mapstructure:"format"`
 		} `mapstructure:"log"`
@@ -89,7 +97,10 @@ var (
 )
 
 // logger is the global logger.
-var logger *slog.Logger
+var (
+	logger     *slog.Logger
+	mainLogger *slog.Logger
+)
 
 // loadConfig parses the configuration file and merges it with configuration data
 // from the environment and CLI flags.
@@ -131,13 +142,24 @@ func loadConfig() error {
 func setupLogger() error {
 	config.Log.Format = strings.ToLower(config.Log.Format)
 	if config.Log.Format == "text" {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: config.Log.Level}))
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			AddSource: config.Debug,
+			Level:     config.Log.Level,
+		}))
 	} else if config.Log.Format == "json" {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: config.Log.Level}))
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			AddSource: config.Debug,
+			Level:     config.Log.Level,
+		}))
 	} else if config.Log.Format == "color" {
-		logger = slog.New(tint.NewHandler(colorable.NewColorableStdout(), &tint.Options{Level: config.Log.Level}))
+		logger = slog.New(tint.NewHandler(colorable.NewColorableStdout(), &tint.Options{
+			AddSource: config.Debug,
+			Level:     config.Log.Level,
+		}))
 	} else {
 		return fmt.Errorf("invalid log format: %s", viper.GetString("log.format"))
 	}
+	mainLogger = logger.With("log", "main")
+	slog.SetDefault(mainLogger)
 	return nil
 }

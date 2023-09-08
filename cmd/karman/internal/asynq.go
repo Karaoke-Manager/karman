@@ -26,15 +26,15 @@ func AsynqLogLevel(level slog.Level) asynq.LogLevel {
 type AsynqLogger struct {
 	l      *slog.Logger
 	ctx    context.Context
-	cancel context.CancelFunc
+	cancel context.CancelCauseFunc
 }
 
 // NewAsynqLogger creates a new asynq.Logger instance backed by l.
-// l will always add the "component" attribute with the specified value.
-func NewAsynqLogger(l *slog.Logger, component string) *AsynqLogger {
-	ctx, cancel := context.WithCancel(context.Background())
+// l will always add the "log" attribute with the specified value.
+func NewAsynqLogger(l *slog.Logger, log string) *AsynqLogger {
+	ctx, cancel := context.WithCancelCause(context.Background())
 	return &AsynqLogger{
-		l:      l.With("component", component),
+		l:      l.With("log", log),
 		ctx:    ctx,
 		cancel: cancel,
 	}
@@ -80,5 +80,9 @@ func (l *AsynqLogger) Fatal(args ...any) {
 	for _, line := range args {
 		l.l.Error(fmt.Sprintf("%s", line))
 	}
-	l.cancel()
+	var err error
+	if len(args) > 0 {
+		err = fmt.Errorf("%s", args[0])
+	}
+	l.cancel(err)
 }

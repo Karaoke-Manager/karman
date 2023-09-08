@@ -11,6 +11,7 @@ import (
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
@@ -20,7 +21,7 @@ func Test_dbRepo_CreateFile(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	existing := testdata.AudioFile(t, db)
 
 	t.Run("success", func(t *testing.T) {
@@ -65,7 +66,7 @@ func Test_dbRepo_UpdateFile(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 
 	t.Run("fields", func(t *testing.T) {
 		file := testdata.AudioFile(t, db)

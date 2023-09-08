@@ -10,13 +10,13 @@ import (
 // These constants identify known problem types related to uploads.
 const (
 	// TypeUploadState indicates that a file action to an upload was rejected because the upload has already been marked for processing.
-	TypeUploadState = ProblemTypeDomain + "/upload-state"
+	TypeUploadState = ProblemTypeDomain + "upload-state"
 
 	// TypeUploadFileNotFound indicates that a file was requested from an upload but the file was not found.
-	TypeUploadFileNotFound = ProblemTypeDomain + "/upload-file-not-found"
+	TypeUploadFileNotFound = ProblemTypeDomain + "upload-file-not-found"
 
 	// TypeInvalidUploadPath indicates that the file path within an upload is not a valid path.
-	TypeInvalidUploadPath = ProblemTypeDomain + "/invalid-upload-path"
+	TypeInvalidUploadPath = ProblemTypeDomain + "invalid-upload-path"
 )
 
 // UploadState generates an error indicating that the upload is not in the correct state to perform this action.

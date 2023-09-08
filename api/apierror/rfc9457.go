@@ -8,7 +8,7 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
-// ProblemDetails implements [RFC 7807] "Problem Details for HTTP APIs".
+// ProblemDetails implements [RFC 9457] "Problem Details for HTTP APIs".
 // A ProblemDetails value is intended to be used for error reporting from the Karman API.
 // Problem details are usually categorized by their type which is a URI.
 // This package defines utility functions and constants for typical errors.
@@ -17,7 +17,7 @@ import (
 // A ProblemDetails value is intended to be serialized using the
 // [github.com/Karaoke-Manager/karman/pkg/render] package.
 //
-// [RFC 7807]: https://datatracker.ietf.org/doc/html/rfc7807
+// [RFC 9457]: https://datatracker.ietf.org/doc/html/rfc9457
 type ProblemDetails struct {
 	// A URI reference that identifies the problem type.
 	// When dereferenced it should provide human-readable documentation for the problem type.

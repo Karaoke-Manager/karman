@@ -12,16 +12,16 @@ import (
 
 // ProblemTypeDomain is the base domain for all custom problem types.
 // This is the namespace under which all Karman problem types reside.
-const ProblemTypeDomain = "https://codello.dev/karman/problems"
+const ProblemTypeDomain = "tag:codello.dev,2020:karman/problems:"
 
 const (
 	// TypeValidationError indicates a that the request data did not conform to the required schema.
 	// This error should be associated with HTTP status code 422.
-	TypeValidationError = ProblemTypeDomain + "/validation-error"
+	TypeValidationError = ProblemTypeDomain + "validation-error"
 
 	// TypeInvalidUUID indicates that a UUID parameter was not a valid UUID.
 	// This error should be associated with HTTP status code 400.
-	TypeInvalidUUID = ProblemTypeDomain + "/invalid-uuid"
+	TypeInvalidUUID = ProblemTypeDomain + "invalid-uuid"
 )
 
 var (

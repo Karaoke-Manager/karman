@@ -4,6 +4,8 @@ openapi/karman.yaml:
   spec:
     - >-
       #/components/securitySchemes/OAuth2/flows/urn:ietf:params:oauth:grant-type:token-exchange
+  path-segment-plural:
+    - '#/paths/~1healthz'
 openapi/tags/auth.yaml:
   operation-4xx-problem-details-rfc7807:
     - '#/components/responses/TokenError'

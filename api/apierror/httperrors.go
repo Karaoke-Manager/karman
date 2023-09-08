@@ -53,11 +53,25 @@ func UnsupportedMediaType(allowed ...mediatype.MediaType) *ProblemDetails {
 	}
 }
 
-// UnprocessableEntity generates an error indicating that the request payload did not conform to the expected schema.
-func UnprocessableEntity(message string) *ProblemDetails {
-	p := HTTPStatus(http.StatusUnprocessableEntity)
-	p.Detail = message
-	return p
+// ValidationError generates an error indicating that the request payload did not conform to the expected schema.
+func ValidationError(message string, errors map[string]string) *ProblemDetails {
+	err := &ProblemDetails{
+		Type:   TypeValidationError,
+		Title:  "Unprocessable Entity",
+		Status: http.StatusUnprocessableEntity,
+		Detail: message,
+	}
+	if errors != nil {
+		errorList := make([]map[string]string, 0, len(errors))
+		for pointer, msg := range errors {
+			errorList = append(errorList, map[string]string{
+				"pointer": pointer,
+				"message": msg,
+			})
+		}
+		err.Fields = map[string]any{"errors": errorList}
+	}
+	return err
 }
 
 // BadRequest generates an 400 Bad Request error with the specified message.

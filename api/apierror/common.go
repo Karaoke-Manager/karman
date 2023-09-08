@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	"github.com/Karaoke-Manager/karman/service"
@@ -51,7 +52,8 @@ func BindError(err error) *ProblemDetails {
 		// Probably a syntax error
 		return ErrBadRequest
 	case errors.As(err, &render.BindError{}):
-		return UnprocessableEntity(errors.Unwrap(err).Error())
+		// TODO: Support setting errors field when binding
+		return ValidationError(errors.Unwrap(err).Error(), nil)
 	default:
 		// Should not happen
 		return ErrUnprocessableEntity
@@ -60,15 +62,10 @@ func BindError(err error) *ProblemDetails {
 
 // JSONUnmarshalError generates an error indicating that the request data could not be parsed in some way.
 func JSONUnmarshalError(err *json.UnmarshalTypeError) *ProblemDetails {
-	return &ProblemDetails{
-		Type:   TypeValidationError,
-		Title:  "Validation Error",
-		Status: 422,
-		Detail: fmt.Sprintf("Expected type %s but got %s.", err.Type.Name(), err.Value),
-		Fields: map[string]any{
-			"field": err.Field,
-		},
-	}
+	field := "/" + strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(err.Field, "~", "~0"), "/", "~1"), ".", "/")
+	return ValidationError(fmt.Sprintf("Expected type %s but got %s.", err.Type.Name(), err.Value), map[string]string{
+		field: fmt.Sprintf("expected type %s, got %s", err.Type.Name(), err.Value),
+	})
 }
 
 // ServiceError generates an error indicating that a service request was not successful.

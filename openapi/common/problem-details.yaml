@@ -179,18 +179,30 @@ components:
               status: 422
               instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
               fields:
-                medley.medleyStartBeat: "number expected"
+                - pointer: "/gap"
+                  detail: "must be an integer"
             allOf:
               - $ref: "#/components/schemas/ProblemDetails"
               - type: object
                 properties:
-                  fields:
-                    type: object
-                    additionalProperties: { type: string }
+                  errors:
+                    type: array
                     description: |-
-                      A `Unprocessable Entity` response may or may not contain information about the JSON field that caused the error.
-                      
-                      The value of this property is a mapping from field paths to error messages.
+                      A `Unprocessable Entity` response may or may not contain information about the JSON fields that caused the error.
+                    items:
+                      type: object
+                      properties:
+                        pointer:
+                          type: string
+                          format: json-pointer
+                          example: "/gap"
+                          description: |-
+                            A [JSON pointer](https://www.rfc-editor.org/rfc/rfc6901.html) identifying the field in the input that caused the error.
+                        detail:
+                          type: string
+                          example: "must be an integer"
+                          description: |-
+                            A human-readable error message.
 
     UnexpectedError:
       x-summary: Unexpected Error

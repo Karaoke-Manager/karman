@@ -191,7 +191,7 @@ func runServer(_ *cobra.Command, _ []string) (rErr error) {
 	}
 	// there is no way the server terminates by itself without some kind of error.
 	// some errors are only logged, so we return a catch-all error here.
-	return errors.New("")
+	return errors.New("stopped")
 }
 
 // healthcheck performs a health check on all system components.
@@ -266,20 +266,38 @@ func setupDatabase() (func(), error) {
 
 // setupRedis either starts the embedded redis instance or prepares a connection to an external redis.
 func setupRedis() (func(), error) {
-	// TODO: Support external redis
-	mainLogger.Warn("You are using the embedded redis server. This server is not intended for production use.")
-	mainLogger.Info("Starting embedded redis server.")
-	miniRedis := miniredis.NewMiniRedis()
-	if err := miniRedis.Start(); err != nil {
-		mainLogger.Error("Could not start embedded redis server.", tint.Err(err))
-		return nil, fmt.Errorf("starting embedded redis server: %w", err)
+	if config.RedisConnection == "" {
+		mainLogger.Warn("You are using the embedded redis server. This server is not intended for production use.")
+		mainLogger.Info("Starting embedded redis server.")
+		miniRedis := miniredis.NewMiniRedis()
+		if err := miniRedis.Start(); err != nil {
+			mainLogger.Error("Could not start embedded redis server.", tint.Err(err))
+			return nil, fmt.Errorf("starting embedded redis server: %w", err)
+		}
+		redisConn = asynq.RedisClientOpt{Addr: miniRedis.Addr()}
+		return func() {
+			mainLogger.Info("Stopping embedded redis server.")
+			miniRedis.Close()
+		}, nil
 	}
-
-	redisConn = asynq.RedisClientOpt{Addr: miniRedis.Addr()}
-	return func() {
-		mainLogger.Info("Stopping embedded redis server.")
-		miniRedis.Close()
-	}, nil
+	conn, err := asynq.ParseRedisURI(config.RedisConnection)
+	if err != nil {
+		mainLogger.Error("Could not parse Redis URL.", tint.Err(err))
+		return nil, fmt.Errorf("could not parse redis url: %w", err)
+	}
+	clientConn, ok := conn.(asynq.RedisClientOpt)
+	if !ok {
+		mainLogger.Error("Currently only direct redis connections are supported.")
+		return func() {}, fmt.Errorf("redis connection must not be clustered or sentinel")
+	}
+	if clientConn.Username == "" {
+		clientConn.Username = os.Getenv("REDIS_USERNAME")
+	}
+	if clientConn.Password == "" {
+		clientConn.Password = os.Getenv("REDIS_PASSWORD")
+	}
+	redisConn = clientConn
+	return func() {}, nil
 }
 
 // setupTaskQueue sets up the asynq.Client for enqueuing tasks.

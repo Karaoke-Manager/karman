@@ -68,6 +68,10 @@ func init() {
 	rootCmd.PersistentFlags().String("db-url", "", "PostgreSQL Connection String")
 	_ = viper.BindPFlag("db-url", rootCmd.Flag("db-url"))
 	viper.SetDefault("db-url", "")
+
+	rootCmd.PersistentFlags().String("redis-url", "", "Redis Connection String")
+	_ = viper.BindPFlag("redis-url", rootCmd.Flag("redis-url"))
+	viper.SetDefault("redis-url", "")
 }
 
 var (
@@ -80,8 +84,9 @@ var (
 			Level  slog.Level `mapstructure:"level"`
 			Format string     `mapstructure:"format"`
 		} `mapstructure:"log"`
-		DBConnection string `mapstructure:"db-url"`
-		API          struct {
+		DBConnection    string `mapstructure:"db-url"`
+		RedisConnection string `mapstructure:"redis-url"`
+		API             struct {
 			Address string `mapstructure:"address"`
 		} `mapstructure:"api"`
 		TaskRunner struct {

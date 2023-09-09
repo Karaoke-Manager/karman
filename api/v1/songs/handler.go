@@ -24,9 +24,22 @@ type Handler struct {
 }
 
 // NewHandler creates a new Handler instance using the specified services.
-func NewHandler(logger *slog.Logger, songRepo song.Repository, songSvc song.Service, mediaStore media.Store, mediaSvc media.Service) *Handler {
+func NewHandler(
+	logger *slog.Logger,
+	songRepo song.Repository,
+	songSvc song.Service,
+	mediaStore media.Store,
+	mediaSvc media.Service,
+) *Handler {
 	r := chi.NewRouter()
-	h := &Handler{logger.With("log", "songs.handler"), r, songRepo, songSvc, mediaStore, mediaSvc}
+	h := &Handler{
+		logger,
+		r,
+		songRepo,
+		songSvc,
+		mediaStore,
+		mediaSvc,
+	}
 
 	r.With(middleware.RequireContentType("text/plain", "text/x-ultrastar"), render.ContentTypeNegotiation("application/json")).Post("/", h.Create)
 	r.With(middleware.Paginate(25, 100), render.ContentTypeNegotiation("application/json")).Get("/", h.Find)

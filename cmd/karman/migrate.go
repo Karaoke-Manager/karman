@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -32,6 +33,11 @@ func init() {
 	rootCmd.AddCommand(migrateCmd)
 
 	goose.SetBaseFS(migrations.FS)
+	if err := goose.SetDialect("pgx"); err != nil {
+		// This error only occurs for an unsupported dialect.
+		// This is a programmer error!
+		panic(err)
+	}
 }
 
 var (
@@ -45,7 +51,7 @@ var (
 func runMigrate(_ *cobra.Command, args []string) (rErr error) {
 	// TODO: The CLI could probably be more consistent...
 	goose.SetLogger(log.New(os.Stdout, "", 0))
-	db, err := goose.OpenDBWithDriver("pgx", config.DBConnection)
+	db, err := sql.Open("pgx", config.DBConnection)
 	if err != nil {
 		// This error indicates an unsupported or invalid driver.
 		// This is a programmer error!

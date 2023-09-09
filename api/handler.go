@@ -25,31 +25,41 @@ type HealthChecker interface {
 	HealthCheck(ctx context.Context) bool
 }
 
-// HealthCheckFunc is a convenience wrapper around HealthChecker.
-type HealthCheckFunc func(ctx context.Context) bool
-
-// HealthCheck invokes f.
-func (f HealthCheckFunc) HealthCheck(ctx context.Context) bool {
-	return f(ctx)
-}
-
 // Handler is the main API handler.
 // This is basically the root entrypoint of the Karman API.
 // All other API endpoints are created as sub-handlers of this controller.
 type Handler struct {
-	r      chi.Router
-	hc     HealthChecker
-	logger *slog.Logger
+	r  chi.Router
+	hc HealthChecker
 }
 
 // NewHandler creates a new Handler instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-handlers.
 // debug indicates whether additional debugging features should be enabled.
-func NewHandler(logger *slog.Logger, hc HealthChecker, songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store, debug bool) *Handler {
+func NewHandler(
+	logger *slog.Logger,
+	requestLogger *slog.Logger,
+	hc HealthChecker,
+	songRepo song.Repository,
+	songSvc song.Service,
+	mediaSvc media.Service,
+	mediaStore media.Store,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store,
+	debug bool,
+) *Handler {
 	r := chi.NewRouter()
-	h := &Handler{r, hc, logger.With("log", "request")}
-	v1Handler := v1.NewHandler(logger, songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore)
-	r.Use(middleware.Logger(h.logger))
+	h := &Handler{r, hc}
+	v1Handler := v1.NewHandler(
+		logger,
+		songRepo,
+		songSvc,
+		mediaSvc,
+		mediaStore,
+		uploadRepo,
+		uploadStore,
+	)
+	r.Use(middleware.Logger(requestLogger))
 	r.Use(middleware.Recoverer(logger, debug))
 	// Restrict requests to JSON for now
 	r.Use(chimiddleware.CleanPath)

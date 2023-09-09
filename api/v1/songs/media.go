@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"codello.dev/ultrastar/txt"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/schema"
@@ -36,6 +37,7 @@ func (h *Handler) ReplaceTxt(w http.ResponseWriter, r *http.Request) {
 	song := MustGetSong(r.Context())
 	song.Song, err = txt.NewReader(r.Body).ReadSong()
 	if err != nil {
+		h.logger.WarnContext(r.Context(), "Could not parse UltraStar TXT.", tint.Err(err))
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
 		return
 	}
@@ -121,7 +123,6 @@ func (h *Handler) ReplaceCover(w http.ResponseWriter, r *http.Request) {
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
 	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
-		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -139,7 +140,6 @@ func (h *Handler) ReplaceBackground(w http.ResponseWriter, r *http.Request) {
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
 	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
-		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -157,7 +157,6 @@ func (h *Handler) ReplaceAudio(w http.ResponseWriter, r *http.Request) {
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
 	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
-		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -175,7 +174,6 @@ func (h *Handler) ReplaceVideo(w http.ResponseWriter, r *http.Request) {
 	mediaType := mediatype.MustParse(r.Header.Get("Content-Type"))
 	file, err := h.mediaSvc.StoreFile(r.Context(), mediaType, r.Body)
 	if err != nil {
-		// TODO: Logging
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}

@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,11 +24,12 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/Karaoke-Manager/karman/api"
+	"github.com/Karaoke-Manager/karman/cmd/karman/health"
 	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
 	"github.com/Karaoke-Manager/karman/core/media"
 	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/core/upload"
-	"github.com/Karaoke-Manager/karman/migrations"
+	"github.com/Karaoke-Manager/karman/task"
 )
 
 // serverCmd implements the "server" command.
@@ -43,7 +46,7 @@ var serverCmd = &cobra.Command{
 		// Requires: https://github.com/jackc/pgx/pull/1718
 		mainLogger.Info("Running database migrations.")
 		goose.SetLogger(log.Default())
-		db, err := goose.OpenDBWithDriver("pgx", config.DBConnection)
+		db, err := sql.Open("pgx", config.DBConnection)
 		if err != nil {
 			// This error indicates an unsupported or invalid driver.
 			// This is a programmer error!
@@ -86,103 +89,90 @@ var (
 	// migrate indicates whether the --migrate flag was specified.
 	migrate bool
 
-	// db is the database connection pool.
-	db *pgxpool.Pool
-	// redisConn defines how to connect to redis.
-	redisConn asynq.RedisConnOpt
-	// taskQueue is the background task service.
-	taskQueue *asynq.Client
-	// taskRunner is the background task processing sever.
-	taskRunner *asynq.Server
-	// taskServerHealth is the last result of the taskRunner healthcheck.
-	taskServerHealth error
+	// Core Services.
+	songRepo     song.Repository
+	songService  song.Service
+	uploadStore  upload.Store
+	uploadRepo   upload.Repository
+	mediaStore   media.Store
+	mediaRepo    media.Repository
+	mediaService media.Service
+
+	// Supporting Services.
+	cronService   task.CronService
+	healthService *health.Service
+
+	// Connector Dependencies.
+	db            *pgxpool.Pool
+	redisConn     asynq.RedisConnOpt
+	taskQueue     *asynq.Client
+	taskInspector *asynq.Inspector
+	taskRunner    *asynq.Server
 )
 
 // runServer starts the server and all of its components.
-func runServer(_ *cobra.Command, _ []string) (rErr error) {
+func runServer(_ *cobra.Command, _ []string) (err error) {
 	goose.SetLogger(goose.NopLogger())
+	var closeFn func()
 
-	closeFn, err := setupDatabase()
-	if err != nil {
+	if closeFn, err = setupDatabase(); err != nil {
 		return err
 	}
 	defer closeFn()
 
-	mainLogger.Info("Setting up application services.")
-	uploadStore, err := upload.NewFileStore(logger.With("log", "upload.store"), config.Uploads.Dir)
-	if err != nil {
-		mainLogger.Error("Could not initialize upload storage.", tint.Err(err))
-		return fmt.Errorf("initializing upload storage: %w", err)
+	if err = setupServices(); err != nil {
+		return err
 	}
-	mainLogger.Debug(fmt.Sprintf("Upload storage initialized at %s.", uploadStore.Root()))
-	mediaStore, err := media.NewFileStore(logger.With("log", "song.store"), config.Media.Dir)
-	if err != nil {
-		mainLogger.Error("Could not initialize media store.", tint.Err(err))
-		return fmt.Errorf("initializing media storage: %w", err)
-	}
-	mainLogger.Debug(fmt.Sprintf("Media storage initialized at %s.", mediaStore.Root()))
-	songRepo := song.NewDBRepository(logger.With("log", "song.repo"), db)
-	songSvc := song.NewService()
-	uploadRepo := upload.NewDBRepository(logger.With("log", "upload.repo"), db)
-	mediaRepo := media.NewDBRepository(logger.With("log", "media.repo"), db)
-	mediaService := media.NewService(logger.With("log", "song.service"), mediaRepo, mediaStore)
 
-	closeFn, err = setupRedis()
-	if err != nil {
+	if closeFn, err = setupRedis(); err != nil {
 		return err
 	}
 	defer closeFn()
 
-	closeFn = setupTaskQueue(redisConn)
+	closeFn = setupTaskQueue()
 	defer closeFn()
 
-	serverCtx, closeFn, err := setupTaskRunner(mediaRepo, mediaStore)
-	if err != nil {
+	closeFn = setupTaskInspector()
+	defer closeFn()
+
+	if closeFn, err = setupTaskRunner(mediaRepo, mediaStore); err != nil {
 		return err
 	}
 	defer closeFn()
 
-	schedulerCtx, closeFn, err := setupTaskScheduler()
-	if err != nil {
+	if closeFn, err = setupTaskScheduler(); err != nil {
 		return err
 	}
 	defer closeFn()
 
-	// Run a healthcheck to log potential connection problems.
-	_ = healthcheck(context.Background())
+	if closeFn, err = setupHealthCheck(); err != nil {
+		return err
+	}
+	defer closeFn()
+
+	// Run a healthcheck to log potential connection problems directly.
+	healthService.HealthCheck(context.Background())
 
 	mainLogger.Info(fmt.Sprintf("Running HTTP server on %s.", config.API.Address))
 	server := &http.Server{
 		Addr:              config.API.Address,
 		ReadHeaderTimeout: 3 * time.Second,
-		Handler:           api.NewHandler(logger, api.HealthCheckFunc(healthcheck), songRepo, songSvc, mediaService, mediaStore, uploadRepo, uploadStore, config.Debug),
+		Handler: api.NewHandler(
+			logger.With("log", "api"),
+			logger.With("log", "request"),
+			healthService,
+			songRepo,
+			songService,
+			mediaService,
+			mediaStore,
+			uploadRepo,
+			uploadStore,
+			config.Debug,
+		),
+		ErrorLog: slog.NewLogLogger(logger.With("log", "http").Handler(), config.Log.Level),
 	}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		select {
-		case sig := <-sigs:
-			mainLogger.Warn(fmt.Sprintf("Stop signal %q received. Shutting down...", sig))
-		case <-serverCtx.Done():
-			mainLogger.Warn("Fatal error in task server. Shutting down...", tint.Err(serverCtx.Err()))
-		case <-schedulerCtx.Done():
-			mainLogger.Warn("Fatal error in task scheduler. Shutting down...", tint.Err(serverCtx.Err()))
-		}
-		mainLogger.Info("Stopping HTTP server with 30 second timeout.")
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
-		err := server.Shutdown(ctx)
-		if errors.Is(err, context.DeadlineExceeded) {
-			mainLogger.Error("HTTP server did not shut down for 30 seconds. Terminating forcefully.")
-		} else if err != nil {
-			mainLogger.Error("HTTP server shutdown caused an error.", tint.Err(err))
-		}
-		err = server.Close()
-		if err != nil {
-			mainLogger.Error("Could not close HTTP server.", tint.Err(err))
-		}
-		cancel()
-	}()
+	go waitForSignal(server)
 
 	err = server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -194,57 +184,27 @@ func runServer(_ *cobra.Command, _ []string) (rErr error) {
 	return errors.New("stopped")
 }
 
-// healthcheck performs a health check on all system components.
-func healthcheck(ctx context.Context) (ret bool) {
-	redisClient := redisConn.MakeRedisClient().(redis.UniversalClient)
-	defer func() {
-		if err := redisClient.Close(); err != nil {
-			mainLogger.Error("Could not close redis ping connection.", tint.Err(err))
-			ret = false
-		}
-	}()
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		mainLogger.Error("Redis health check failed.", tint.Err(err))
-		return false
-	}
-	if taskServerHealth != nil {
-		mainLogger.Error("Task server health check failed.", tint.Err(taskServerHealth))
-		return false
-	}
-	if err := db.Ping(ctx); err != nil {
-		mainLogger.Error("Database health check failed.", tint.Err(err))
-		return false
-	}
-
-	// TODO: Rewrite migration checks using https://github.com/jackc/pgx/pull/1718
-	goose.SetBaseFS(migrations.FS)
-	gooseDB, err := goose.OpenDBWithDriver("pgx", config.DBConnection)
+// setupServices initializes the core application services.
+func setupServices() (err error) {
+	mainLogger.Info("Setting up application services.")
+	uploadStore, err = upload.NewFileStore(logger.With("log", "upload.store"), config.Uploads.Dir)
 	if err != nil {
-		logger.ErrorContext(ctx, "Could not create database migration connection.", "log", "health", tint.Err(err))
-		return false
+		mainLogger.Error("Could not initialize upload storage.", tint.Err(err))
+		return fmt.Errorf("initializing upload storage: %w", err)
 	}
-	defer func() {
-		if err := gooseDB.Close(); err != nil {
-			logger.ErrorContext(ctx, "Could not close database migration connection.", "log", "health", tint.Err(err))
-			ret = false
-		}
-	}()
-	current, err := goose.GetDBVersionContext(ctx, gooseDB)
+	mainLogger.Debug(fmt.Sprintf("Upload storage initialized at %s.", uploadStore.(*upload.FileStore).Root()))
+	mediaStore, err = media.NewFileStore(logger.With("log", "song.store"), config.Media.Dir)
 	if err != nil {
-		logger.ErrorContext(ctx, "Could not fetch current migration version.", "log", "health", tint.Err(err))
-		return false
+		mainLogger.Error("Could not initialize media store.", tint.Err(err))
+		return fmt.Errorf("initializing media storage: %w", err)
 	}
-	ms, err := goose.CollectMigrations(".", 0, goose.MaxVersion)
-	if err != nil {
-		logger.ErrorContext(ctx, "Could not collect pending migrations.", "log", "health", tint.Err(err))
-		return false
-	}
-	last, _ := ms.Last()
-	if last.Version != current {
-		logger.WarnContext(ctx, fmt.Sprintf("The database schema is at version %d. The server expects version %d. Please migrate.", current, last.Version), "log", "health")
-		// FIXME: Maybe return false if the two versions are too far apart
-	}
-	return true
+	mainLogger.Debug(fmt.Sprintf("Media storage initialized at %s.", mediaStore.(*media.FileStore).Root()))
+	songRepo = song.NewDBRepository(logger.With("log", "song.repo"), db)
+	songService = song.NewService()
+	uploadRepo = upload.NewDBRepository(logger.With("log", "upload.repo"), db)
+	mediaRepo = media.NewDBRepository(logger.With("log", "media.repo"), db)
+	mediaService = media.NewService(logger.With("log", "song.service"), mediaRepo, mediaStore)
+	return nil
 }
 
 // setupDatabase create a database connection pool.
@@ -296,14 +256,22 @@ func setupRedis() (func(), error) {
 	if clientConn.Password == "" {
 		clientConn.Password = os.Getenv("REDIS_PASSWORD")
 	}
+	userpass := clientConn.Username
+	if clientConn.Password != "" {
+		userpass += ":" + clientConn.Password
+	}
+	if userpass != "" {
+		userpass += "@"
+	}
+	logger.Debug(fmt.Sprintf("Using redis connection redis://%s%s/%d", userpass, clientConn.Addr, clientConn.DB))
 	redisConn = clientConn
 	return func() {}, nil
 }
 
 // setupTaskQueue sets up the asynq.Client for enqueuing tasks.
-func setupTaskQueue(redis asynq.RedisConnOpt) func() {
+func setupTaskQueue() func() {
 	mainLogger.Info("Setting up task queue.")
-	taskQueue = asynq.NewClient(redis)
+	taskQueue = asynq.NewClient(redisConn)
 	return func() {
 		mainLogger.Info("Closing task queue.")
 		if err := taskQueue.Close(); err != nil {
@@ -312,15 +280,27 @@ func setupTaskQueue(redis asynq.RedisConnOpt) func() {
 	}
 }
 
+// setupTaskInspector initializes an asynq.Inspector instance.
+func setupTaskInspector() func() {
+	mainLogger.Info("Starting task inspector.")
+	taskInspector = asynq.NewInspector(redisConn)
+	return func() {
+		mainLogger.Info("Stopping task inspector.")
+		if err := taskInspector.Close(); err != nil {
+			mainLogger.Error("Could not stop task inspector.", tint.Err(err))
+		}
+	}
+}
+
 // setupTaskRunner sets up the task runner that executes background tasks.
-func setupTaskRunner(mediaRepo media.Repository, mediaStore media.Store) (context.Context, func(), error) {
+func setupTaskRunner(mediaRepo media.Repository, mediaStore media.Store) (func(), error) {
 	mainLogger.Info(fmt.Sprintf("Starting task runner with %d workers.", config.TaskRunner.Workers))
-	taskRunnerLogger := internal.NewAsynqLogger(logger, "asynq.server")
 	taskRunner = asynq.NewServer(redisConn, asynq.Config{
 		Concurrency: config.TaskRunner.Workers,
 		Queues: map[string]int{
-			"default":       1,
-			media.TaskQueue: 1,
+			"default":        1,
+			task.QueueMedia:  1,
+			task.QueueUpload: 1,
 		},
 		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
 			retried, _ := asynq.GetRetryCount(ctx)
@@ -331,36 +311,30 @@ func setupTaskRunner(mediaRepo media.Repository, mediaStore media.Store) (contex
 				logger.WarnContext(ctx, "Task failed. Will be retried shortly.", "log", "asynq.server", "task", task.Type(), "retried", retried, "maxRetry", maxRetry, tint.Err(err))
 			}
 		}),
-		Logger:   taskRunnerLogger,
+		Logger:   (*internal.AsynqLogger)(logger.With("log", "asynq.server")),
 		LogLevel: internal.AsynqLogLevel(config.Log.Level),
-		HealthCheckFunc: func(err error) {
-			taskServerHealth = err
-		},
+		// We perform a health check on redis explicitly, so we do not need to use the health check of the task runner.
 	})
-	mux := asynq.NewServeMux()
-	mux.Handle(media.NewTaskHandler(mediaRepo, mediaStore))
-	if err := taskRunner.Start(mux); err != nil {
+	h := task.NewHandler(logger.With("log", "task"), mediaRepo, mediaStore)
+	if err := taskRunner.Start(h); err != nil {
 		mainLogger.Error("Could not start task runner.", tint.Err(err))
-		return nil, nil, fmt.Errorf("starting task server: %w", err)
+		return nil, fmt.Errorf("starting task server: %w", err)
 	}
-	return taskRunnerLogger.Context(), func() {
+	return func() {
 		mainLogger.Info("Stopping task runner.")
 		taskRunner.Shutdown()
 	}, nil
 }
 
 // setupTaskScheduler sets up the task scheduler that creates specific task instances for scheduled tasks.
-func setupTaskScheduler() (context.Context, func(), error) {
+func setupTaskScheduler() (func(), error) {
 	mainLogger.Info("Starting task scheduler.")
-	taskSchedulerLogger := internal.NewAsynqLogger(logger, "asynq.scheduler")
-	schedulerConfig := internal.MergePeriodicTaskConfigProviders(
-		media.NewPeriodicTaskConfigProvider(),
-	)
+	cronService = task.NewCronService()
 	scheduler, err := asynq.NewPeriodicTaskManager(asynq.PeriodicTaskManagerOpts{
-		PeriodicTaskConfigProvider: schedulerConfig,
+		PeriodicTaskConfigProvider: cronService,
 		RedisConnOpt:               redisConn,
 		SchedulerOpts: &asynq.SchedulerOpts{
-			Logger:   taskSchedulerLogger,
+			Logger:   (*internal.AsynqLogger)(logger.With("log", "asynq.scheduler")),
 			LogLevel: internal.AsynqLogLevel(config.Log.Level),
 			Location: time.Local,
 			PreEnqueueFunc: func(task *asynq.Task, opts []asynq.Option) {
@@ -368,7 +342,7 @@ func setupTaskScheduler() (context.Context, func(), error) {
 			},
 			PostEnqueueFunc: func(info *asynq.TaskInfo, err error) {
 				if err != nil {
-					logger.Error("Could not enqueue scheduled task.", "log", "asynq.scheduler", "task", info.Type, tint.Err(err))
+					logger.Error("Could not enqueue scheduled task.", "log", "asynq.scheduler", tint.Err(err))
 				}
 			},
 		},
@@ -380,10 +354,48 @@ func setupTaskScheduler() (context.Context, func(), error) {
 	}
 	if err = scheduler.Start(); err != nil {
 		mainLogger.Error("Could not start task scheduler.", tint.Err(err))
-		return nil, nil, fmt.Errorf("starting cron manager: %w", err)
+		return nil, fmt.Errorf("starting cron manager: %w", err)
 	}
-	return taskSchedulerLogger.Context(), func() {
+	return func() {
 		mainLogger.Info("Stopping task scheduler.")
 		scheduler.Shutdown()
 	}, nil
+}
+
+// setupHealthCheck initializes a health.Service.
+func setupHealthCheck() (func(), error) {
+	mainLogger.Info("Starting health check service.")
+	redisClient := redisConn.MakeRedisClient().(redis.UniversalClient)
+	healthService = &health.Service{
+		Logger:       logger.With("log", "health"),
+		DBConnection: config.DBConnection,
+		DB:           db,
+		RedisClient:  redisClient,
+	}
+	return func() {
+		mainLogger.Info("Stopping health check service.")
+		if err := redisClient.Close(); err != nil {
+			mainLogger.Error("Could not close health check redis connection.", tint.Err(err))
+		}
+	}, nil
+}
+
+// waitForSignal blocks until the program receives a SIGINT or SIGTERM signal.
+// When a signal is received, the server is closed.
+func waitForSignal(server *http.Server) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	mainLogger.Warn(fmt.Sprintf("Stop signal %q received. Shutting down...", sig))
+	mainLogger.Info("Stopping HTTP server with 30 second timeout.")
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
+	if err := server.Shutdown(ctx); errors.Is(err, context.DeadlineExceeded) {
+		mainLogger.Error("HTTP server did not shut down for 30 seconds. Terminating forcefully.")
+	} else if err != nil {
+		mainLogger.Error("HTTP server shutdown caused an error.", tint.Err(err))
+	}
+	if err := server.Close(); err != nil {
+		mainLogger.Error("Could not close HTTP server.", tint.Err(err))
+	}
+	cancel()
 }

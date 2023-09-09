@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"strings"
@@ -143,7 +144,10 @@ func dropTestingDatabase(database string) error {
 
 // migrate applies all known migrations to the specified database.
 func migrate(database string) error {
-	db, err := goose.OpenDBWithDriver("pgx", fmt.Sprintf("dbname=%s", database))
+	if err := goose.SetDialect("pgx"); err != nil {
+		return err
+	}
+	db, err := sql.Open("pgx", fmt.Sprintf("dbname=%s", database))
 	if err != nil {
 		return err
 	}

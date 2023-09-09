@@ -45,3 +45,8 @@ func (s *mockStore) Create(_ context.Context, _ mediatype.MediaType, _ uuid.UUID
 func (s *mockStore) Open(_ context.Context, _ mediatype.MediaType, _ uuid.UUID) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(s.placeholder)), nil
 }
+
+// Delete always indicates a successful delete.
+func (s *mockStore) Delete(_ context.Context, _ mediatype.MediaType, _ uuid.UUID) (bool, error) {
+	return true, nil
+}

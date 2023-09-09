@@ -36,6 +36,38 @@ func Test_fakeRepo_CreateFile(t *testing.T) {
 	}
 }
 
+func Test_fakeRepo_GetFile(t *testing.T) {
+	t.Parallel()
+
+	repo := NewFakeRepository()
+	id := uuid.New()
+	repo.(*fakeRepo).files[id] = model.File{
+		Model: model.Model{UUID: id},
+		Size:  123,
+	}
+
+	t.Run("existing", func(t *testing.T) {
+		file, err := repo.GetFile(context.TODO(), id)
+		if err != nil {
+			t.Errorf("GetFile(ctx, %q) returned an unexpected error: %s", id, err)
+			return
+		}
+		if file.Size != 123 {
+			t.Errorf("GetFile(ctx, %q) produced file.Size = %d, expected %d", id, file.Size, 123)
+		}
+	})
+
+	t.Run("missing", func(t *testing.T) {
+		id := uuid.New()
+		_, err := repo.GetFile(context.TODO(), id)
+		if err == nil {
+			t.Errorf("GetFile(ctx, %q) did not return an error, expected ErrNotFound", id)
+		} else if !errors.Is(err, core.ErrNotFound) {
+			t.Errorf("GetFile(ctx, %q) returned an unexpected error: %s, expected ErrNotFound", id, err)
+		}
+	})
+}
+
 func Test_fakeRepo_UpdateFile(t *testing.T) {
 	t.Parallel()
 
@@ -63,4 +95,33 @@ func Test_fakeRepo_UpdateFile(t *testing.T) {
 			t.Errorf("UpdateFile(ctx, &update) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})
+}
+
+func Test_fakeRepo_DeleteFile(t *testing.T) {
+	t.Parallel()
+
+	id := uuid.New()
+	expected := model.File{
+		Model: model.Model{UUID: id},
+		Size:  123,
+	}
+	repo := NewFakeRepository()
+	repo.(*fakeRepo).files[id] = expected
+
+	ok, err := repo.DeleteFile(context.TODO(), expected.UUID)
+	if err != nil {
+		t.Errorf("DeleteFile(ctx, %q) returned an unexpected error: %s", expected.UUID, err)
+	}
+	if !ok {
+		t.Errorf("DeleteFile(ctx, %q) returned ok = %t, expected %t", expected.UUID, ok, true)
+	}
+
+	// repeat delete to test idempotency
+	ok, err = repo.DeleteFile(context.TODO(), expected.UUID)
+	if err != nil {
+		t.Errorf("DeleteFile(ctx, %q) [2nd time] returned an unexpected error: %s", expected.UUID, err)
+	}
+	if ok {
+		t.Errorf("DeleteFile(ctx, %q) [2nd time] returned ok = %t, expected %t", expected.UUID, ok, false)
+	}
 }

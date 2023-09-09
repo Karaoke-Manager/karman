@@ -69,6 +69,7 @@ type songRow struct {
 	AudioCreatedAt pgtype.Timestamp     `db:"audio_created_at"`
 	AudioUpdatedAt pgtype.Timestamp     `db:"audio_updated_at"`
 	AudioDeletedAt pgtype.Timestamp     `db:"audio_deleted_at"`
+	AudioPath      string               `db:"audio_path"`
 	AudioType      *mediatype.MediaType `db:"audio_type"`
 	AudioSize      pgtype.Int8          `db:"audio_size"`
 	AudioChecksum  []byte               `db:"audio_checksum"`
@@ -78,6 +79,7 @@ type songRow struct {
 	CoverCreatedAt pgtype.Timestamp     `db:"cover_created_at"`
 	CoverUpdatedAt pgtype.Timestamp     `db:"cover_updated_at"`
 	CoverDeletedAt pgtype.Timestamp     `db:"cover_deleted_at"`
+	CoverPath      string               `db:"cover_path"`
 	CoverType      *mediatype.MediaType `db:"cover_type"`
 	CoverSize      pgtype.Int8          `db:"cover_size"`
 	CoverChecksum  []byte               `db:"cover_checksum"`
@@ -88,6 +90,7 @@ type songRow struct {
 	VideoCreatedAt pgtype.Timestamp     `db:"video_created_at"`
 	VideoUpdatedAt pgtype.Timestamp     `db:"video_updated_at"`
 	VideoDeletedAt pgtype.Timestamp     `db:"video_deleted_at"`
+	VideoPath      string               `db:"video_path"`
 	VideoType      *mediatype.MediaType `db:"video_type"`
 	VideoSize      pgtype.Int8          `db:"video_size"`
 	VideoChecksum  []byte               `db:"video_checksum"`
@@ -99,6 +102,7 @@ type songRow struct {
 	BackgroundCreatedAt pgtype.Timestamp     `db:"bg_created_at"`
 	BackgroundUpdatedAt pgtype.Timestamp     `db:"bg_updated_at"`
 	BackgroundDeletedAt pgtype.Timestamp     `db:"bg_deleted_at"`
+	BackgroundPath      string               `db:"bg_path"`
 	BackgroundType      *mediatype.MediaType `db:"bg_type"`
 	BackgroundSize      pgtype.Int8          `db:"bg_size"`
 	BackgroundChecksum  []byte               `db:"bg_checksum"`
@@ -149,10 +153,11 @@ func (r songRow) toModel() model.Song {
 				CreatedAt: r.AudioCreatedAt.Time,
 				UpdatedAt: r.AudioUpdatedAt.Time,
 			},
-			Type:     dbutil.ZeroNil(r.AudioType),
-			Size:     r.AudioSize.Int64,
-			Checksum: r.AudioChecksum,
-			Duration: dbutil.ZeroNil(r.AudioDuration),
+			UploadPath: r.AudioPath,
+			Type:       dbutil.ZeroNil(r.AudioType),
+			Size:       r.AudioSize.Int64,
+			Checksum:   r.AudioChecksum,
+			Duration:   dbutil.ZeroNil(r.AudioDuration),
 		}
 		if r.AudioDeletedAt.Valid {
 			song.AudioFile.DeletedAt = r.AudioDeletedAt.Time
@@ -165,11 +170,12 @@ func (r songRow) toModel() model.Song {
 				CreatedAt: r.CoverCreatedAt.Time,
 				UpdatedAt: r.CoverUpdatedAt.Time,
 			},
-			Type:     dbutil.ZeroNil(r.CoverType),
-			Size:     r.CoverSize.Int64,
-			Checksum: r.CoverChecksum,
-			Width:    int(r.CoverWidth.Int32),
-			Height:   int(r.CoverHeight.Int32),
+			UploadPath: r.CoverPath,
+			Type:       dbutil.ZeroNil(r.CoverType),
+			Size:       r.CoverSize.Int64,
+			Checksum:   r.CoverChecksum,
+			Width:      int(r.CoverWidth.Int32),
+			Height:     int(r.CoverHeight.Int32),
 		}
 		if r.CoverDeletedAt.Valid {
 			song.CoverFile.DeletedAt = r.CoverDeletedAt.Time
@@ -182,12 +188,13 @@ func (r songRow) toModel() model.Song {
 				CreatedAt: r.VideoCreatedAt.Time,
 				UpdatedAt: r.VideoUpdatedAt.Time,
 			},
-			Type:     dbutil.ZeroNil(r.VideoType),
-			Size:     r.VideoSize.Int64,
-			Checksum: r.VideoChecksum,
-			Duration: dbutil.ZeroNil(r.VideoDuration),
-			Width:    int(r.VideoWidth.Int32),
-			Height:   int(r.VideoHeight.Int32),
+			UploadPath: r.VideoPath,
+			Type:       dbutil.ZeroNil(r.VideoType),
+			Size:       r.VideoSize.Int64,
+			Checksum:   r.VideoChecksum,
+			Duration:   dbutil.ZeroNil(r.VideoDuration),
+			Width:      int(r.VideoWidth.Int32),
+			Height:     int(r.VideoHeight.Int32),
 		}
 		if r.VideoDeletedAt.Valid {
 			song.VideoFile.DeletedAt = r.VideoDeletedAt.Time
@@ -200,11 +207,12 @@ func (r songRow) toModel() model.Song {
 				CreatedAt: r.BackgroundCreatedAt.Time,
 				UpdatedAt: r.BackgroundUpdatedAt.Time,
 			},
-			Type:     dbutil.ZeroNil(r.BackgroundType),
-			Size:     r.BackgroundSize.Int64,
-			Checksum: r.BackgroundChecksum,
-			Width:    int(r.BackgroundWidth.Int32),
-			Height:   int(r.BackgroundHeight.Int32),
+			UploadPath: r.BackgroundPath,
+			Type:       dbutil.ZeroNil(r.BackgroundType),
+			Size:       r.BackgroundSize.Int64,
+			Checksum:   r.BackgroundChecksum,
+			Width:      int(r.BackgroundWidth.Int32),
+			Height:     int(r.BackgroundHeight.Int32),
 		}
 		if r.BackgroundDeletedAt.Valid {
 			song.BackgroundFile.DeletedAt = r.BackgroundDeletedAt.Time
@@ -266,10 +274,14 @@ func (r *dbRepo) GetSong(ctx context.Context, id uuid.UUID) (model.Song, error) 
     s.duet_singer1, s.duet_singer2, s.notes_p1, s.notes_p2,
     
     a.uuid AS audio_uuid, a.created_at AS audio_created_at, a.updated_at AS audio_updated_at, a.deleted_at AS audio_deleted_at, a.type AS audio_type, a.size AS audio_size, a.checksum AS audio_checksum, a.duration AS audio_duration,
+    CASE WHEN a.upload_id IS NULL THEN '' ELSE a.path END AS audio_path,
     c.uuid AS cover_uuid, c.created_at AS cover_created_at, c.updated_at AS cover_updated_at, c.deleted_at AS cover_deleted_at, c.type AS cover_type, c.size AS cover_size, c.checksum AS cover_checksum, c.width cover_width, c.height AS cover_height,
+    CASE WHEN c.upload_id IS NULL THEN '' ELSE c.path END AS cover_path,
     v.uuid AS video_uuid, v.created_at AS video_created_at, v.updated_at AS video_updated_at, v.deleted_at AS video_deleted_at, v.type AS video_type, v.size AS video_size, v.checksum AS video_checksum, v.duration AS video_duration, v.width AS video_width, v.height AS video_height,
-    b.uuid AS bg_uuid, b.created_at AS bg_created_at, b.updated_at AS bg_updated_at, b.deleted_at AS bg_deleted_at, b.type AS bg_type, b.size AS bg_size, b.checksum AS bg_checksum, b.width AS bg_width, b.height AS bg_height
-    FROM songs AS s
+    CASE WHEN v.upload_id IS NULL THEN '' ELSE v.path END AS video_path,
+    b.uuid AS bg_uuid, b.created_at AS bg_created_at, b.updated_at AS bg_updated_at, b.deleted_at AS bg_deleted_at, b.type AS bg_type, b.size AS bg_size, b.checksum AS bg_checksum, b.width AS bg_width, b.height AS bg_height,
+    CASE WHEN b.upload_id IS NULL THEN '' ELSE b.path END AS bg_path
+	FROM songs AS s
         LEFT OUTER JOIN files AS a ON s.audio_file_id = a.id
     	LEFT OUTER JOIN files AS c ON s.cover_file_id = c.id
     	LEFT OUTER JOIN files AS v ON s.video_file_id = v.id
@@ -302,9 +314,13 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
     s.notes_p1, s.notes_p2, s.duet_singer1, s.duet_singer2,
     
     a.uuid AS audio_uuid, a.created_at AS audio_created_at, a.updated_at AS audio_updated_at, a.deleted_at AS audio_deleted_at, a.type AS audio_type, a.size AS audio_size, a.checksum AS audio_checksum, a.duration AS audio_duration,
+    CASE WHEN a.upload_id IS NULL THEN '' ELSE a.path END AS audio_path,
     c.uuid AS cover_uuid, c.created_at AS cover_created_at, c.updated_at AS cover_updated_at, c.deleted_at AS cover_deleted_at, c.type AS cover_type, c.size AS cover_size, c.checksum AS cover_checksum, c.width cover_width, c.height AS cover_height,
+    CASE WHEN c.upload_id IS NULL THEN '' ELSE c.path END AS cover_path,
     v.uuid AS video_uuid, v.created_at AS video_created_at, v.updated_at AS video_updated_at, v.deleted_at AS video_deleted_at, v.type AS video_type, v.size AS video_size, v.checksum AS video_checksum, v.duration AS video_duration, v.width AS video_width, v.height AS video_height,
-    b.uuid AS bg_uuid, b.created_at AS bg_created_at, b.updated_at AS bg_updated_at, b.deleted_at AS bg_deleted_at, b.type AS bg_type, b.size AS bg_size, b.checksum AS bg_checksum, b.width AS bg_width, b.height AS bg_height
+    CASE WHEN v.upload_id IS NULL THEN '' ELSE v.path END AS video_path,
+    b.uuid AS bg_uuid, b.created_at AS bg_created_at, b.updated_at AS bg_updated_at, b.deleted_at AS bg_deleted_at, b.type AS bg_type, b.size AS bg_size, b.checksum AS bg_checksum, b.width AS bg_width, b.height AS bg_height,
+    CASE WHEN b.upload_id IS NULL THEN '' ELSE b.path END AS bg_path
     FROM songs AS s
         LEFT OUTER JOIN files AS a ON s.audio_file_id = a.id
     	LEFT OUTER JOIN files AS c ON s.cover_file_id = c.id

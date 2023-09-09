@@ -89,3 +89,27 @@ func VideoFile(t *testing.T, db pgxutil.DB) model.File {
 	}
 	return file
 }
+
+// FileInUpload inserts an upload and a model.File into the database.
+// The file belongs to the upload.
+// The file is only created in the database, no actual file contents are created.
+func FileInUpload(t *testing.T, db pgxutil.DB) model.File {
+	id, err := insertUpload(db, &model.Upload{State: model.UploadStateOpen}, nil)
+	if err != nil {
+		t.Fatalf("testdata.FileInUpload() could not insert upload into the database: %s", err)
+	}
+	file := model.File{
+		UploadPath: "/foo/bar.mp3",
+		Type:       mediatype.AudioMPEG,
+		Size:       92773,
+		Duration:   4 * time.Minute,
+	}
+	_, err = insertFile(db, &file, map[string]any{
+		"upload_id": id,
+		"path":      file.UploadPath,
+	})
+	if err != nil {
+		t.Fatalf("testdata.FileInUpload() could not insert file into the database: %s", err)
+	}
+	return file
+}

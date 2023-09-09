@@ -48,7 +48,7 @@ func TestService_GetUpload(t *testing.T) {
 			t.Errorf("GetUpload(ctx, %q) did not return an error, expected ErrNotFound", id)
 		}
 		if !errors.Is(err, core.ErrNotFound) {
-			t.Errorf("GetUpload(ctx, %q) returned an unexpected error: %s", id, err)
+			t.Errorf("GetUpload(ctx, %q) returned an unexpected error: %s, expected ErrNotFound", id, err)
 		}
 	})
 

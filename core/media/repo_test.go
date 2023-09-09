@@ -62,6 +62,59 @@ func Test_dbRepo_CreateFile(t *testing.T) {
 	})
 }
 
+func Test_dbRepo_GetFile(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+
+	t.Run("regular file", func(t *testing.T) {
+		expected := testdata.ImageFile(t, db)
+		file, err := repo.GetFile(context.TODO(), expected.UUID)
+		if err != nil {
+			t.Errorf("GetFile(ctx, %q) returned an unexpected error: %s", expected.UUID, err)
+			return
+		}
+		if !file.Type.Equals(expected.Type) {
+			t.Errorf("GetFile(ctx, %q) produced file.Type = %q, expected %q", expected.UUID, file.Type, expected.Type)
+		}
+		if file.Size != expected.Size {
+			t.Errorf("GetFile(ctx, %q) produced file.Size = %d, expected %d", expected.UUID, file.Size, expected.UUID)
+		}
+		if file.InUpload() {
+			t.Errorf("GetFile(ctx, %q) produced file.InUpload() = true, expected false", expected.UUID)
+		}
+	})
+
+	t.Run("upload file", func(t *testing.T) {
+		expected := testdata.FileInUpload(t, db)
+		file, err := repo.GetFile(context.TODO(), expected.UUID)
+		if err != nil {
+			t.Errorf("GetFile(ctx, %q) returned an unexpected error: %s", expected.UUID, err)
+			return
+		}
+		if !file.Type.Equals(expected.Type) {
+			t.Errorf("GetFile(ctx, %q) produced file.Type = %q, expected %q", expected.UUID, file.Type, expected.Type)
+		}
+		if file.Size != expected.Size {
+			t.Errorf("GetFile(ctx, %q) produced file.Size = %d, expected %d", expected.UUID, file.Size, expected.UUID)
+		}
+		if !file.InUpload() {
+			t.Errorf("GetFile(ctx, %q) produced file.InUpload() = %t, expected true", expected.UUID, file.InUpload())
+		}
+	})
+
+	t.Run("missing", func(t *testing.T) {
+		id := uuid.New()
+		_, err := repo.GetFile(context.TODO(), id)
+		if err == nil {
+			t.Errorf("GetFile(ctx, %q) did not return an error, expected ErrNotFound", id)
+		} else if !errors.Is(err, core.ErrNotFound) {
+			t.Errorf("GetFile(ctx, %q) returned an unexpected error: %s, expected ErrNotFound", id, err)
+		}
+	})
+}
+
 func Test_dbRepo_UpdateFile(t *testing.T) {
 	t.Parallel()
 
@@ -93,5 +146,51 @@ func Test_dbRepo_UpdateFile(t *testing.T) {
 			t.Errorf("UpdateFile(ctx, &file) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})
+}
 
+func Test_dbRepo_DeleteFile(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	file := testdata.VideoFile(t, db)
+
+	ok, err := repo.DeleteFile(context.TODO(), file.UUID)
+	if err != nil {
+		t.Errorf("DeleteFile(ctx, %q) returned an unexpected error: %s", file.UUID, err)
+		return
+	}
+	if !ok {
+		t.Errorf("DeleteFile(ctx, %q) = %t, _, expected %t", file.UUID, ok, true)
+	}
+	// repeat delete to test idempotency
+	ok, err = repo.DeleteFile(context.TODO(), file.UUID)
+	if err != nil {
+		t.Errorf("DeleteFile(ctx, %q) [2nd time] returned an unexpected error: %s", file.UUID, err)
+		return
+	}
+	if ok {
+		t.Errorf("DeleteFile(ctx, %q) [2nd time] = %t, _, expected %t", file.UUID, ok, false)
+	}
+}
+
+func Test_dbRepo_FindOrphanedFiles(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	expected := testdata.ImageFile(t, db)
+	testdata.SongWithAudio(t, db)
+
+	files, err := repo.FindOrphanedFiles(context.TODO(), -1)
+	if err != nil {
+		t.Errorf("FindOrphanedFiles(ctx, -1) returned an unexpected error: %s", err)
+	}
+	if len(files) != 1 {
+		t.Errorf("FindOrphanedFiles(ctx, -1) returned %d files, expected %d", len(files), 1)
+		return
+	}
+	if files[0].UUID != expected.UUID {
+		t.Errorf("FindOrphanedFiles(ctx, -1) returned file with UUID = %s, expected %s", files[0].UUID, expected.UUID)
+	}
 }

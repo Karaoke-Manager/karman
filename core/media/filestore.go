@@ -2,6 +2,7 @@ package media
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -55,11 +56,16 @@ func (s *FileStore) Root() string {
 	return s.root
 }
 
+// filePath returns the path to the file with the specified UUID.
+func (s *FileStore) filePath(id uuid.UUID) string {
+	idStr := id.String()
+	return filepath.Join(s.root, idStr[:2], idStr)
+}
+
 // Create opens a writer for file.
 // Any necessary intermediate directories are created before this method returns.
 func (s *FileStore) Create(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.WriteCloser, error) {
-	idStr := id.String()
-	path := filepath.Join(s.root, idStr[:2], idStr)
+	path := s.filePath(id)
 	if err := os.MkdirAll(filepath.Dir(path), s.DirMode); err != nil {
 		s.logger.ErrorContext(ctx, "Could not create media file.", "uuid", id, tint.Err(err))
 		return nil, err
@@ -69,12 +75,25 @@ func (s *FileStore) Create(ctx context.Context, _ mediatype.MediaType, id uuid.U
 
 // Open opens a reader for file.
 func (s *FileStore) Open(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (io.ReadCloser, error) {
-	idStr := id.String()
-	path := filepath.Join(s.root, idStr[:2], idStr)
+	path := s.filePath(id)
 	r, err := os.Open(path)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "Could not open media file.", "uuid", id, tint.Err(err))
 		return r, err
 	}
 	return r, nil
+}
+
+// Delete deletes the file.
+func (s *FileStore) Delete(ctx context.Context, _ mediatype.MediaType, id uuid.UUID) (bool, error) {
+	path := s.filePath(id)
+	err := os.Remove(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		s.logger.ErrorContext(ctx, "Could not delete media file.", "uuid", id, tint.Err(err))
+		return false, err
+	}
+	return true, nil
 }

@@ -15,9 +15,11 @@ import (
 	"time"
 
 	"github.com/abema/go-mp4" // MP4 support
+	"github.com/google/uuid"
 	"github.com/lmittmann/tint"
 	"github.com/tcolgate/mp3" // MP3 support
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
@@ -185,4 +187,18 @@ func (s *service) analyzeVideo(ctx context.Context, r io.Reader, mediaType media
 			}
 		}
 	}
+}
+
+// DeleteFile deletes the file with the specified UUID from the underlying store.
+// If the deletion is successful the file is also deleted from the database.
+func (s *service) DeleteFile(ctx context.Context, id uuid.UUID) error {
+	file, err := s.repo.GetFile(ctx, id)
+	if err != nil && !errors.Is(err, core.ErrNotFound) {
+		return err
+	}
+	if _, err = s.store.Delete(ctx, file.Type, id); err != nil {
+		return err
+	}
+	_, err = s.repo.DeleteFile(ctx, file.UUID)
+	return err
 }

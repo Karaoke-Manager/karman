@@ -360,7 +360,7 @@ paths:
                   - type: object
                     title: URL Not Whitelisted
                     example:
-                      type: "codello.dev/karman/problems/forbidden-password-reset-url"
+                      type: "tag:codello.dev,2020:karman/problems:forbidden-password-reset-url"
                       title: "Password Reset URL not Allowed"
                       status: 403
                       detail: "The requested password reset URL has not been whitelisted on the server."
@@ -461,7 +461,7 @@ paths:
             application/problem+json:
               schema:
                 example:
-                  type: "codello.dev/karman/problems/email-already-in-use"
+                  type: "tag:codello.dev,2020:karman/problems:email-already-in-use"
                   title: "E-Mail Address Already In Use"
                   status: 409
                 allOf:
@@ -549,7 +549,7 @@ components:
           schema:
             title: Username Not Available
             example:
-              type: "codello.dev/karman/problems/username-not-available"
+              type: "tag:codello.dev,2020:karman/problems:username-not-available"
               title: "Username Not Available"
               status: 409
               detail: "This username is already taken."
@@ -574,7 +574,7 @@ components:
           schema:
             title: User Not Found
             example:
-              type: "codello.dev/karman/problems/user-not-found"
+              type: "tag:codello.dev,2020:karman/problems:user-not-found"
               title: "User Not Found"
               status: 404
               username: "maro"

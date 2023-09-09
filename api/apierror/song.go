@@ -12,13 +12,13 @@ import (
 const (
 	// TypeInvalidTXT indicates that the UltraStar txt data could not be parsed.
 	// It is usually accompanied by a line number that caused the error.
-	TypeInvalidTXT = ProblemTypeDomain + "/invalid-ultrastar-txt"
+	TypeInvalidTXT = ProblemTypeDomain + "invalid-ultrastar-txt"
 
 	// TypeUploadSongReadonly indicates that the song cannot be modified because it belongs to an upload.
-	TypeUploadSongReadonly = ProblemTypeDomain + "/upload-song-readonly"
+	TypeUploadSongReadonly = ProblemTypeDomain + "upload-song-readonly"
 
 	// TypeMediaFileNotFound indicates that the requested media file was not found.
-	TypeMediaFileNotFound = ProblemTypeDomain + "/song-media-not-found"
+	TypeMediaFileNotFound = ProblemTypeDomain + "song-media-not-found"
 )
 
 // InvalidUltraStarTXT generates an error indicating that the UltraStar data in the request could not be parsed.

@@ -322,7 +322,7 @@ components:
     FileNotFoundError:
       title: Media File Not Found
       example:
-        type: "codello.dev/karman/problems/song-media-not-found"
+        type: "tag:codello.dev,2020:karman/problems:song-media-not-found"
         title: "Media File Not Found"
         status: 404
         detail: "The song has no cover."

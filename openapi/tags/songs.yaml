@@ -763,7 +763,7 @@ components:
     SongNotFoundError:
       title: Song Not Found
       example:
-        type: "codello.dev/karman/problems/song-not-found"
+        type: "tag:codello.dev,2020:karman/problems:song-not-found"
         title: "Song Not Found"
         status: 404
         uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
@@ -784,7 +784,7 @@ components:
     InvalidTXTError:
       title: Invalid TXT
       example:
-        type: "codello.dev/karman/problems/invalid-ultrastar-txt"
+        type: "tag:codello.dev,2020:karman/problems:invalid-ultrastar-txt"
         title: "Invalid UltraStar TXT"
         status: 400
         detail: "Invalid line break."
@@ -821,7 +821,7 @@ components:
           schema:
             title: Upload Cannot Be Modified
             example:
-              type: "codello.dev/karman/problems/upload-song-readonly"
+              type: "tag:codello.dev,2020:karman/problems:upload-song-readonly"
               title: "A Song in an Upload Cannot Be Modified"
               status: 409
               detail: "The song must be imported before it can be modified."

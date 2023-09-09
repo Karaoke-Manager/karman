@@ -651,7 +651,7 @@ components:
     UploadNotFoundError:
       title: Upload Not Found
       example:
-        type: "codello.dev/karman/problems/upload-not-found"
+        type: "tag:codello.dev,2020:karman/problems:upload-not-found"
         title: "Upload Not Found"
         status: 404
         uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
@@ -672,7 +672,7 @@ components:
     UploadStateError:
       title: Invalid Upload State
       example:
-        type: "codello.dev/karman/problems/upload-state"
+        type: "tag:codello.dev,2020:karman/problems:upload-state"
         title: "Invalid Upload State"
         detail: "This action cannot be performed in the current upload state."
         status: 409
@@ -712,7 +712,7 @@ components:
               - $ref: "#/components/schemas/UploadNotFoundError"
               - title: File Not Found
                 example:
-                  type: "codello.dev/karman/problems/file-not-found"
+                  type: "tag:codello.dev,2020:karman/problems:file-not-found"
                   title: "File Not Found"
                   status: 404
                   uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"
@@ -752,7 +752,7 @@ components:
               - $ref: "../common/problem-details.yaml#/components/schemas/InvalidUUIDError"
               - title: Invalid Path
                 example:
-                  type: "codello.dev/karman/problems/invalid-upload-path"
+                  type: "tag:codello.dev,2020:karman/problems:invalid-upload-path"
                   title: "Invalid Path"
                   status: 400
                   uuid: "F0481266-E081-4E28-BB20-4D6221C90C2F"

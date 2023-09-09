@@ -134,13 +134,23 @@ func TestHandler_Update(t *testing.T) {
 	t.Run("415 Unsupported Media Type", test.InvalidContentType(h, http.MethodPatch, url, "text/plain", "application/json"))
 	t.Run("404 Not Found", test.HTTPError(h, http.MethodPatch, fmt.Sprintf("/v1/songs/%s", uuid.New()), http.StatusNotFound))
 	t.Run("409 Conflict", testSongConflict(h, http.MethodPatch, "/v1/songs/%s", songWithUpload.UUID))
-	t.Run("422 Unprocessable Entity", func(t *testing.T) {
+	t.Run("422 Unprocessable Entity (Medley)", func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPatch, url, strings.NewReader(`
 			{"title": "Foobar", "medley": {"mode": "manual"}}
 		`))
 		r.Header.Set("Content-Type", "application/json")
 		resp := test.DoRequest(h, r) //nolint:bodyclose
-		test.AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, "", nil)
+		test.AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, apierror.TypeValidationError, nil)
+	})
+	t.Run("422 Unprocessable Entity (Datatype)", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPatch, url, strings.NewReader(`
+			{"title": "Foobar", "gap": "51"}
+		`))
+		r.Header.Set("Content-Type", "application/json")
+		resp := test.DoRequest(h, r) //nolint:bodyclose
+		test.AssertValidationError(t, resp, map[string]string{
+			"/gap": "expected type Duration, got string",
+		})
 	})
 }
 

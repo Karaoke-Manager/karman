@@ -50,6 +50,26 @@ func AssertProblemDetails(t *testing.T, resp *http.Response, code int, errType s
 	}
 }
 
+// AssertValidationError validates that resp encodes a problem details instance, indicating a 422 Unprocessable Entity error.
+// It is validated that the error contains the specified error messages.
+// errors maps from expected JSON pointers to their error messages.
+func AssertValidationError(t *testing.T, resp *http.Response, errors map[string]string) {
+	if errors == nil {
+		AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, apierror.TypeValidationError, nil)
+	} else {
+		expectedErrors := make([]any, 0, len(errors))
+		for pointer, message := range errors {
+			expectedErrors = append(expectedErrors, map[string]any{
+				"pointer": pointer,
+				"message": message,
+			})
+		}
+		AssertProblemDetails(t, resp, http.StatusUnprocessableEntity, apierror.TypeValidationError, map[string]any{
+			"errors": expectedErrors,
+		})
+	}
+}
+
 // MissingContentType returns a test that runs a request against h without the Content-Type header
 // and validates that the response indicates as much.
 // The variadic argument lets you specify the expected allowed content types for this endpoint.

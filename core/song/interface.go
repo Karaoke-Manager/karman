@@ -16,7 +16,7 @@ type Repository interface {
 	CreateSong(ctx context.Context, song *model.Song) error
 
 	// GetSong fetches the song with the specified UUID.
-	// If no such song exists, service.ErrNotFound will be returned.
+	// If no such song exists, core.ErrNotFound will be returned.
 	GetSong(ctx context.Context, id uuid.UUID) (model.Song, error)
 
 	// FindSongs returns all songs matching the specified query.
@@ -27,7 +27,7 @@ type Repository interface {
 	FindSongs(ctx context.Context, limit int, offset int64) ([]model.Song, int64, error)
 
 	// UpdateSong saves Updates for the specified song.
-	// The song's UUID must already exist in the database, otherwise e service.ErrNotFound
+	// The song's UUID must already exist in the database, otherwise e core.ErrNotFound
 	// will be returned.
 	UpdateSong(ctx context.Context, song *model.Song) error
 

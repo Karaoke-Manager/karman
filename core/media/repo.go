@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgxutil"
 	"github.com/lmittmann/tint"
 
+	"github.com/Karaoke-Manager/karman/core/internal/dbutil"
 	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/service/dbutil"
 )
 
 // dbRepo is a Repository implementation backed by a PostgreSQL database.

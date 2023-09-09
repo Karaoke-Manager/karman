@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
-	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
@@ -88,7 +88,7 @@ func Test_dbRepo_GetSong(t *testing.T) {
 		_, err := repo.GetSong(context.TODO(), id)
 		if err == nil {
 			t.Errorf("GetSong(ctx, %q) did not return an error, expected ErrNotFound", id)
-		} else if !errors.Is(err, svc.ErrNotFound) {
+		} else if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("GetSong(ctx, %q) returned an unexpected error: %s", id, err)
 		}
 	})
@@ -140,7 +140,7 @@ func Test_dbRepo_UpdateSong(t *testing.T) {
 		song := model.Song{}
 		song.UUID = uuid.New()
 		err := repo.UpdateSong(context.TODO(), &song)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("UpdateSong(ctx, &song) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})

@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
-	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
@@ -47,7 +47,7 @@ func TestService_GetUpload(t *testing.T) {
 		if err == nil {
 			t.Errorf("GetUpload(ctx, %q) did not return an error, expected ErrNotFound", id)
 		}
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("GetUpload(ctx, %q) returned an unexpected error: %s", id, err)
 		}
 	})
@@ -127,7 +127,7 @@ func TestService_DeleteUpload(t *testing.T) {
 		}
 
 		_, err = repo.GetUpload(context.TODO(), upload.UUID)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("GetUpload(ctx, %q) returned an upload after it was deleted", upload.UUID)
 		}
 	})

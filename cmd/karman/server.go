@@ -23,10 +23,10 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api"
 	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
+	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/migrations"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
-	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 // serverCmd implements the "server" command.

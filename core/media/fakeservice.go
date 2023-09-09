@@ -10,21 +10,21 @@ import (
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
-// FakeService is a Service implementation that only uses dummy values for file contents.
+// fakeService is a Service implementation that only uses dummy values for file contents.
 // This type is intended for testing purposes.
-type FakeService struct {
+type fakeService struct {
 	repo Repository
 }
 
-// NewFakeService creates a new FakeService instance and returns it.
+// NewFakeService creates a new fakeService instance and returns it.
 // The placeholder will be the content of all "files".
 func NewFakeService(repo Repository) Service {
-	return &FakeService{repo}
+	return &fakeService{repo}
 }
 
 // StoreFile fully reads r and returns a file with dummy values.
 // file.Type will be set to mediaType.
-func (f *FakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (model.File, error) {
+func (f *fakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (model.File, error) {
 	h := sha256.New()
 	n, err := io.Copy(h, r)
 	if err != nil {

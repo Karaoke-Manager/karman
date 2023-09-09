@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/net/webdav"
 
-	"github.com/Karaoke-Manager/karman/service/media"
-	songsvc "github.com/Karaoke-Manager/karman/service/song"
+	"github.com/Karaoke-Manager/karman/core/media"
+	songsvc "github.com/Karaoke-Manager/karman/core/song"
 )
 
 // rootNode represents the root directory of a flatFS.

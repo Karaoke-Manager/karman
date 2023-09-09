@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
-	svc "github.com/Karaoke-Manager/karman/service"
 )
 
 func Test_fakeRepo_CreateSong(t *testing.T) {
@@ -55,7 +55,7 @@ func Test_fakeRepo_GetSong(t *testing.T) {
 	t.Run("missing", func(t *testing.T) {
 		id := uuid.New()
 		_, err := repo.GetSong(context.TODO(), id)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("GetSong(ctx, %q) produced an unexpected error: %s, expected ErrNotFound", id, err)
 		}
 	})
@@ -147,7 +147,7 @@ func Test_fakeRepo_UpdateSong(t *testing.T) {
 			Model: model.Model{UUID: uuid.New()},
 		}
 		err := repo.UpdateSong(context.TODO(), &update)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("UpdateSong(ctx, &update) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})

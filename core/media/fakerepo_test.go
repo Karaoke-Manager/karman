@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	svc "github.com/Karaoke-Manager/karman/service"
 )
 
 func Test_fakeRepo_CreateFile(t *testing.T) {
@@ -59,7 +59,7 @@ func Test_fakeRepo_UpdateFile(t *testing.T) {
 			Model: model.Model{UUID: uuid.New()},
 		}
 		err := repo.UpdateFile(context.TODO(), &update)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("UpdateFile(ctx, &update) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})

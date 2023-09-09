@@ -14,10 +14,10 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/test"
 )
 

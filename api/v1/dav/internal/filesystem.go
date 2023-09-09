@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/net/webdav"
 
+	"github.com/Karaoke-Manager/karman/core"
+	"github.com/Karaoke-Manager/karman/core/media"
+	songsvc "github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/service"
-	"github.com/Karaoke-Manager/karman/service/media"
-	songsvc "github.com/Karaoke-Manager/karman/service/song"
 )
 
 // flatFS implements a [webdav.FileSystem] that serves songs in a flat hierarchy:
@@ -76,7 +76,7 @@ func (s *flatFS) find(ctx context.Context, name string) (node, error) {
 	}
 
 	song, err := s.songRepo.GetSong(ctx, id)
-	if errors.Is(err, service.ErrNotFound) {
+	if errors.Is(err, core.ErrNotFound) {
 		return nil, fs.ErrNotExist
 	} else if err != nil {
 		return nil, err

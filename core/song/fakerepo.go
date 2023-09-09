@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
-	svc "github.com/Karaoke-Manager/karman/service"
 )
 
 // fakeRepo is a simple implementation of Repository that can be used for testing.
@@ -36,7 +36,7 @@ func (r *fakeRepo) CreateSong(_ context.Context, song *model.Song) error {
 func (r *fakeRepo) GetSong(_ context.Context, id uuid.UUID) (model.Song, error) {
 	song, ok := r.songs[id]
 	if !ok {
-		return model.Song{}, svc.ErrNotFound
+		return model.Song{}, core.ErrNotFound
 	}
 	return song, nil
 }
@@ -73,7 +73,7 @@ func (r *fakeRepo) DeleteSong(_ context.Context, id uuid.UUID) (bool, error) {
 func (r *fakeRepo) UpdateSong(_ context.Context, song *model.Song) error {
 	_, ok := r.songs[song.UUID]
 	if !ok {
-		return svc.ErrNotFound
+		return core.ErrNotFound
 	}
 	song.UpdatedAt = time.Now()
 	r.songs[song.UUID] = *song

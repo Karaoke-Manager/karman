@@ -11,11 +11,11 @@ import (
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	v1 "github.com/Karaoke-Manager/karman/api/v1"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
+	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json" // JSON encoding for responses
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
-	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 // HealthChecker is an interface that can provide information about the system health.

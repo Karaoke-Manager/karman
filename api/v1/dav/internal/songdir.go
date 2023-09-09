@@ -10,9 +10,9 @@ import (
 
 	"golang.org/x/net/webdav"
 
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 )
 
 // songNode represents the directory for a song.

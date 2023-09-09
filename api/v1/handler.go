@@ -9,9 +9,9 @@ import (
 	"github.com/Karaoke-Manager/karman/api/v1/dav"
 	"github.com/Karaoke-Manager/karman/api/v1/songs"
 	"github.com/Karaoke-Manager/karman/api/v1/uploads"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
-	"github.com/Karaoke-Manager/karman/service/upload"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
+	"github.com/Karaoke-Manager/karman/core/upload"
 )
 
 // Handler implements the /v1 API namespace.

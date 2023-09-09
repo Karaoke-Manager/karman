@@ -17,9 +17,9 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/schema"
+	"github.com/Karaoke-Manager/karman/core/media"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
-	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )

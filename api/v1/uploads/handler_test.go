@@ -17,9 +17,9 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json"
-	"github.com/Karaoke-Manager/karman/service/upload"
 	"github.com/Karaoke-Manager/karman/test"
 )
 

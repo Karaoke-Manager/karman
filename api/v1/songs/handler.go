@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 )
 
 // Handler implements the /v1/songs endpoints.

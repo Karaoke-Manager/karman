@@ -8,8 +8,8 @@ import (
 	"golang.org/x/net/webdav"
 
 	"github.com/Karaoke-Manager/karman/api/v1/dav/internal"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
 )
 
 func init() {

@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
-	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
@@ -89,7 +89,7 @@ func Test_dbRepo_UpdateFile(t *testing.T) {
 		file := model.File{}
 		file.UUID = uuid.New()
 		err := repo.UpdateFile(context.TODO(), &file)
-		if !errors.Is(err, svc.ErrNotFound) {
+		if !errors.Is(err, core.ErrNotFound) {
 			t.Errorf("UpdateFile(ctx, &file) returned an unexpected error: %s, expected ErrNotFound", err)
 		}
 	})

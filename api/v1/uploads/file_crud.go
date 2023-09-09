@@ -10,8 +10,8 @@ import (
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/schema"
+	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 // PutFile implements the PUT /v1/uploads/{uuid}/files/* endpoint.

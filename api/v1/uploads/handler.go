@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
-	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
 // Handler implements the /v1/uploads endpoints.

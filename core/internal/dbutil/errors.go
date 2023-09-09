@@ -5,12 +5,12 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Karaoke-Manager/karman/service"
+	"github.com/Karaoke-Manager/karman/core"
 )
 
 func Error(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
-		return service.ErrNotFound
+		return core.ErrNotFound
 	}
 	return err
 }

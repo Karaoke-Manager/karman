@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
-	svc "github.com/Karaoke-Manager/karman/service"
 )
 
 // fakeRepo is a Repository implementation backed by an in-memory map.
@@ -32,7 +32,7 @@ func (f fakeRepo) CreateFile(_ context.Context, file *model.File) error {
 // UpdateFile updates the stored version of file.
 func (f fakeRepo) UpdateFile(_ context.Context, file *model.File) error {
 	if _, ok := f.files[file.UUID]; !ok {
-		return svc.ErrNotFound
+		return core.ErrNotFound
 	}
 	file.UpdatedAt = time.Now()
 	f.files[file.UUID] = *file

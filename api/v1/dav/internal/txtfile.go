@@ -11,9 +11,9 @@ import (
 	"codello.dev/ultrastar/txt"
 	"golang.org/x/net/webdav"
 
+	"github.com/Karaoke-Manager/karman/core/media"
+	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/model"
-	"github.com/Karaoke-Manager/karman/service/media"
-	"github.com/Karaoke-Manager/karman/service/song"
 )
 
 // txtNode represents the TXT file for a song.

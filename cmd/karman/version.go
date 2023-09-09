@@ -11,11 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	versionCmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "print version in JSON format")
-	rootCmd.AddCommand(versionCmd)
-}
-
 // versionCmd is the command instance for the version command.
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -23,6 +18,12 @@ var versionCmd = &cobra.Command{
 	Long:  "Print information about the currently running version of Karman.",
 	Args:  cobra.NoArgs,
 	Run:   runVersion,
+}
+
+// init sets up CLI flags for the version command.
+func init() {
+	versionCmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "print version in JSON format")
+	rootCmd.AddCommand(versionCmd)
 }
 
 var (
@@ -52,7 +53,10 @@ func runVersion(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	if info.GitVersion == "" {
+	if info.GitVersion != "" && info.GitTreeState != "dirty" {
+		fmt.Printf("Karman Version %s (built with %s)\n", info.GitVersion, info.GoVersion)
+	}
+	if info.GitCommit == "" || info.GitTreeState == "" {
 		fmt.Printf("Karman Development Build (built with %s)\n", info.GoVersion)
 		return
 	}
@@ -63,7 +67,7 @@ func runVersion(_ *cobra.Command, _ []string) {
 	if info.GitTreeState == "dirty" {
 		dirty = ".dirty"
 	}
-	fmt.Printf("Karman Version %s+git.%s%s (built with %s)\n", info.GitVersion, info.GitCommit, dirty, info.GoVersion)
+	fmt.Printf("Karman Version git.%s%s (built with %s)\n", info.GitCommit, dirty, info.GoVersion)
 }
 
 // versionInfo is the JSON schema for the version command output.

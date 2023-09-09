@@ -21,8 +21,10 @@
 go.work
 
 # Compiled Binaries
-build/
+/build/
+/karman
 
 # Testing files
-tmp/
+/config.yml
+/tmp/
 *.db

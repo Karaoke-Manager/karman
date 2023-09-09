@@ -25,6 +25,7 @@ var (
 	ErrUnprocessableEntity  = HTTPStatus(http.StatusUnprocessableEntity)
 	ErrUnsupportedMediaType = HTTPStatus(http.StatusUnsupportedMediaType)
 	ErrInternalServerError  = HTTPStatus(http.StatusInternalServerError)
+	ErrServiceUnavailable   = HTTPStatus(http.StatusServiceUnavailable)
 )
 
 // MissingContentType generates an error indicating that no content type was specified in the request.

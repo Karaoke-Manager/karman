@@ -12,6 +12,7 @@ import (
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	svc "github.com/Karaoke-Manager/karman/service"
 	"github.com/Karaoke-Manager/karman/test"
 	testdata "github.com/Karaoke-Manager/karman/test/data"
@@ -21,7 +22,7 @@ func Test_dbRepo_CreateSong(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	existing := testdata.SimpleSong(t, db)
 
 	t.Run("success", func(t *testing.T) {
@@ -69,7 +70,7 @@ func Test_dbRepo_GetSong(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	existing := testdata.SimpleSong(t, db)
 
 	t.Run("existing", func(t *testing.T) {
@@ -97,7 +98,7 @@ func Test_dbRepo_FindSongs(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	testdata.NSongs(t, db, 100)
 
 	cases := map[string]struct {
@@ -133,7 +134,7 @@ func Test_dbRepo_UpdateSong(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 
 	t.Run("missing", func(t *testing.T) {
 		song := model.Song{}
@@ -197,7 +198,7 @@ func Test_dbRepo_DeleteSong(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
-	repo := NewDBRepository(db)
+	repo := NewDBRepository(nolog.Logger, db)
 	song := testdata.SimpleSong(t, db)
 
 	ok, err := repo.DeleteSong(context.TODO(), song.UUID)

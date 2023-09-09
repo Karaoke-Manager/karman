@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	"github.com/Karaoke-Manager/karman/test"
 )
 
@@ -16,7 +17,7 @@ func TestService_StoreFile(t *testing.T) {
 
 	ctx := context.Background()
 	store, _ := fileStore(t)
-	svc := NewService(NewFakeRepository(), store)
+	svc := NewService(nolog.Logger, NewFakeRepository(), store)
 
 	// in order to not blow up repository size we download the test data on the fly.
 	cases := map[string]struct {

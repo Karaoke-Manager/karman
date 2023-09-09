@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"codello.dev/ultrastar/txt"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
@@ -17,6 +18,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	data, err := txt.NewReader(r.Body).ReadSong()
 	if err != nil {
 		_ = render.Render(w, r, apierror.InvalidUltraStarTXT(err))
+		h.logger.WarnContext(r.Context(), "Could not parse UltraStar TXT.", tint.Err(err))
 		return
 	}
 	song := model.Song{Song: data}
@@ -69,7 +71,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	update.Apply(&song)
 	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
-		// TODO: Check for validation errors?
 		_ = render.Render(w, r, apierror.ServiceError(err))
 		return
 	}

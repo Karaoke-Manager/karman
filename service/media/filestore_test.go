@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
+	"github.com/Karaoke-Manager/karman/pkg/nolog"
 )
 
 // fileStore creates a new FileStore in a temporary directory.
@@ -23,7 +24,7 @@ func fileStore(t *testing.T) (*FileStore, string) {
 	t.Cleanup(func() {
 		_ = os.RemoveAll(dir)
 	})
-	store, err := NewFileStore(dir)
+	store, err := NewFileStore(nolog.Logger, dir)
 	if err != nil {
 		t.Fatalf("fileStore() could not create FileStore instance: %s", err)
 	}
@@ -43,7 +44,7 @@ func TestNewFileStore(t *testing.T) {
 
 	t.Run("missing root directory", func(t *testing.T) {
 		path := filepath.Join(dir, "test1")
-		_, err = NewFileStore(path)
+		_, err = NewFileStore(nolog.Logger, path)
 		if err == nil {
 			t.Errorf("NewFileStore(%q) did not return an error, but an error was expected", path)
 		}
@@ -54,7 +55,7 @@ func TestNewFileStore(t *testing.T) {
 		if err != nil {
 			t.Fatalf("cold not create temporary file at %s: %s", path, err)
 		}
-		_, err = NewFileStore(path)
+		_, err = NewFileStore(nolog.Logger, path)
 		if err == nil {
 			t.Errorf("NewFileStore(%q) did not return an error, but an error was expected", path)
 		}
@@ -65,7 +66,7 @@ func TestNewFileStore(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not create new directory at %s", path)
 		}
-		_, err = NewFileStore(path)
+		_, err = NewFileStore(nolog.Logger, path)
 		if err != nil {
 			t.Errorf("NewFileStore(%q) returned an unexpected error: %s", path, err)
 		}

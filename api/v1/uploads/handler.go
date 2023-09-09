@@ -1,6 +1,7 @@
 package uploads
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -13,16 +14,17 @@ import (
 
 // Handler implements the /v1/uploads endpoints.
 type Handler struct {
-	r chi.Router
+	r      chi.Router
+	logger *slog.Logger
 
 	uploadRepo  upload.Repository
 	uploadStore upload.Store
 }
 
 // NewHandler creates a new Handler instance using the specified service.
-func NewHandler(uploadRepo upload.Repository, uploadStore upload.Store) *Handler {
+func NewHandler(logger *slog.Logger, uploadRepo upload.Repository, uploadStore upload.Store) *Handler {
 	r := chi.NewRouter()
-	h := &Handler{r, uploadRepo, uploadStore}
+	h := &Handler{r, logger.With("log", "uploads.handler"), uploadRepo, uploadStore}
 
 	r.With(render.ContentTypeNegotiation("application/json")).Post("/", h.Create)
 	r.With(middleware.Paginate(25, 100), render.ContentTypeNegotiation("application/json")).Get("/", h.Find)

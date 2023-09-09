@@ -269,8 +269,7 @@ paths:
       operationId: resetPassword
       summary: Reset a Password
       tags: [ user ]
-      security:
-        - {}
+      security: []
       description: |-
         This endpoint initiates a password reset.
         As opposed to a password change this will generate a password reset token that can then be used to change the password.

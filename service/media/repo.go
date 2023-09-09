@@ -2,11 +2,14 @@ package media
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgxutil"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/service/dbutil"
@@ -14,13 +17,14 @@ import (
 
 // dbRepo is a Repository implementation backed by a PostgreSQL database.
 type dbRepo struct {
-	db pgxutil.DB
+	logger *slog.Logger
+	db     pgxutil.DB
 }
 
 // NewDBRepository returns a new Repository backed by the specified connection.
 // db can be a single connection or a connection pool.
-func NewDBRepository(db pgxutil.DB) Repository {
-	return &dbRepo{db}
+func NewDBRepository(logger *slog.Logger, db pgxutil.DB) Repository {
+	return &dbRepo{logger, db}
 }
 
 // CreateFile creates file in the database.
@@ -34,6 +38,7 @@ func (r *dbRepo) CreateFile(ctx context.Context, file *model.File) error {
 		UpdatedAt time.Time `db:"updated_at"`
 	}])
 	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not create media file.", "type", file.Type, tint.Err(err))
 		return err
 	}
 	file.UUID = row.UUID
@@ -56,6 +61,9 @@ func (r *dbRepo) UpdateFile(ctx context.Context, file *model.File) error {
 		"uuid": file.UUID,
 	}, "updated_at", pgx.RowTo[time.Time])
 	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.ErrorContext(ctx, "Could not update file.", "uuid", file.UUID, tint.Err(err))
+		}
 		return dbutil.Error(err)
 	}
 	file.UpdatedAt = updatedAt

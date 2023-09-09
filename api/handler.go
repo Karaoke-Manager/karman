@@ -1,41 +1,66 @@
 package api
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
+	"github.com/Karaoke-Manager/karman/api/middleware"
 	v1 "github.com/Karaoke-Manager/karman/api/v1"
 	"github.com/Karaoke-Manager/karman/pkg/render"
+	_ "github.com/Karaoke-Manager/karman/pkg/render/json" // JSON encoding for responses
 	"github.com/Karaoke-Manager/karman/service/media"
 	"github.com/Karaoke-Manager/karman/service/song"
 	"github.com/Karaoke-Manager/karman/service/upload"
 )
 
+// HealthChecker is an interface that can provide information about the system health.
+type HealthChecker interface {
+	// HealthCheck performs a health check and returns its result.
+	// A result of true indicates that the system is healthy.
+	HealthCheck(ctx context.Context) bool
+}
+
+// HealthCheckFunc is a convenience wrapper around HealthChecker.
+type HealthCheckFunc func(ctx context.Context) bool
+
+// HealthCheck invokes f.
+func (f HealthCheckFunc) HealthCheck(ctx context.Context) bool {
+	return f(ctx)
+}
+
 // Handler is the main API handler.
 // This is basically the root entrypoint of the Karman API.
 // All other API endpoints are created as sub-handlers of this controller.
 type Handler struct {
-	r chi.Router
+	r      chi.Router
+	hc     HealthChecker
+	logger *slog.Logger
 }
 
 // NewHandler creates a new Handler instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-handlers.
-func NewHandler(songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store) *Handler {
+// debug indicates whether additional debugging features should be enabled.
+func NewHandler(logger *slog.Logger, hc HealthChecker, songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store, debug bool) *Handler {
 	r := chi.NewRouter()
-	h := &Handler{r}
-	v1Handler := v1.NewHandler(songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore)
+	h := &Handler{r, hc, logger.With("log", "request")}
+	v1Handler := v1.NewHandler(logger, songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore)
+	r.Use(middleware.Logger(h.logger))
+	r.Use(middleware.Recoverer(logger, debug))
 	// Restrict requests to JSON for now
-	r.Use(middleware.CleanPath)
+	r.Use(chimiddleware.CleanPath)
 	// TODO: Some CORS stuff
+	// TODO: Support running on subpath
 	// r.Use(middleware.Compress())
 	// r.Use(middleware.RealIP)
-	// r.Use(middleware.Recoverer)
-	r.Use(middleware.StripSlashes)
+	r.Use(chimiddleware.StripSlashes)
 	r.Use(render.NotAcceptableHandler(h.NotAcceptable))
 	r.Mount("/v1", v1Handler)
+	r.HandleFunc("/healthz", h.Healthz)
 
 	r.NotFound(h.NotFound)
 	r.MethodNotAllowed(h.MethodNotAllowed)
@@ -45,6 +70,15 @@ func NewHandler(songRepo song.Repository, songSvc song.Service, mediaSvc media.S
 // ServeHTTP processes HTTP requests for h.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.r.ServeHTTP(w, r)
+}
+
+// Healthz implements the /healthz endpoint.
+func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
+	if h.hc == nil || h.hc.HealthCheck(r.Context()) {
+		_ = render.NoContent(w, r)
+	} else {
+		_ = render.Render(w, r, apierror.ErrServiceUnavailable)
+	}
 }
 
 // NotFound is an HTTP endpoint that renders a generic 404 Not Found error.

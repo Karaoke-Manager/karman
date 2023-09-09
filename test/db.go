@@ -3,7 +3,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"strings"
 	"testing"
@@ -21,24 +20,31 @@ import (
 	"github.com/Karaoke-Manager/karman/migrations"
 )
 
-var (
-	pgVersion = os.Getenv("PGVERSION") // postgres version, used with testcontainers
-	pgImage   = os.Getenv("PGIMAGE")   // full postgres image, used with testcontainers, overrides pgVersion
-
-	pgHost = os.Getenv("PGHOST") // host of the database
-	pgPort = os.Getenv("PGPORT") // port of the database
-	pgUser = os.Getenv("PGUSER") // user of the database, must have CREATE/DROP DATABASE permission
-	pgPass = os.Getenv("PGPASS") // password of pgUser
-)
+// init sets up default values in the environment.
+func init() {
+	if os.Getenv("POSTGRES_VERSION") == "" {
+		_ = os.Setenv("POSTGRES_VERSION", "15")
+	}
+	if os.Getenv("POSTGRES_IMAGE") == "" {
+		_ = os.Setenv("POSTGRES_IMAGE", fmt.Sprintf("postgres:%s-alpine", strings.TrimPrefix(os.Getenv("POSTGRES_VERSION"), "v")))
+	}
+	if os.Getenv("PGUSER") == "" {
+		_ = os.Setenv("PGUSER", "postgres")
+	}
+	if os.Getenv("PGPASSWORD") == "" {
+		_ = os.Setenv("PGPASSWORD", "postgres")
+	}
+}
 
 // NewDB creates a new database connection for a single test.
-// Depending on how the go test command was invoked this method behaves in one of two ways:
+// Depending on the environment this method behaves in one of two ways:
 //
-// If the -pg-host flag has been specified, a database connection to an existing database is created.
-// The connection uses the values from the -pg-port, -pg-user, and -pg-pass for the connection.
+// If the PGHOST environment variable is set, a database connection to an existing database is created.
+// The connection uses the usual environment variables for postgres connections (PGPORT, PGUSER, etc.).
+// If PGUSER or PGPASSWORD is empty, a default value of "postgres" will be used for either.
 //
-// If -pg-host is not specified, this functions uses testcontainers to create a testing database.
-// You can control the postgres version using the -pg-version flag or specify a custom image using -pg-image.
+// If PGHOST is not present in the environment, this functions uses testcontainers to create a testing database.
+// You can control the postgres version using the POSTGRES_VERSION variable or specify a custom image using POSTGRES_IMAGE.
 // Only a single database container is created for multiple tests (for each version/image).
 // The database container will not be terminated automatically, so that it can be reused by multiple tests.
 // You should rely on Reaper/Ryuk to automatically remove these containers.
@@ -49,7 +55,7 @@ var (
 // The -pg-user must have the appropriate permissions on the database.
 // When using testcontainers this is the case by default.
 func NewDB(t *testing.T) pgxutil.DB {
-	if pgHost == "" {
+	if os.Getenv("PGHOST") == "" {
 		if err := runPostgresContainer(); err != nil {
 			t.Fatalf("NewDB() could not create postgres container: %s", err)
 		}
@@ -68,7 +74,7 @@ func NewDB(t *testing.T) pgxutil.DB {
 		t.Fatalf("NewDB() could not migrate testing database: %s", err)
 	}
 
-	pool, err := pgxpool.New(context.TODO(), connectionString(database))
+	pool, err := pgxpool.New(context.TODO(), fmt.Sprintf("dbname=%s", database))
 	if err != nil {
 		t.Fatalf("Could not connect to testing database: %s", err)
 	}
@@ -79,25 +85,13 @@ func NewDB(t *testing.T) pgxutil.DB {
 // runPostgresContainer starts a new testcontainers instance of PostgreSQL.
 // This function sets up pgHost, pgPort, etc. to point to this container.
 func runPostgresContainer() error {
-	if pgVersion == "" {
-		pgVersion = "15"
-	}
-	if pgImage == "" {
-		pgImage = fmt.Sprintf("postgres:%s-alpine", strings.TrimPrefix(pgVersion, "v"))
-	}
-	if pgUser == "" {
-		pgUser = "postgres"
-	}
-	if pgPass == "" {
-		pgPass = "postgres"
-	}
 	container, err := postgres.RunContainer(context.TODO(),
-		testcontainers.WithImage(pgImage),
+		testcontainers.WithImage(os.Getenv("POSTGRES_IMAGE")),
 		testcontainers.WithWaitStrategy(wait.ForExposedPort()),
-		postgres.WithUsername(pgUser),
-		postgres.WithPassword(pgPass),
+		postgres.WithUsername(os.Getenv("PGUSER")),
+		postgres.WithPassword(os.Getenv("PGPASSWORD")),
 		testcontainers.CustomizeRequestOption(func(req *testcontainers.GenericContainerRequest) {
-			req.Name = "karman-tests-" + strings.ReplaceAll(strings.ReplaceAll(pgImage, ":", "_"), "/", "-")
+			req.Name = "karman-tests-" + strings.ReplaceAll(strings.ReplaceAll(os.Getenv("POSTGRES_IMAGE"), ":", "_"), "/", "-")
 			req.Reuse = true
 			// container is terminated by Reaper/Ryuk
 		}),
@@ -105,14 +99,16 @@ func runPostgresContainer() error {
 	if err != nil {
 		return err
 	}
-	if pgHost, err = container.Host(context.TODO()); err != nil {
+	host, err := container.Host(context.TODO())
+	if err != nil {
 		return err
 	}
+	_ = os.Setenv("PGHOST", host)
 	rawPort, err := container.MappedPort(context.TODO(), "5432/tcp")
 	if err != nil {
 		return err
 	}
-	pgPort = rawPort.Port()
+	_ = os.Setenv("PGPORT", rawPort.Port())
 	return nil
 }
 
@@ -121,7 +117,7 @@ func runPostgresContainer() error {
 func createTestingDatabase() (string, error) {
 	database := uuid.New().String()
 	// Initially we connect to the postgres DB to create the database for this test
-	db, err := pgx.Connect(context.TODO(), connectionString("postgres"))
+	db, err := pgx.Connect(context.TODO(), "dbname=postgres")
 	if err != nil {
 		return database, err
 	}
@@ -134,7 +130,7 @@ func createTestingDatabase() (string, error) {
 
 // dropTestingDatabase tries to drop the specified database.
 func dropTestingDatabase(database string) error {
-	db, err := pgx.Connect(context.TODO(), connectionString("postgres"))
+	db, err := pgx.Connect(context.TODO(), "dbname=postgres")
 	if err != nil {
 		return err
 	}
@@ -147,7 +143,7 @@ func dropTestingDatabase(database string) error {
 
 // migrate applies all known migrations to the specified database.
 func migrate(database string) error {
-	db, err := goose.OpenDBWithDriver("pgx", connectionString(database))
+	db, err := goose.OpenDBWithDriver("pgx", fmt.Sprintf("dbname=%s", database))
 	if err != nil {
 		return err
 	}
@@ -156,9 +152,4 @@ func migrate(database string) error {
 		return err
 	}
 	return db.Close()
-}
-
-// connectionString is a helper method to construct a connection string to the specified database.
-func connectionString(database string) string {
-	return fmt.Sprintf("postgres://%s:%s@%s/%s", pgUser, pgPass, net.JoinHostPort(pgHost, pgPort), database)
 }

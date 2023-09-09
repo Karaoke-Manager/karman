@@ -1,0 +1,168 @@
+openapi: 3.0.3
+info:
+  title: Background Jobs
+  version: v1
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit/
+
+
+tags:
+  - name: cron
+    x-displayName: Background Jobs
+    description: |-
+      Karman performs various scheduled jobs in the background.
+      These endpoints offer some management capabilities for application administrators.
+      
+      Jobs are identified by name.
+      The following jobs are available:
+      
+      - `media:prune`: This job deletes media files
+      - `upload:prune`: This job deletes uploads that have been soft-deleted.
+      - `upload:enqueue`: This job creates jobs for processing uploads.
+        If an upload processing job has been lost (e.g. because the redis instance failed)
+        this job recreates those jobs. 
+      - `song:prune`: This job deletes songs that have been soft-deleted.
+      
+      The schedule for each job depends on the server settings.
+      Server admins can also restrict the ability to run these jobs via the API.
+
+
+paths:
+  /v1/jobs:
+    get:
+      operationId: getJobs
+      summary: List Jobs
+      tags: [ cron ]
+      description: |-
+        Fetch a list of known jobs and their states.
+      responses:
+        200:
+          x-summary: OK
+          description: |-
+            A successful request returns a mapping of jobs to their configurations.
+          content:
+            application/json:
+              example:
+                media:prune:
+                  enabled: true
+                  active: false
+                  scheduledAt: "2023-08-24T14:15:22Z"
+                upload:prune:
+                  enabled: true
+                  active: false
+              schema:
+                additionalProperties:
+                  x-additionalPropertiesName: job
+                  type: object
+                  description: |-
+                    Each mapping value describes a single job.
+                  allOf:
+                    - $ref: "#/components/schemas/Job"
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+  /v1/jobs/{name}:
+    parameters:
+      - $ref: "#/components/parameters/JobName"
+    get:
+      operationId: getJob
+      summary: Get Job Status
+      tags: [ cron ]
+      description: |-
+        Get status information about a single job.
+      responses:
+        200:
+          x-summary: OK
+          description: |-
+            A successful request returns information about a job.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
+        404: { $ref: "../common/problem-details.yaml#/components/responses/NotFound" }
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+  /v1/jobs/{name}/start:
+    parameters:
+      - $ref: "#/components/parameters/JobName"
+    post:
+      operationId: startJob
+      summary: Start Job
+      tags: [ cron ]
+      description: |-
+        Start a scheduled job manually.
+        Depending on the job this may or may not effect the next execution date.
+        If the job is disabled the response will have code 403.
+      # Empty request body
+      responses:
+        202:
+          x-summary: Accepted
+          description: |-
+            The job was started.
+            This response gives no indication about the time when the job is finished.
+            Use the `active` field of a job to fetch that information.
+        401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
+        403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
+        404: { $ref: "../common/problem-details.yaml#/components/responses/NotFound" }
+        409:
+          x-summary: Conflict
+          description: |-
+            The task is already running or in a state where it cannot be started.
+          content:
+            application/problem+json:
+              schema:
+                example:
+                  type: "tag:codello.dev,2020:karman/problems:invalid-job-sate"
+                  title: "Invalid Job State"
+                  status: 409
+                allOf:
+                  - $ref: "../common/problem-details.yaml#/components/schemas/ProblemDetails"
+        5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
+
+
+components:
+  schemas:
+    Job:
+      type: object
+      x-tags: [ cron ]
+      description: |-
+        A background Job.
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: |-
+            Indicates whether this job enabled or not.
+            A disabled job cannot be triggered manually.
+            The enabled state may depend on the user performing the request, i.e.
+            a job can be enabled for one user and disabled for another user.
+        active:
+          type: boolean
+          example: false
+          description: |-
+            Indicates whether this job is currently being executed.
+        scheduledAt:
+          type: string
+          format: date-time
+          example: "2019-08-24T14:15:22Z"
+          description: |-
+            The next planned execution date for this job.
+            This is only the next planned date.
+            The job may be scheduled at an interval leading to more executions after this date.
+            
+            If a job does not have a scheduled date (i.e. this field is `null` or absent) the job is not a scheduled job.
+            You may still be able to trigger the job manually.
+
+  parameters:
+    JobName:
+      name: name
+      in: path
+      required: true
+      description: |-
+        The name of the job to fetch.
+      schema:
+        type: string
+        example: "media:prune"

@@ -14,6 +14,18 @@ tags:
       Songs are a core resource of the Karman API.
       The following endpoints allow querying information about songs as well as manipulating the song database.
       
+      ## WebDAV
+      
+      The song library can be accessed over WebDAV at `/v1/dav`.
+      The OpenAPI does not have proper support for documenting WebDAV endpoints, so the endpoint is described here.
+      
+      The `/v1/dav` endpoint conforms to the WebDAV standard.
+      Responses are generated accordingly, including error responses.
+      WebDAV error responses do not conform to [RFC 9457](https://www.rfc-editor.org/rfc/rfc7807).
+      
+      The `/v1/dav` endpoint is completely read-only.
+      Any modification requests (like `COPY` or `PUT`) will return an error response.
+      
       ## Search Queries
       
       Songs can be searched and filtered at different points throughout the API.

@@ -75,36 +75,10 @@ func init() {
 }
 
 var (
-	// configFile is a path to a config file passed as CLI argument.
-	configFile string
-	// config is the parsed configuration from files, environment and flags.
-	config struct {
-		Debug bool `mapstructure:"debug"`
-		Log   struct {
-			Level  slog.Level `mapstructure:"level"`
-			Format string     `mapstructure:"format"`
-		} `mapstructure:"log"`
-		DBConnection    string `mapstructure:"db-url"`
-		RedisConnection string `mapstructure:"redis-url"`
-		API             struct {
-			Address string `mapstructure:"address"`
-		} `mapstructure:"api"`
-		TaskRunner struct {
-			Workers int `mapstructure:"workers"`
-		} `mapstructure:"task-server"`
-		Uploads struct {
-			Dir string `mapstructure:"dir"`
-		} `mapstructure:"uploads"`
-		Media struct {
-			Dir string `mapstructure:"dir"`
-		} `mapstructure:"media"`
-	}
-)
-
-// logger is the global logger.
-var (
-	logger     *slog.Logger
-	mainLogger *slog.Logger
+	configFile string          // path to config file as passed via CLI
+	config     internal.Config // parsed config data
+	logger     *slog.Logger    // root logger
+	mainLogger *slog.Logger    // logger for startup and shutdown
 )
 
 // loadConfig parses the configuration file and merges it with configuration data

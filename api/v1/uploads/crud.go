@@ -28,7 +28,7 @@ func (h *Handler) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	uploads, total, err := h.uploadRepo.FindUploads(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
 	if _, err := h.uploadRepo.DeleteUpload(r.Context(), id); err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	_ = render.NoContent(w, r)

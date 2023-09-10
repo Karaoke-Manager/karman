@@ -196,8 +196,12 @@ func (s *service) DeleteFile(ctx context.Context, id uuid.UUID) error {
 	if err != nil && !errors.Is(err, core.ErrNotFound) {
 		return err
 	}
-	if _, err = s.store.Delete(ctx, file.Type, id); err != nil {
-		return err
+	if !file.InUpload() {
+		// we do not delete file contents from uploads here.
+		// they will get deleted when the upload is deleted.
+		if _, err = s.store.Delete(ctx, file.Type, id); err != nil {
+			return err
+		}
 	}
 	_, err = s.repo.DeleteFile(ctx, file.UUID)
 	return err

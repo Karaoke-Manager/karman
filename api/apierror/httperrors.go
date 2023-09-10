@@ -7,6 +7,9 @@ import (
 )
 
 const (
+	// TypeRouteNotFound indicates that a request was made to a non-existing endpoint.
+	TypeRouteNotFound = ProblemTypeDomain + "route-not-found"
+
 	// TypeMissingContentType indicates that a Content-Type header is required but was not specified.
 	TypeMissingContentType = ProblemTypeDomain + "missing-content-type"
 
@@ -26,6 +29,14 @@ var (
 	ErrUnsupportedMediaType = HTTPStatus(http.StatusUnsupportedMediaType)
 	ErrInternalServerError  = HTTPStatus(http.StatusInternalServerError)
 	ErrServiceUnavailable   = HTTPStatus(http.StatusServiceUnavailable)
+
+	// ErrRouteNotFound generates an error indicating that a request was made to a non-existing endpoint.
+	ErrRouteNotFound = &ProblemDetails{
+		Type:   TypeRouteNotFound,
+		Title:  "Route Not Found",
+		Status: http.StatusNotFound,
+		Detail: "This API endpoint does not exist.",
+	}
 )
 
 // MissingContentType generates an error indicating that no content type was specified in the request.

@@ -167,6 +167,7 @@ func runServer(_ *cobra.Command, _ []string) (err error) {
 			mediaStore,
 			uploadRepo,
 			uploadStore,
+			cronService,
 			config.Debug,
 		),
 		ErrorLog: slog.NewLogLogger(logger.With("log", "http").Handler(), config.Log.Level),
@@ -329,7 +330,7 @@ func setupTaskRunner(mediaRepo media.Repository, mediaStore media.Store) (func()
 // setupTaskScheduler sets up the task scheduler that creates specific task instances for scheduled tasks.
 func setupTaskScheduler() (func(), error) {
 	mainLogger.Info("Starting task scheduler.")
-	cronService = task.NewCronService()
+	cronService = task.NewCronService(taskInspector)
 	scheduler, err := asynq.NewPeriodicTaskManager(asynq.PeriodicTaskManagerOpts{
 		PeriodicTaskConfigProvider: cronService,
 		RedisConnOpt:               redisConn,

@@ -16,6 +16,7 @@ import (
 	"github.com/Karaoke-Manager/karman/core/upload"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 	_ "github.com/Karaoke-Manager/karman/pkg/render/json" // JSON encoding for responses
+	"github.com/Karaoke-Manager/karman/task"
 )
 
 // HealthChecker is an interface that can provide information about the system health.
@@ -46,6 +47,7 @@ func NewHandler(
 	mediaStore media.Store,
 	uploadRepo upload.Repository,
 	uploadStore upload.Store,
+	cronService task.CronService,
 	debug bool,
 ) *Handler {
 	r := chi.NewRouter()
@@ -58,6 +60,7 @@ func NewHandler(
 		mediaStore,
 		uploadRepo,
 		uploadStore,
+		cronService,
 	)
 	r.Use(middleware.Logger(requestLogger))
 	r.Use(middleware.Recoverer(logger, debug))
@@ -94,7 +97,7 @@ func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 // NotFound is an HTTP endpoint that renders a generic 404 Not Found error.
 // This endpoint is the default 404 endpoint for the Handler and its sub-handlers.
 func (*Handler) NotFound(w http.ResponseWriter, r *http.Request) {
-	_ = render.Render(w, r, apierror.ErrNotFound)
+	_ = render.Render(w, r, apierror.ErrRouteNotFound)
 }
 
 // MethodNotAllowed is an HTTP endpoint that renders a generic 405 Method Not Allowed error.

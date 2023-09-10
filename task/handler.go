@@ -7,7 +7,7 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/lmittmann/tint"
 
-	"github.com/Karaoke-Manager/karman/service/media"
+	"github.com/Karaoke-Manager/karman/core/media"
 	"github.com/Karaoke-Manager/karman/task/mediatask"
 )
 
@@ -30,7 +30,6 @@ func NewHandler(
 		mux,
 	}
 	mux.Use(h.Logger)
-
 	mux.Handle(mediatask.NewHandler(
 		logger,
 		repo,

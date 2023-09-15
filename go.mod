@@ -13,7 +13,7 @@ require (
 	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jackc/pgxutil v0.0.0-20230909142405-7345eb835976
-	github.com/lmittmann/tint v1.0.1
+	github.com/lmittmann/tint v1.0.2
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pressly/goose/v3 v3.15.0

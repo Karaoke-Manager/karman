@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["local>codello/.github:renovate-config"]
+  "extends": ["local>codello/.github:renovate-config"],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "github.com/testcontainers/testcontainers-go",
+        "github.com/testcontainers/testcontainers-go/modules/postgres"
+      ],
+      "groupName": "github.com/testcontainers/testcontainers-go"
+    }
+  ]
 }

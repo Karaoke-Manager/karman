@@ -35,7 +35,7 @@ paths:
       summary: List Jobs
       tags: [ cron ]
       description: |-
-        Fetch a list of known jobs and their states.
+        Fetch all known jobs and their respective states.
       responses:
         200:
           x-summary: OK
@@ -45,10 +45,12 @@ paths:
             application/json:
               example:
                 media:prune:
+                  name: "media:prune"
                   enabled: true
                   active: false
                   scheduledAt: "2023-08-24T14:15:22Z"
                 upload:prune:
+                  name: "upload:prune"
                   enabled: true
                   active: false
               schema:
@@ -131,6 +133,12 @@ components:
       description: |-
         A background Job.
       properties:
+        name:
+          type: string
+          example: "media:prune"
+          description: |-
+            The name of the job.
+            Job names are unique and serve as their the primary identifier.
         enabled:
           type: boolean
           example: true

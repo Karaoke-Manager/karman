@@ -21,8 +21,8 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
-	github.com/testcontainers/testcontainers-go v0.24.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.24.0
+	github.com/testcontainers/testcontainers-go v0.24.1
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.24.1
 	golang.org/x/net v0.15.0
 )
 

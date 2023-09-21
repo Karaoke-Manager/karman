@@ -19,9 +19,9 @@ tags:
       
       - `media:prune`: This job deletes media files
       - `upload:prune`: This job deletes uploads that have been soft-deleted.
-      - `upload:enqueue`: This job creates jobs for processing uploads.
-        If an upload processing job has been lost (e.g. because the redis instance failed)
-        this job recreates those jobs. 
+      - `upload:enqueue`: This job creates tasks for processing uploads.
+        If an upload processing task has been lost (e.g. because the redis instance failed)
+        this job recreates those tasks. 
       - `song:prune`: This job deletes songs that have been soft-deleted.
       
       The schedule for each job depends on the server settings.
@@ -35,7 +35,8 @@ paths:
       summary: List Jobs
       tags: [ cron ]
       description: |-
-        Fetch all known jobs and their respective states.
+        Fetch all background jobs and their respective states.
+        See [Background Jobs](#tag/cron) for a description of the available jobs.
       responses:
         200:
           x-summary: OK
@@ -51,8 +52,8 @@ paths:
                   scheduledAt: "2023-08-24T14:15:22Z"
                 upload:prune:
                   name: "upload:prune"
-                  enabled: true
-                  active: false
+                  enabled: false
+                  active: true
               schema:
                 additionalProperties:
                   x-additionalPropertiesName: job
@@ -74,6 +75,7 @@ paths:
       tags: [ cron ]
       description: |-
         Get status information about a single job.
+        See [Background Jobs](#tag/cron) for a description of the available jobs.
       responses:
         200:
           x-summary: OK

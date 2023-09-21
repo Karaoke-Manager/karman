@@ -160,6 +160,20 @@ components:
           schema:
             $ref: "#/components/schemas/PermissionDeniedError"
 
+    NotFound:
+      x-summary: Not Found
+      description: |-
+        The requested resource was not found.
+      content:
+        application/problem+json:
+          schema:
+            example:
+              title: "Not Found"
+              status: 404
+              instance: "/traces/481CF77B-3099-445C-A789-58F997233681"
+            allOf:
+              - $ref: "#/components/schemas/ProblemDetails"
+
     UnprocessableEntity:
       x-summary: Unprocessable Entity
       description: |-

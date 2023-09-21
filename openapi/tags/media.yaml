@@ -44,7 +44,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
-        404: { $ref: "#/components/responses/NotFound" }
+        404: { $ref: "#/components/responses/SongOrFileNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
     put:
@@ -119,7 +119,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
-        404: { $ref: "#/components/responses/NotFound" }
+        404: { $ref: "#/components/responses/SongOrFileNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
     put:
@@ -191,7 +191,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
-        404: { $ref: "#/components/responses/NotFound" }
+        404: { $ref: "#/components/responses/SongOrFileNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
     put:
@@ -263,7 +263,7 @@ paths:
         400: { $ref: "../common/problem-details.yaml#/components/responses/InvalidUUID" }
         401: { $ref: "../common/problem-details.yaml#/components/responses/Unauthorized" }
         403: { $ref: "../common/problem-details.yaml#/components/responses/PermissionDenied" }
-        404: { $ref: "#/components/responses/NotFound" }
+        404: { $ref: "#/components/responses/SongOrFileNotFound" }
         5XX: { $ref: "../common/problem-details.yaml#/components/responses/UnexpectedError" }
 
     put:
@@ -348,7 +348,7 @@ components:
                 
 
   responses:
-    NotFound:
+    SongOrFileNotFound:
       x-summary: Not Found
       description: |-
         Either the song with the specified `uuid` does not exist or it does not have the requested media file.

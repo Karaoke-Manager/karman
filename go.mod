@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	codello.dev/ultrastar v0.0.0-20230902191652-78b46d211dd9
-	github.com/abema/go-mp4 v1.0.0
+	github.com/abema/go-mp4 v1.1.0
 	github.com/ajg/form v1.5.1
 	github.com/alicebob/miniredis/v2 v2.30.5
 	github.com/brianvoe/gofakeit/v6 v6.23.2

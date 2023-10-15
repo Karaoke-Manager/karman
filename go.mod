@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.4.3
-	github.com/jackc/pgxutil v0.0.0-20230909142405-7345eb835976
+	github.com/jackc/pgxutil v0.0.0-20231015020832-ec5434149869
 	github.com/lmittmann/tint v1.0.2
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mitchellh/mapstructure v1.5.0
@@ -85,7 +85,7 @@ require (
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect

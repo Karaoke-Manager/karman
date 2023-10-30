@@ -16,9 +16,8 @@ func AsynqLogLevel(level slog.Level) asynq.LogLevel {
 		return asynq.WarnLevel
 	} else if level >= slog.LevelDebug {
 		return asynq.InfoLevel
-	} else {
-		return asynq.DebugLevel
 	}
+	return asynq.DebugLevel
 }
 
 // AsynqLogger is an implementation of asynq.Logger backed by a slog.Logger.

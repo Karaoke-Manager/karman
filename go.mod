@@ -7,7 +7,7 @@ require (
 	github.com/abema/go-mp4 v1.1.1
 	github.com/ajg/form v1.5.1
 	github.com/alicebob/miniredis/v2 v2.31.0
-	github.com/brianvoe/gofakeit/v6 v6.24.0
+	github.com/brianvoe/gofakeit/v6 v6.25.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/google/uuid v1.4.0
 	github.com/hibiken/asynq v0.24.1

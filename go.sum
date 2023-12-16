@@ -294,6 +294,8 @@ github.com/pressly/goose/v3 v3.15.1 h1:dKaJ1SdLvS/+HtS8PzFT0KBEtICC1jewLXM+b3eml
 github.com/pressly/goose/v3 v3.15.1/go.mod h1:0E3Yg/+EwYzO6Rz2P98MlClFgIcoujbVRs575yi3iIM=
 github.com/pressly/goose/v3 v3.16.0 h1:xMJUsZdHLqSnCqESyKSqEfcYVYsUuup1nrOhaEFftQg=
 github.com/pressly/goose/v3 v3.16.0/go.mod h1:JwdKVnmCRhnF6XLQs2mHEQtucFD49cQBdRM4UiwkxsM=
+github.com/pressly/goose/v3 v3.17.0 h1:fT4CL3LRm4kfyLuPWzDFAoxjR5ZHjeJ6uQhibQtBaIs=
+github.com/pressly/goose/v3 v3.17.0/go.mod h1:22aw7NpnCPlS86oqkO/+3+o9FuCaJg4ZVWRUO3oGzHQ=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/redis/go-redis/v9 v9.0.3/go.mod h1:WqMKv5vnQbRuZstUwxQI195wHy+t4PuXDOjzMvcuQHk=
 github.com/redis/go-redis/v9 v9.2.1 h1:WlYJg71ODF0dVspZZCpYmoF1+U1Jjk9Rwd7pq6QmlCg=

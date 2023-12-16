@@ -16,7 +16,7 @@ require (
 	github.com/lmittmann/tint v1.0.3
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/pressly/goose/v3 v3.16.0
+	github.com/pressly/goose/v3 v3.17.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.1

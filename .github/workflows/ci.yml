@@ -14,13 +14,13 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: codello/.github/.github/workflows/go-lint.yml@v0
+    uses: codello/.github/.github/workflows/go-lint.yml@v1
     with:
       args: --timeout=5m
 
   unit-test:
     name: Unit Tests
-    uses: codello/.github/.github/workflows/go-test.yml@v0
+    uses: codello/.github/.github/workflows/go-test.yml@v1
     with:
       test-on: ubuntu-latest,ubuntu-20.04,windows-latest,macos-latest
 
@@ -32,7 +32,7 @@ jobs:
 
   build:
     name: Build
-    uses: codello/.github/.github/workflows/go-build.yml@v0
+    uses: codello/.github/.github/workflows/go-build.yml@v1
     with:
       packages: ./cmd/karman
       platforms: linux/amd64,linux/arm64,linux/arm,linux/386,windows/amd64,darwin/amd64,darwin/arm64
@@ -45,7 +45,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: codello/.github/.github/workflows/docker-publish.yml@v0
+    uses: codello/.github/.github/workflows/docker-publish.yml@v1
     with:
       image: ${{ github.repository_owner }}/server
       platforms: linux/amd64,linux/arm64,linux/arm,linux/386

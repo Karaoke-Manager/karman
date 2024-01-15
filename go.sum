@@ -39,6 +39,8 @@ codello.dev/ultrastar v0.0.0-20230902191652-78b46d211dd9 h1:iZ9eI8JnqGc0CNzr8SWZ
 codello.dev/ultrastar v0.0.0-20230902191652-78b46d211dd9/go.mod h1:Piibu8DmxYe4xdx3rNavmJnxCId9rlqrc6V0svnrqvs=
 codello.dev/ultrastar v0.0.0-20231106075130-3362f15f34b7 h1:987uhUKLL3w6zRUL9XF9P44Ae7C67xyd5mT3cwhCs6Q=
 codello.dev/ultrastar v0.0.0-20231106075130-3362f15f34b7/go.mod h1:b9M/ckUKRYkR72FaBhbB65Um7LXGrFAOMs/F5UAbCDo=
+codello.dev/ultrastar v0.0.0-20231228203649-93ceed9ca6b4 h1:tt4lnHzcQ6f64Ub7K3YvQ/PCSjVGHj6mKh99fE8IWdg=
+codello.dev/ultrastar v0.0.0-20231228203649-93ceed9ca6b4/go.mod h1:b9M/ckUKRYkR72FaBhbB65Um7LXGrFAOMs/F5UAbCDo=
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

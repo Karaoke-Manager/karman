@@ -58,7 +58,7 @@ var rootCmd = &cobra.Command{
 	DisableAutoGenTag: true,
 	Args:              cobra.NoArgs,
 	Version:           version,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 		if cmd == versionCmd {
 			// do not load config for version command
 			return nil

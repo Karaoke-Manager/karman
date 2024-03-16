@@ -196,7 +196,7 @@ func Test_dbRepo_CreateError(t *testing.T) {
 	}
 	_, n, err := repo.GetErrors(context.TODO(), upload.UUID, -1, 0)
 	if err != nil {
-		t.Fatalf("CreateError(ctx, ...) succeeded, but GetErrors(ctx, %q, -1, 0) failed with an unexpected error: %s", upload.UUID)
+		t.Fatalf("CreateError(ctx, ...) succeeded, but GetErrors(ctx, %q, -1, 0) failed with an unexpected error: %s", upload.UUID, err)
 	}
 	if n != 1 {
 		t.Errorf("CreateError(ctx, %q, ...) resulted in %d errors, expected %d", upload.UUID, n, 1)

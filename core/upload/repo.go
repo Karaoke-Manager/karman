@@ -203,8 +203,11 @@ func (r *dbRepo) GetErrors(ctx context.Context, id uuid.UUID, limit int, offset 
 
 // ClearErrors deletes all errors associated with the specified upload.
 func (r *dbRepo) ClearErrors(ctx context.Context, upload *model.Upload) (bool, error) {
-	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM upload_errors WHERE upload_id = $1`, upload.UUID)
-	if errors.Is(err, pgx.ErrNoRows) {
+	t, err := r.db.Exec(ctx, `DELETE
+	FROM upload_errors
+	USING uploads
+	WHERE upload_errors.upload_id = uploads.id AND uploads.uuid = $1`, upload.UUID)
+	if t.RowsAffected() == 0 {
 		return false, nil
 	}
 	if err != nil {
@@ -217,8 +220,11 @@ func (r *dbRepo) ClearErrors(ctx context.Context, upload *model.Upload) (bool, e
 
 // ClearSongs deletes all songs associated with the specified upload.
 func (r *dbRepo) ClearSongs(ctx context.Context, upload *model.Upload) (bool, error) {
-	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM songs WHERE upload_id = $1`, upload.UUID)
-	if errors.Is(err, pgx.ErrNoRows) {
+	t, err := r.db.Exec(ctx, `DELETE
+	FROM songs
+	USING uploads
+	WHERE songs.upload_id = uploads.id AND uploads.uuid = $1`, upload.UUID)
+	if t.RowsAffected() == 0 {
 		return false, nil
 	}
 	if err != nil {
@@ -231,8 +237,11 @@ func (r *dbRepo) ClearSongs(ctx context.Context, upload *model.Upload) (bool, er
 
 // ClearFiles deletes all files associated with the specified upload.
 func (r *dbRepo) ClearFiles(ctx context.Context, upload *model.Upload) (bool, error) {
-	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM files WHERE upload_id = $1`, upload.UUID)
-	if errors.Is(err, pgx.ErrNoRows) {
+	t, err := r.db.Exec(ctx, `DELETE
+	FROM files
+	USING uploads
+	WHERE files.upload_id = uploads.id AND uploads.uuid = $1`, upload.UUID)
+	if t.RowsAffected() == 0 {
 		return false, nil
 	}
 	if err != nil {

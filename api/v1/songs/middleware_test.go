@@ -55,7 +55,7 @@ func TestHandler_CheckModify(t *testing.T) {
 	simpleSong := model.Song{Model: model.Model{UUID: uuid.New()}}
 	songWithUpload := model.Song{Model: model.Model{UUID: uuid.New()}, InUpload: true}
 
-	m := h.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m := h.CheckModify(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 

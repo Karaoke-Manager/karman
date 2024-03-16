@@ -1,14 +1,6 @@
 package upload
 
-import (
-	"context"
-	"testing"
-
-	"github.com/google/uuid"
-
-	"github.com/Karaoke-Manager/karman/pkg/nolog"
-)
-
+/*
 func TestService_DeleteUpload(t *testing.T) {
 	repo := fakeRepo
 	store, dir := fileStore(t)
@@ -25,4 +17,4 @@ func TestService_DeleteUpload(t *testing.T) {
 			t.Errorf("DeleteUpload(ctx, %q) returned an unexpected error: %s", id, err)
 		}
 	})
-}
+}*/

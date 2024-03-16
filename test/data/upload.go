@@ -50,7 +50,7 @@ func OpenUpload(t *testing.T, db pgxutil.DB) model.Upload {
 
 // NOpenUploads inserts n new open uploads into the database.
 func NOpenUploads(t *testing.T, db pgxutil.DB, n int) {
-	_, err := db.CopyFrom(context.TODO(), pgx.Identifier{"uploads"}, []string{"open"}, pgx.CopyFromSlice(n, func(i int) ([]any, error) {
+	_, err := db.CopyFrom(context.TODO(), pgx.Identifier{"uploads"}, []string{"open"}, pgx.CopyFromSlice(n, func(_ int) ([]any, error) {
 		return []any{true}, nil
 	}))
 	if err != nil {
@@ -73,7 +73,7 @@ func PendingUpload(t *testing.T, db pgxutil.DB) model.Upload {
 
 // NPendingUploads inserts n pending uploads into the database.
 func NPendingUploads(t *testing.T, db pgxutil.DB, n int) {
-	_, err := db.CopyFrom(context.TODO(), pgx.Identifier{"uploads"}, []string{"open"}, pgx.CopyFromSlice(n, func(i int) ([]any, error) {
+	_, err := db.CopyFrom(context.TODO(), pgx.Identifier{"uploads"}, []string{"open"}, pgx.CopyFromSlice(n, func(_ int) ([]any, error) {
 		return []any{false}, nil
 	}))
 	if err != nil {

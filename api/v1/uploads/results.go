@@ -1,8 +1,9 @@
 package uploads
 
 import (
-	"github.com/lmittmann/tint"
 	"net/http"
+
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"

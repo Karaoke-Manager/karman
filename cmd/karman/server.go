@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgxutil"
 	"log"
 	"log/slog"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgxutil"
 	"github.com/lmittmann/tint"
 	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
@@ -326,12 +326,12 @@ func setupTaskScheduler(redis asynq.RedisConnOpt, cleanup func(func())) (*asynq.
 		Logger:   (*internal.AsynqLogger)(schedulerLogger),
 		LogLevel: internal.AsynqLogLevel(config.Log.Level),
 		Location: time.Local,
-		PreEnqueueFunc: func(task *asynq.Task, opts []asynq.Option) {
+		PreEnqueueFunc: func(task *asynq.Task, _ []asynq.Option) {
 			schedulerLogger.Info("Enqueuing scheduled task.", "task", task.Type())
 		},
 		PostEnqueueFunc: func(info *asynq.TaskInfo, err error) {
 			if err != nil {
-				schedulerLogger.Error("Could not enqueue scheduled task.", tint.Err(err))
+				schedulerLogger.Error("Could not enqueue scheduled task.", "task", info.Type, tint.Err(err))
 			}
 		},
 	})

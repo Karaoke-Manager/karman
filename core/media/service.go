@@ -32,7 +32,7 @@ type service struct {
 	store  Store
 }
 
-// NewService creates a new Service instance using the supplied db and store.
+// NewService creates a new Service instance using the supplied repo and store.
 // The default implementation will store media files in the store as well as in the DB.
 // For each media file there will be an entry in the DB, the actual data however lives in the store.
 func NewService(logger *slog.Logger, repo Repository, store Store) Service {

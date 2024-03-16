@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgxutil"
 
 	"github.com/Karaoke-Manager/karman/model"
+	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
 
 // insertUpload inserts upload into the database.
@@ -127,5 +128,47 @@ func DoneUploadWithErrors(t *testing.T, db pgxutil.DB) model.Upload {
 		t.Fatalf("testdata.DoneUploadWithErrors() could not insert errors into the database: %s", err)
 	}
 	upload.Errors = 2
+	return upload
+}
+
+// DoneUploadWithSongs inserts a new upload in the done state into the database and returns it.
+// The upload has at least one song associated with it.
+func DoneUploadWithSongs(t *testing.T, db pgxutil.DB) model.Upload {
+	upload := model.Upload{
+		State:          model.UploadStateDone,
+		SongsTotal:     2,
+		SongsProcessed: 2,
+	}
+	id, err := insertUpload(db, &upload, nil)
+	if err != nil {
+		t.Fatalf("testdata.DoneUploadWithSongs() could not insert upload into the database: %s", err)
+	}
+	_, err = db.CopyFrom(context.TODO(), pgx.Identifier{"songs"}, []string{"upload_id", "title"}, pgx.CopyFromRows([][]any{
+		{id, "Song 1"},
+		{id, "Song 2"},
+	}))
+	if err != nil {
+		t.Fatalf("testdata.DoneUploadWithSongs() could not insert songs into the database: %s", err)
+	}
+	return upload
+}
+
+func DoneUploadWithFiles(t *testing.T, db pgxutil.DB) model.Upload {
+	upload := model.Upload{
+		State: model.UploadStateDone,
+	}
+	id, err := insertUpload(db, &upload, nil)
+	if err != nil {
+		t.Fatalf("testdata.DoneUploadWithFiles() could not insert upload into the database: %s", err)
+	}
+	_, err = db.CopyFrom(context.TODO(), pgx.Identifier{"files"}, []string{"upload_id", "type", "path"}, pgx.CopyFromRows([][]any{
+		{id, mediatype.AudioMPEG, "/test.mp3"},
+		{id, mediatype.VideoMP4, "/test.mp4"},
+		{id, mediatype.ImageJPEG, "/test.jpg"},
+		{id, mediatype.ImagePNG, "/test.png"},
+	}))
+	if err != nil {
+		t.Fatalf("testdata.DoneUploadWithFiles() could not insert files into the database: %s", err)
+	}
 	return upload
 }

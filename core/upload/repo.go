@@ -123,6 +123,25 @@ func (r *dbRepo) FindUploads(ctx context.Context, limit int, offset int64) ([]mo
 	return uploads, total, nil
 }
 
+// UpdateUpload updates the upload in the database with upload.UUID.
+func (r *dbRepo) UpdateUpload(ctx context.Context, upload *model.Upload) error {
+	updatedAt, err := pgxutil.UpdateRowReturning(ctx, r.db, "uploads", map[string]any{
+		"open":            upload.State == model.UploadStateOpen,
+		"songs_total":     upload.SongsTotal,
+		"songs_processed": upload.SongsProcessed,
+	}, map[string]any{
+		"uuid": upload.UUID,
+	}, "updated_at", pgx.RowTo[time.Time])
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			r.logger.ErrorContext(ctx, "Could not update upload.", "uuid", upload.UUID, tint.Err(err))
+		}
+		return dbutil.Error(err)
+	}
+	upload.UpdatedAt = updatedAt
+	return nil
+}
+
 // DeleteUpload deletes the upload with the specified UUID.
 func (r *dbRepo) DeleteUpload(ctx context.Context, id uuid.UUID) (bool, error) {
 	// TODO: Stop processing
@@ -135,6 +154,22 @@ func (r *dbRepo) DeleteUpload(ctx context.Context, id uuid.UUID) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// CreateError creates a processing error for an upload.
+func (r *dbRepo) CreateError(ctx context.Context, upload *model.Upload, processingError model.UploadProcessingError) error {
+	_, err := pgxutil.ExecRow(ctx, r.db, `INSERT INTO upload_errors (upload_id, file, message)
+		VALUES ((SELECT uploads.id FROM uploads WHERE uuid = $1), $2, $3)`,
+		upload.UUID,
+		processingError.File,
+		processingError.Message,
+	)
+	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not create upload error.", "uuid", upload.UUID, tint.Err(err))
+		return err
+	}
+	upload.Errors++
+	return nil
 }
 
 // GetErrors lists processing errors for an upload with pagination.
@@ -164,4 +199,44 @@ func (r *dbRepo) GetErrors(ctx context.Context, id uuid.UUID, limit int, offset 
 		return nil, row.Total, err
 	}
 	return uploadErrors, row.Total, nil
+}
+
+// ClearErrors deletes all errors associated with the specified upload.
+func (r *dbRepo) ClearErrors(ctx context.Context, upload *model.Upload) (bool, error) {
+	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM upload_errors WHERE upload_id = $1`, upload.UUID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not delete upload errors.", "uuid", upload.UUID, tint.Err(err))
+		return false, err
+	}
+	upload.Errors = 0
+	return true, nil
+}
+
+// ClearSongs deletes all songs associated with the specified upload.
+func (r *dbRepo) ClearSongs(ctx context.Context, upload *model.Upload) (bool, error) {
+	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM songs WHERE upload_id = $1`, upload.UUID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not delete upload songs.", "uuid", upload.UUID, tint.Err(err))
+	}
+	upload.SongsTotal = -1
+	upload.SongsProcessed = 0
+	return true, nil
+}
+
+// ClearFiles deletes all files associated with the specified upload.
+func (r *dbRepo) ClearFiles(ctx context.Context, upload *model.Upload) (bool, error) {
+	_, err := pgxutil.ExecRow(ctx, r.db, `DELETE FROM files WHERE upload_id = $1`, upload.UUID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		r.logger.ErrorContext(ctx, "Could not delete upload files.", "uuid", upload.UUID, tint.Err(err))
+	}
+	return true, nil
 }

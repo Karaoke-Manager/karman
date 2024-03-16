@@ -24,7 +24,8 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	song := model.Song{Song: data}
 	h.songSvc.ParseArtists(r.Context(), &song)
 	if err = h.songRepo.CreateSong(r.Context(), &song); err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not create song.", tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	render.SetStatus(r, http.StatusCreated)
@@ -37,7 +38,8 @@ func (h *Handler) Find(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	songs, total, err := h.songRepo.FindSongs(r.Context(), pagination.Limit, pagination.Offset)
 	if err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not list songs.", "limit", pagination.Limit, "offset", pagination.Offset, tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 
@@ -71,7 +73,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	update.Apply(&song)
 	if err := h.songRepo.UpdateSong(r.Context(), &song); err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not update song.", "uuid", song.UUID, tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	_ = render.NoContent(w, r)
@@ -81,7 +84,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := middleware.MustGetUUID(r.Context())
 	if _, err := h.songRepo.DeleteSong(r.Context(), id); err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not delete song.", "uuid", id, tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	_ = render.NoContent(w, r)

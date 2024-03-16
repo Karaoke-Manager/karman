@@ -50,7 +50,7 @@ type Repository interface {
 
 	// FindOrphanedFiles fetches a list of files that are not associated with a song.
 	// If you pass limit < 0, all orphaned files are returned.
-	FindOrphanedFiles(ctx context.Context, limit int) ([]model.File, error)
+	FindOrphanedFiles(ctx context.Context, limit int64) ([]model.File, error)
 }
 
 // Store is an interface to an underlying storage system used by Karman.

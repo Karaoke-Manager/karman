@@ -10,6 +10,21 @@ import (
 	"github.com/Karaoke-Manager/karman/model"
 )
 
+// Service provides an interface for working with uploads in Karman.
+// An implementation of the Service interface implements the core logic associated with uploads.
+type Service interface {
+	// ProcessUpload analyzes the upload with the specified UUID and creates
+	// files and songs for the files contained in the upload.
+	// Processing an upload resets any previous processing attempts,
+	// thereby deleting any songs and media files associated with the upload.
+	ProcessUpload(ctx context.Context, id uuid.UUID) error
+
+	// DeleteUpload removes the upload with the specified UUID from the database and from the storage system.
+	// Implementations must make sure that a nil value is returned if and only if
+	// the upload was deleted from both the database and the storage system.
+	DeleteUpload(ctx context.Context, id uuid.UUID) error
+}
+
 // Repository provides methods for storing uploads.
 type Repository interface {
 	// CreateUpload creates a new, open upload.
@@ -18,7 +33,7 @@ type Repository interface {
 	CreateUpload(ctx context.Context, upload *model.Upload) error
 
 	// GetUpload fetches the upload with the specified UUID.
-	// If no such upload exists, the error will be common.ErrNotFound.
+	// If no such upload exists, the error will be core.ErrNotFound.
 	GetUpload(ctx context.Context, id uuid.UUID) (model.Upload, error)
 
 	// FindUploads gives a paginated view to all uploads.
@@ -26,13 +41,34 @@ type Repository interface {
 	// This method returns the page contents, the total number of uploads and an error (if one occurred).
 	FindUploads(ctx context.Context, limit int, offset int64) ([]model.Upload, int64, error)
 
+	// UpdateUpload saves updates for the specified upload.
+	// The UUID of the upload must already exist in the database, otherwise e core.ErrNotFound will be returned.
+	UpdateUpload(ctx context.Context, upload *model.Upload) error
+
 	// DeleteUpload deletes the upload with the specified UUID, if it exists.
 	// If no such upload exists, the first return value will be false.
 	DeleteUpload(ctx context.Context, id uuid.UUID) (bool, error)
 
+	// CreateError registers a processing error for an upload.
+	// If creation of the error fails, the return value will be non-nil.
+	CreateError(ctx context.Context, upload *model.Upload, processingError model.UploadProcessingError) error
+
 	// GetErrors returns a paginated list of errors belonging to the upload.
 	// This method is only useful after processing has finished.
 	GetErrors(ctx context.Context, id uuid.UUID, limit int, offset int64) ([]model.UploadProcessingError, int64, error)
+
+	// ClearErrors deletes all errors associated with the specified upload.
+	// If no errors exist or the specified upload does not exist, the first return value will be false.
+	ClearErrors(ctx context.Context, upload *model.Upload) (bool, error)
+
+	// ClearSongs deletes all songs associated with the specified upload.
+	// If no songs exist or the specified upload does not exist, the first return value will be false.
+	ClearSongs(ctx context.Context, upload *model.Upload) (bool, error)
+
+	// ClearFiles deletes all files associated with the specified upload.
+	// If no files exist or the specified upload does not exist, the first return value will be false.
+	// Files will only be deleted from the database. The actual files remain in the filesystem until the upload is deleted.
+	ClearFiles(ctx context.Context, upload *model.Upload) (bool, error)
 }
 
 // Store is an interface used by the upload service to facilitate the actual file storage.
@@ -69,6 +105,10 @@ type Store interface {
 	//
 	// If name is ".", all files for the upload are deleted.
 	Delete(ctx context.Context, upload uuid.UUID, name string) error
+
+	// FS returns a fs.FS instance for the specified upload.
+	// The returned instance is bound to ctx and should not be used after ctx is invalidated or canceled.
+	FS(ctx context.Context, upload uuid.UUID) fs.FS
 }
 
 // Dir represents a directory in a Store.
@@ -87,7 +127,7 @@ type Store interface {
 //
 // After a ReadDir call has returned, you can inspect the current marker using the Marker method.
 type Dir interface {
-	fs.File
+	fs.ReadDirFile
 
 	// Readdir provides the interface for reading directory contents.
 	// In general this method works like os.Readdir, with the following exceptions:

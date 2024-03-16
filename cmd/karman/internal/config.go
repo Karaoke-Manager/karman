@@ -4,6 +4,12 @@ import (
 	"log/slog"
 )
 
+type JobConfig struct {
+	Enabled  bool           `mapstructure:"enabled"`
+	Schedule string         `mapstructure:"schedule"`
+	Config   map[string]any `mapstructure:",remain"`
+}
+
 type Config struct {
 	Debug bool `mapstructure:"debug"`
 	Log   struct {
@@ -24,10 +30,5 @@ type Config struct {
 	Media struct {
 		Dir string `mapstructure:"dir"`
 	} `mapstructure:"media"`
-	Cron struct {
-		PruneFiles struct {
-			Enabled  bool   `mapstructure:"enabled"`
-			Schedule string `mapstructure:"schedule"`
-		} `mapstructure:"prune-files"`
-	} `mapstructure:"cron"`
+	Jobs map[string]JobConfig `mapstructure:"jobs"`
 }

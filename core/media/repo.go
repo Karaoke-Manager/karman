@@ -151,7 +151,7 @@ func (r *dbRepo) DeleteFile(ctx context.Context, id uuid.UUID) (bool, error) {
 }
 
 // FindOrphanedFiles returns a list of files that do not belong to an upload or a song.
-func (r *dbRepo) FindOrphanedFiles(ctx context.Context, limit int) ([]model.File, error) {
+func (r *dbRepo) FindOrphanedFiles(ctx context.Context, limit int64) ([]model.File, error) {
 	files, err := pgxutil.Select(ctx, r.db, `SELECT DISTINCT
     uuid, created_at, updated_at, deleted_at,
     CASE WHEN upload_id IS NULL THEN '' ELSE path END AS path,

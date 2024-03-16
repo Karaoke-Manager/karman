@@ -29,13 +29,13 @@ func (h *Handler) PutFile(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = io.Copy(f, r.Body)
 	if err != nil {
-		h.logger.Error("Writing upload file failed", "uuid", u.UUID, "path", path, tint.Err(err))
+		h.logger.ErrorContext(r.Context(), "Writing upload file failed", "uuid", u.UUID, "path", path, tint.Err(err))
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	err = f.Close()
 	if err != nil {
-		h.logger.Error("Closing upload file failed", "uuid", u.UUID, "path", path, tint.Err(err))
+		h.logger.ErrorContext(r.Context(), "Closing upload file failed", "uuid", u.UUID, "path", path, tint.Err(err))
 		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
@@ -64,7 +64,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 		}
 		dir := f.(upload.Dir)
 		if err = dir.SkipTo(marker); err != nil {
-			h.logger.Error("Could not skip to maker in upload directory.", "uuid", u.UUID, "path", path, "marker", marker, tint.Err(err))
+			h.logger.ErrorContext(r.Context(), "Could not skip to maker in upload directory.", "uuid", u.UUID, "path", path, "marker", marker, tint.Err(err))
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		}
@@ -72,7 +72,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, io.EOF) {
 			marker = ""
 		} else if err != nil {
-			h.logger.Error("Could not list contents of upload directory.", "uuid", u.UUID, "path", path, "marker", marker, tint.Err(err))
+			h.logger.ErrorContext(r.Context(), "Could not list contents of upload directory.", "uuid", u.UUID, "path", path, "marker", marker, tint.Err(err))
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		} else {
@@ -96,7 +96,8 @@ func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.uploadStore.Delete(r.Context(), u.UUID, path); err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not delete file in upload directory.", "uuid", u.UUID, "path", path, tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 	_ = render.NoContent(w, r)

@@ -16,7 +16,7 @@ import (
 	testdata "github.com/Karaoke-Manager/karman/test/data"
 )
 
-func TestService_CreateUpload(t *testing.T) {
+func Test_dbRepo_CreateUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
@@ -35,7 +35,7 @@ func TestService_CreateUpload(t *testing.T) {
 	}
 }
 
-func TestService_GetUpload(t *testing.T) {
+func Test_dbRepo_GetUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
@@ -88,7 +88,7 @@ func TestService_GetUpload(t *testing.T) {
 	})
 }
 
-func TestService_FindUploads(t *testing.T) {
+func Test_dbRepo_FindUploads(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
@@ -109,7 +109,42 @@ func TestService_FindUploads(t *testing.T) {
 	}
 }
 
-func TestService_DeleteUpload(t *testing.T) {
+func Test_dbRepo_UpdateUpload(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+
+	t.Run("fields", func(t *testing.T) {
+		upload := testdata.OpenUpload(t, db)
+		upload.State = model.UploadStateProcessing
+		upload.SongsTotal = 100
+		upload.SongsProcessed = 20
+		oldUpdatedAt := upload.UpdatedAt
+		err := repo.UpdateUpload(context.TODO(), &upload)
+		if err != nil {
+			t.Errorf("UpdateUpload(ctx, &upload) returned an unexpected error: %s", err)
+			return
+		}
+		if upload.UpdatedAt == oldUpdatedAt {
+			t.Errorf("UpdateUpload(ctx, &upload) did not change upload.UpdatedAt, expected change")
+		}
+		if upload.SongsTotal != 100 {
+			t.Errorf("UpdateUpload(ctx, &upload) produced upload.SongsTotal = %d, expected %d", upload.SongsTotal, 100)
+		}
+	})
+
+	t.Run("missing", func(t *testing.T) {
+		upload := model.Upload{}
+		upload.UUID = uuid.New()
+		err := repo.UpdateUpload(context.TODO(), &upload)
+		if !errors.Is(err, core.ErrNotFound) {
+			t.Errorf("UpdateUpload(ctx, &upload) returned an unexpected error: %s, expected ErrNotFound", err)
+		}
+	})
+}
+
+func Test_dbRepo_DeleteUpload(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
@@ -144,7 +179,31 @@ func TestService_DeleteUpload(t *testing.T) {
 	})
 }
 
-func TestService_GetErrors(t *testing.T) {
+func Test_dbRepo_CreateError(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	upload := testdata.ProcessingUpload(t, db)
+
+	err := repo.CreateError(context.TODO(), &upload, model.UploadProcessingError{File: "song.txt", Message: "Invalid Encoding"})
+	if err != nil {
+		t.Errorf("CreateError(ctx, %q, ...) returned an unexpected error: %s", upload.UUID, err)
+		return
+	}
+	if upload.Errors != 1 {
+		t.Errorf("CreateError(ctx, %q, ...) resulted in upload.Errors = %d, expected %d", upload.UUID, upload.Errors, 1)
+	}
+	_, n, err := repo.GetErrors(context.TODO(), upload.UUID, -1, 0)
+	if err != nil {
+		t.Fatalf("CreateError(ctx, ...) succeeded, but GetErrors(ctx, %q, -1, 0) failed with an unexpected error: %s", upload.UUID)
+	}
+	if n != 1 {
+		t.Errorf("CreateError(ctx, %q, ...) resulted in %d errors, expected %d", upload.UUID, n, 1)
+	}
+}
+
+func Test_dbRepo_GetErrors(t *testing.T) {
 	t.Parallel()
 
 	db := test.NewDB(t)
@@ -161,5 +220,77 @@ func TestService_GetErrors(t *testing.T) {
 	}
 	if len(errs) != upload.Errors {
 		t.Errorf("GetErrors(ctx, %q, -1, 0) returned %d errors, expected %d", upload.UUID, len(errs), upload.Errors)
+	}
+}
+
+func Test_dbRepo_ClearErrors(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	upload := testdata.DoneUploadWithErrors(t, db)
+
+	ok, err := repo.ClearErrors(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearErrors(ctx, %q) returned an unexpected error: %s", upload.UUID, err)
+	}
+	if !ok {
+		t.Errorf("ClearErrors(ctx, %q) = %t, nil, expected %t", upload.UUID, ok, true)
+	}
+
+	ok, err = repo.ClearErrors(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearErrors(ctx, %q) [2nd time] returned an unexpected error: %s", upload.UUID, err)
+	}
+	if ok {
+		t.Errorf("ClearErrors(ctx, %q) = %t, nil [2nd ti], expected %t", upload.UUID, ok, false)
+	}
+}
+
+func Test_dbRepo_ClearSongs(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	upload := testdata.DoneUploadWithSongs(t, db)
+
+	ok, err := repo.ClearSongs(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearSongs(ctx, %q) returned an unexpected error: %s", upload.UUID, err)
+	}
+	if !ok {
+		t.Errorf("ClearSongs(ctx, %q) = %t, nil, expected %t", upload.UUID, ok, true)
+	}
+
+	ok, err = repo.ClearSongs(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearSongs(ctx, %q) [2nd time] returned an unexpected error: %s", upload.UUID, err)
+	}
+	if ok {
+		t.Errorf("ClearSongs(ctx, %q) = %t, nil [2nd time], expected %t", upload.UUID, ok, false)
+	}
+}
+
+func Test_dbRepo_ClearFiles(t *testing.T) {
+	t.Parallel()
+
+	db := test.NewDB(t)
+	repo := NewDBRepository(nolog.Logger, db)
+	upload := testdata.DoneUploadWithFiles(t, db)
+
+	ok, err := repo.ClearFiles(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearFiles(ctx, %q) returned an unexpected error: %s", upload.UUID, err)
+	}
+	if !ok {
+		t.Errorf("ClearFiles(ctx, %q) = %t, nil, expected %t", upload.UUID, ok, true)
+	}
+
+	ok, err = repo.ClearFiles(context.TODO(), &upload)
+	if err != nil {
+		t.Errorf("ClearFiles(ctx, %q) [2nd time] returned an unexpected error: %s", upload.UUID, err)
+	}
+	if ok {
+		t.Errorf("ClearFiles(ctx, %q) = %t, nil [2nd time], expected %t", upload.UUID, ok, false)
 	}
 }

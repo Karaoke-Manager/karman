@@ -16,6 +16,38 @@ import (
 	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
 )
 
+var (
+	configFile string          // path to config file as passed via CLI
+	config     internal.Config // parsed config data
+	logger     *slog.Logger    // root logger
+	mainLogger *slog.Logger    // logger for startup and shutdown
+)
+
+// init sets up common flags for all other commands.
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Custom config file")
+
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode.")
+	_ = viper.BindPFlag("debug", rootCmd.Flag("debug"))
+	viper.SetDefault("debug", false)
+
+	rootCmd.PersistentFlags().String("log-level", slog.LevelInfo.String(), "The logging verbosity. Can be set to DEBUG, INFO, WARN, ERROR or an integer where lower numbers mean more logging.")
+	_ = viper.BindPFlag("log.level", rootCmd.Flag("log-level"))
+	viper.SetDefault("log.level", 0)
+
+	rootCmd.PersistentFlags().String("log-format", "text", `Format used for logging. Allowed values are "text" or "json".`)
+	_ = viper.BindPFlag("log.format", rootCmd.Flag("log-format"))
+	viper.SetDefault("log.format", "text")
+
+	rootCmd.PersistentFlags().String("db-url", "", "PostgreSQL Connection String")
+	_ = viper.BindPFlag("db-url", rootCmd.Flag("db-url"))
+	viper.SetDefault("db-url", "")
+
+	rootCmd.PersistentFlags().String("redis-url", "", "Redis Connection String")
+	_ = viper.BindPFlag("redis-url", rootCmd.Flag("redis-url"))
+	viper.SetDefault("redis-url", "")
+}
+
 // rootCmd represents the main "karman" command.
 // The command cannot be executed by itself.
 var rootCmd = &cobra.Command{
@@ -48,38 +80,6 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 }
-
-// init sets up common flags for all other commands.
-func init() {
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Custom config file")
-
-	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode.")
-	_ = viper.BindPFlag("debug", rootCmd.Flag("debug"))
-	viper.SetDefault("debug", false)
-
-	rootCmd.PersistentFlags().String("log-level", slog.LevelInfo.String(), "The logging verbosity. Can be set to DEBUG, INFO, WARN, ERROR or an integer where lower numbers mean more logging.")
-	_ = viper.BindPFlag("log.level", rootCmd.Flag("log-level"))
-	viper.SetDefault("log.level", 0)
-
-	rootCmd.PersistentFlags().String("log-format", "text", `Format used for logging. Allowed values are "text" or "json".`)
-	_ = viper.BindPFlag("log.format", rootCmd.Flag("log-format"))
-	viper.SetDefault("log.format", "text")
-
-	rootCmd.PersistentFlags().String("db-url", "", "PostgreSQL Connection String")
-	_ = viper.BindPFlag("db-url", rootCmd.Flag("db-url"))
-	viper.SetDefault("db-url", "")
-
-	rootCmd.PersistentFlags().String("redis-url", "", "Redis Connection String")
-	_ = viper.BindPFlag("redis-url", rootCmd.Flag("redis-url"))
-	viper.SetDefault("redis-url", "")
-}
-
-var (
-	configFile string          // path to config file as passed via CLI
-	config     internal.Config // parsed config data
-	logger     *slog.Logger    // root logger
-	mainLogger *slog.Logger    // logger for startup and shutdown
-)
 
 // loadConfig parses the configuration file and merges it with configuration data
 // from the environment and CLI flags.

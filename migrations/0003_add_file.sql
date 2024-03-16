@@ -6,7 +6,7 @@ CREATE TABLE files
 (
     LIKE entity INCLUDING ALL,
 
-    upload_id INTEGER REFERENCES uploads (id),
+    upload_id INTEGER REFERENCES uploads (id) ON DELETE CASCADE,
     path      TEXT     NOT NULL DEFAULT '',
 
     type      TEXT     NOT NULL DEFAULT '' CHECK ( type ~* '[^ \/]+\/[^ \/]+' ),

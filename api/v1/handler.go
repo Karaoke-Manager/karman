@@ -7,13 +7,11 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Karaoke-Manager/karman/api/v1/dav"
-	"github.com/Karaoke-Manager/karman/api/v1/jobs"
 	"github.com/Karaoke-Manager/karman/api/v1/songs"
 	"github.com/Karaoke-Manager/karman/api/v1/uploads"
 	"github.com/Karaoke-Manager/karman/core/media"
 	"github.com/Karaoke-Manager/karman/core/song"
 	"github.com/Karaoke-Manager/karman/core/upload"
-	"github.com/Karaoke-Manager/karman/task"
 )
 
 // Handler implements the /v1 API namespace.
@@ -31,7 +29,6 @@ func NewHandler(
 	mediaStore media.Store,
 	uploadRepo upload.Repository,
 	uploadStore upload.Store,
-	cronService task.CronService,
 ) *Handler {
 	uploadsHandler := uploads.NewHandler(
 		logger,
@@ -51,17 +48,12 @@ func NewHandler(
 		songSvc,
 		mediaStore,
 	)
-	jobsHandler := jobs.NewHandler(
-		logger,
-		cronService,
-	)
 
 	r := chi.NewRouter()
 	h := &Handler{r}
 	r.Mount("/uploads", uploadsHandler)
 	r.Mount("/songs", songsHandler)
 	r.Mount("/dav", davHandler)
-	r.Mount("/jobs", jobsHandler)
 	return h
 }
 

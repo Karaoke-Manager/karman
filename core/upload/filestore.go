@@ -131,12 +131,19 @@ func (s *FileStore) Delete(ctx context.Context, upload uuid.UUID, name string) e
 	return nil
 }
 
+// FS returns a fs.FS instance for the specified upload.
+// The returned instance is bound to ctx and should not be used after ctx is invalidated or canceled.
+func (s *FileStore) FS(ctx context.Context, upload uuid.UUID) fs.FS {
+	return &uploadFS{s, ctx, upload}
+}
+
 // folderDir implements the Dir interface for FileStore.
 // The implementation caches the full contents of a directory in order to work on files in alphabetical order.
 type folderDir struct {
 	*os.File // underlying file
 
-	entries []fs.FileInfo // cached entries
+	entries []fs.DirEntry
+	infos   []fs.FileInfo // cached infos
 	marker  string        // current marker
 }
 
@@ -154,15 +161,16 @@ func (d *folderDir) SkipTo(marker string) error {
 	return nil
 }
 
-// Readdir reads n entries from the current marker.
-// If n <= 0, all remaining entries are read and a nil error will be returned.
-// If n > 0 an io.EOF error indicates that all entries have been read.
+// ReadDir reads n fs.DirEntry values from the current marker.
+// If n <= 0, all remaining infos are read and a nil error will be returned.
+// If n > 0 an io.EOF error indicates that all infos have been read.
 //
-// A first call to Readdir will read the entire directory contents into memory.
+// A first call to ReadDir will read the entire directory contents into memory.
 // All subsequent operations only operate on the in-memory data.
-func (d *folderDir) Readdir(n int) ([]fs.FileInfo, error) {
+func (d *folderDir) ReadDir(n int) ([]fs.DirEntry, error) {
+	// TODO: Test for this method
 	if d.entries == nil {
-		entries, err := d.File.Readdir(0)
+		entries, err := d.File.ReadDir(0)
 		if err != nil {
 			return nil, err
 		}
@@ -191,4 +199,43 @@ func (d *folderDir) Readdir(n int) ([]fs.FileInfo, error) {
 		err = io.EOF
 	}
 	return d.entries[start:end], err
+}
+
+// Readdir reads n infos from the current marker.
+// If n <= 0, all remaining infos are read and a nil error will be returned.
+// If n > 0 an io.EOF error indicates that all infos have been read.
+//
+// A first call to Readdir will read the entire directory contents into memory.
+// All subsequent operations only operate on the in-memory data.
+func (d *folderDir) Readdir(n int) ([]fs.FileInfo, error) {
+	if d.infos == nil {
+		entries, err := d.File.Readdir(0)
+		if err != nil {
+			return nil, err
+		}
+		sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
+		d.infos = entries
+	}
+
+	start := 0
+	if d.marker != "" {
+		start = len(d.infos)
+		for i, entry := range d.infos {
+			if entry.Name() > d.marker {
+				start = i
+				break
+			}
+		}
+	}
+	end := min(start+n, len(d.infos))
+	var err error
+	if n <= 0 {
+		end = len(d.infos)
+	}
+	if end > start {
+		d.marker = d.infos[end-1].Name()
+	} else if n > 0 {
+		err = io.EOF
+	}
+	return d.infos[start:end], err
 }

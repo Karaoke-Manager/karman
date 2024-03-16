@@ -1,63 +1,64 @@
+// Package task
+// TODO: Doc: Common errors
 package task
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/hibiken/asynq"
-	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/core/media"
-	"github.com/Karaoke-Manager/karman/task/mediatask"
+	"github.com/Karaoke-Manager/karman/core/upload"
+	"github.com/Karaoke-Manager/karman/task/middleware"
 )
 
-// Handler is the main asynq.Handler.
-// It consists of the sub-handlers for various task areas.
+var (
+	// ErrInvalidPayload indicates that the payload of a task did not correspond to the expected schema.
+	// Tasks with this error will not be retried.
+	ErrInvalidPayload = fmt.Errorf("invalid payload: %w", asynq.SkipRetry)
+)
+
+// Handler implements the asynq.Handler interface.
 type Handler struct {
 	logger *slog.Logger
 	mux    *asynq.ServeMux
+
+	mediaRepo     media.Repository
+	mediaService  media.Service
+	uploadService upload.Service
+	uploadRepo    upload.Repository
+	uploadStore   upload.Store
 }
 
 // NewHandler creates a new Handler instance that can process tasks.
 func NewHandler(
 	logger *slog.Logger,
-	repo media.Repository,
-	store media.Store,
+	mediaRepo media.Repository,
+	mediaService media.Service,
+	uploadService upload.Service,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store,
 ) *Handler {
 	mux := asynq.NewServeMux()
 	h := &Handler{
 		logger,
 		mux,
+		mediaRepo,
+		mediaService,
+		uploadService,
+		uploadRepo,
+		uploadStore,
 	}
-	mux.Use(h.Logger)
-	mux.Handle(mediatask.NewHandler(
-		logger,
-		repo,
-		store,
-	))
+	mux.Use(middleware.Logger(h.logger))
+	mux.HandleFunc(TypePruneMedia, h.HandlePruneMediaTask)
+	mux.HandleFunc(TypePruneUploads, h.HandlePruneUploadsTask)
+	mux.HandleFunc(TypeProcessUpload, h.HandleProcessUploadTask)
 	return h
 }
 
 // ProcessTask begins processing the specified task or returns an error.
 func (h *Handler) ProcessTask(ctx context.Context, task *asynq.Task) error {
 	return h.mux.ProcessTask(ctx, task)
-}
-
-// Logger is a task middleware that prints a log line when a task is started and when a task finishes.
-func (h *Handler) Logger(next asynq.Handler) asynq.Handler {
-	fn := func(ctx context.Context, task *asynq.Task) error {
-		id, _ := asynq.GetTaskID(ctx)
-		queue, _ := asynq.GetQueueName(ctx)
-		retry, _ := asynq.GetRetryCount(ctx)
-		maxRetry, _ := asynq.GetMaxRetry(ctx)
-		h.logger.InfoContext(ctx, "Starting task.", "task", task.Type(), "taskID", id, "queue", queue, "retry", retry, "maxRetry", maxRetry)
-		err := next.ProcessTask(ctx, task)
-		if err != nil {
-			h.logger.WarnContext(ctx, "Task did not complete successfully.", "task", task.Type(), "taskID", id, "queue", queue, "retry", retry, "maxRetry", maxRetry, tint.Err(err))
-		} else {
-			h.logger.InfoContext(ctx, "Task completed successfully.", "task", task.Type(), "taskID", id, "queue", queue, "retry", retry, "maxRetry", maxRetry)
-		}
-		return err
-	}
-	return asynq.HandlerFunc(fn)
 }

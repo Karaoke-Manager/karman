@@ -52,7 +52,7 @@ func (h *Handler) FetchUpload(next http.Handler) http.Handler {
 			_ = render.Render(w, r, apierror.ErrNotFound)
 			return
 		} else if err != nil {
-			h.logger.Error("Could not fetch upload.", "uuid", id, tint.Err(err))
+			h.logger.ErrorContext(r.Context(), "Could not fetch upload.", "uuid", id, tint.Err(err))
 			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		}

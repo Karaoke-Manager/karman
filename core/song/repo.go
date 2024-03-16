@@ -338,7 +338,7 @@ func (r *dbRepo) FindSongs(ctx context.Context, limit int, offset int64) ([]mode
 }
 
 // UpdateSong updates the song in the database with song.UUID.
-// File references must already exist in the database or they will be set to nil.
+// File references must already exist in the database, or they will be set to nil.
 // Data of file references (size, checksum, ...) is not updated.
 func (r *dbRepo) UpdateSong(ctx context.Context, song *model.Song) error {
 	prepareSong(song)

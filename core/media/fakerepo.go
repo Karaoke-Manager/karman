@@ -56,6 +56,6 @@ func (r *fakeRepo) DeleteFile(_ context.Context, id uuid.UUID) (bool, error) {
 }
 
 // FindOrphanedFiles always returns an empty list.
-func (r *fakeRepo) FindOrphanedFiles(_ context.Context, _ int) ([]model.File, error) {
+func (r *fakeRepo) FindOrphanedFiles(_ context.Context, _ int64) ([]model.File, error) {
 	return nil, nil
 }

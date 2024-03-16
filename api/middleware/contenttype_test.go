@@ -54,7 +54,7 @@ func TestRequireContentType(t *testing.T) {
 		}
 		for name, c := range cases {
 			t.Run(name, func(t *testing.T) {
-				h := RequireContentType(c.allowed)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				h := RequireContentType(c.allowed)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					if !c.ok {
 						t.Errorf("RequireContentType(%q) accepted %q, expected reject", c.allowed, c.actual)
 					}

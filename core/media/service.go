@@ -15,9 +15,11 @@ import (
 	"time"
 
 	"github.com/abema/go-mp4" // MP4 support
+	"github.com/google/uuid"
 	"github.com/lmittmann/tint"
 	"github.com/tcolgate/mp3" // MP3 support
 
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/streamio"
@@ -30,7 +32,7 @@ type service struct {
 	store  Store
 }
 
-// NewService creates a new Service instance using the supplied db and store.
+// NewService creates a new Service instance using the supplied repo and store.
 // The default implementation will store media files in the store as well as in the DB.
 // For each media file there will be an entry in the DB, the actual data however lives in the store.
 func NewService(logger *slog.Logger, repo Repository, store Store) Service {
@@ -185,4 +187,22 @@ func (s *service) analyzeVideo(ctx context.Context, r io.Reader, mediaType media
 			}
 		}
 	}
+}
+
+// DeleteFile deletes the file with the specified UUID from the underlying store.
+// If the deletion is successful the file is also deleted from the database.
+func (s *service) DeleteFile(ctx context.Context, id uuid.UUID) error {
+	file, err := s.repo.GetFile(ctx, id)
+	if err != nil && !errors.Is(err, core.ErrNotFound) {
+		return err
+	}
+	if !file.InUpload() {
+		// we do not delete file contents from uploads here.
+		// they will get deleted when the upload is deleted.
+		if _, err = s.store.Delete(ctx, file.Type, id); err != nil {
+			return err
+		}
+	}
+	_, err = s.repo.DeleteFile(ctx, file.UUID)
+	return err
 }

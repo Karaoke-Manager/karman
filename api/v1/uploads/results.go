@@ -3,6 +3,8 @@ package uploads
 import (
 	"net/http"
 
+	"github.com/lmittmann/tint"
+
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
 	"github.com/Karaoke-Manager/karman/api/schema"
@@ -15,7 +17,8 @@ func (h *Handler) GetErrors(w http.ResponseWriter, r *http.Request) {
 	pagination := middleware.MustGetPagination(r.Context())
 	errors, total, err := h.uploadRepo.GetErrors(r.Context(), upload.UUID, pagination.Limit, pagination.Offset)
 	if err != nil {
-		_ = render.Render(w, r, apierror.ServiceError(err))
+		h.logger.ErrorContext(r.Context(), "Could not load upload errors.", "uuid", upload.UUID, "limit", pagination.Limit, "offset", pagination.Offset, tint.Err(err))
+		_ = render.Render(w, r, apierror.ErrInternalServerError)
 		return
 	}
 

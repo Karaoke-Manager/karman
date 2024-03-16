@@ -3,10 +3,17 @@ package media
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
+	"github.com/Karaoke-Manager/karman/core"
+	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 	"github.com/Karaoke-Manager/karman/pkg/nolog"
 	"github.com/Karaoke-Manager/karman/test"
@@ -15,7 +22,6 @@ import (
 func TestService_StoreFile(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	store, _ := fileStore(t)
 	svc := NewService(nolog.Logger, NewFakeRepository(), store)
 
@@ -39,7 +45,7 @@ func TestService_StoreFile(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			f := test.MustOpen(t, fmt.Sprintf("testdata/%s", c.file))
-			file, err := svc.StoreFile(ctx, c.media, f)
+			file, err := svc.StoreFile(context.TODO(), c.media, f)
 			if err != nil {
 				t.Errorf("StoreFile(ctx, %q, f) returned an unexpected error: %s", c.media, err)
 				return
@@ -61,5 +67,32 @@ func TestService_StoreFile(t *testing.T) {
 				t.Errorf("StoreFile(ctx, %q, f) yielded file.Checksum = %s, expected %s", c.media, sum, c.Checksum)
 			}
 		})
+	}
+}
+
+func TestService_DeleteFile(t *testing.T) {
+	t.Parallel()
+
+	store := NewMemStore()
+	repo := NewFakeRepository().(*fakeRepo)
+	svc := NewService(nolog.Logger, repo, store)
+
+	id := uuid.New()
+	w, _ := store.Create(context.TODO(), mediatype.Nil, id)
+	_, _ = io.WriteString(w, "Hello World")
+	_ = w.Close()
+	repo.files[id] = model.File{Model: model.Model{UUID: id}}
+
+	err := svc.DeleteFile(context.TODO(), id)
+	if err != nil {
+		t.Errorf("DeleteFile(ctx, %q) returned an unexpected error: %s", id, err)
+	}
+	_, err = store.Open(context.TODO(), mediatype.Nil, id)
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("DeleteFile(ctx, %q) did not actually delete the file from the store: %s", id, err)
+	}
+	_, err = repo.GetFile(context.TODO(), id)
+	if !errors.Is(err, core.ErrNotFound) {
+		t.Errorf("DeleteFile(ctx, %q) did not actuall delete the file from the database: %s", id, err)
 	}
 }

@@ -79,7 +79,7 @@ func Test_dbRepo_GetSong(t *testing.T) {
 			t.Errorf("GetSong(ctx, %q) returned an unexpected error: %s", existing.UUID, err)
 		}
 		if song.Title != existing.Title {
-			t.Errorf("song.Title = %q, expected %q", song.Title, existing.Title)
+			t.Errorf("GetSong(ctx, %q) produced song.Title = %q, expected %q", existing.UUID, song.Title, existing.Title)
 		}
 	})
 
@@ -89,7 +89,7 @@ func Test_dbRepo_GetSong(t *testing.T) {
 		if err == nil {
 			t.Errorf("GetSong(ctx, %q) did not return an error, expected ErrNotFound", id)
 		} else if !errors.Is(err, core.ErrNotFound) {
-			t.Errorf("GetSong(ctx, %q) returned an unexpected error: %s", id, err)
+			t.Errorf("GetSong(ctx, %q) returned an unexpected error: %s, expected ErrNotFound", id, err)
 		}
 	})
 }

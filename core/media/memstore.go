@@ -47,3 +47,13 @@ func (s *memStore) Open(_ context.Context, _ mediatype.MediaType, id uuid.UUID) 
 	}
 	return io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
+
+// Delete deletes the data for the specified UUID.
+func (s *memStore) Delete(_ context.Context, _ mediatype.MediaType, id uuid.UUID) (bool, error) {
+	_, ok := s.files[id]
+	if !ok {
+		return false, nil
+	}
+	delete(s.files, id)
+	return true, nil
+}

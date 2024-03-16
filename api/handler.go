@@ -25,31 +25,41 @@ type HealthChecker interface {
 	HealthCheck(ctx context.Context) bool
 }
 
-// HealthCheckFunc is a convenience wrapper around HealthChecker.
-type HealthCheckFunc func(ctx context.Context) bool
-
-// HealthCheck invokes f.
-func (f HealthCheckFunc) HealthCheck(ctx context.Context) bool {
-	return f(ctx)
-}
-
 // Handler is the main API handler.
 // This is basically the root entrypoint of the Karman API.
 // All other API endpoints are created as sub-handlers of this controller.
 type Handler struct {
-	r      chi.Router
-	hc     HealthChecker
-	logger *slog.Logger
+	r  chi.Router
+	hc HealthChecker
 }
 
 // NewHandler creates a new Handler instance using the specified dependencies.
 // The injected dependencies are passed along to the sub-handlers.
 // debug indicates whether additional debugging features should be enabled.
-func NewHandler(logger *slog.Logger, hc HealthChecker, songRepo song.Repository, songSvc song.Service, mediaSvc media.Service, mediaStore media.Store, uploadRepo upload.Repository, uploadStore upload.Store, debug bool) *Handler {
+func NewHandler(
+	logger *slog.Logger,
+	requestLogger *slog.Logger,
+	hc HealthChecker,
+	songRepo song.Repository,
+	songSvc song.Service,
+	mediaSvc media.Service,
+	mediaStore media.Store,
+	uploadRepo upload.Repository,
+	uploadStore upload.Store,
+	debug bool,
+) *Handler {
 	r := chi.NewRouter()
-	h := &Handler{r, hc, logger.With("log", "request")}
-	v1Handler := v1.NewHandler(logger, songRepo, songSvc, mediaSvc, mediaStore, uploadRepo, uploadStore)
-	r.Use(middleware.Logger(h.logger))
+	h := &Handler{r, hc}
+	v1Handler := v1.NewHandler(
+		logger,
+		songRepo,
+		songSvc,
+		mediaSvc,
+		mediaStore,
+		uploadRepo,
+		uploadStore,
+	)
+	r.Use(middleware.Logger(requestLogger))
 	r.Use(middleware.Recoverer(logger, debug))
 	// Restrict requests to JSON for now
 	r.Use(chimiddleware.CleanPath)
@@ -84,7 +94,7 @@ func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 // NotFound is an HTTP endpoint that renders a generic 404 Not Found error.
 // This endpoint is the default 404 endpoint for the Handler and its sub-handlers.
 func (*Handler) NotFound(w http.ResponseWriter, r *http.Request) {
-	_ = render.Render(w, r, apierror.ErrNotFound)
+	_ = render.Render(w, r, apierror.ErrRouteNotFound)
 }
 
 // MethodNotAllowed is an HTTP endpoint that renders a generic 405 Method Not Allowed error.

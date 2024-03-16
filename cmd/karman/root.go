@@ -16,38 +16,12 @@ import (
 	"github.com/Karaoke-Manager/karman/cmd/karman/internal"
 )
 
-// rootCmd represents the main "karman" command.
-// The command cannot be executed by itself.
-var rootCmd = &cobra.Command{
-	Use:               "karman",
-	Short:             "Karman - The Karaoke Manager",
-	Long:              `The Karaoke Manager helps you organize your UltraStar Karaoke songs.`,
-	SilenceUsage:      true,
-	DisableAutoGenTag: true,
-	Args:              cobra.NoArgs,
-	Version:           version,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if cmd == versionCmd {
-			// do not load config for version command
-			return nil
-		}
-		if err := loadConfig(); err != nil {
-			return err
-		}
-		if err := setupLogger(); err != nil {
-			return err
-		}
-		if viper.ConfigFileUsed() != "" {
-			mainLogger.Info(fmt.Sprintf("Using configuration file %s.", viper.ConfigFileUsed()))
-		} else {
-			mainLogger.Info("No configuration file found.")
-		}
-		if config.Debug {
-			mainLogger.Warn("Debug mode is enabled.")
-		}
-		return nil
-	},
-}
+var (
+	configFile string          // path to config file as passed via CLI
+	config     internal.Config // parsed config data
+	logger     *slog.Logger    // root logger
+	mainLogger *slog.Logger    // logger for startup and shutdown
+)
 
 // init sets up common flags for all other commands.
 func init() {
@@ -74,38 +48,38 @@ func init() {
 	viper.SetDefault("redis-url", "")
 }
 
-var (
-	// configFile is a path to a config file passed as CLI argument.
-	configFile string
-	// config is the parsed configuration from files, environment and flags.
-	config struct {
-		Debug bool `mapstructure:"debug"`
-		Log   struct {
-			Level  slog.Level `mapstructure:"level"`
-			Format string     `mapstructure:"format"`
-		} `mapstructure:"log"`
-		DBConnection    string `mapstructure:"db-url"`
-		RedisConnection string `mapstructure:"redis-url"`
-		API             struct {
-			Address string `mapstructure:"address"`
-		} `mapstructure:"api"`
-		TaskRunner struct {
-			Workers int `mapstructure:"workers"`
-		} `mapstructure:"task-server"`
-		Uploads struct {
-			Dir string `mapstructure:"dir"`
-		} `mapstructure:"uploads"`
-		Media struct {
-			Dir string `mapstructure:"dir"`
-		} `mapstructure:"media"`
-	}
-)
-
-// logger is the global logger.
-var (
-	logger     *slog.Logger
-	mainLogger *slog.Logger
-)
+// rootCmd represents the main "karman" command.
+// The command cannot be executed by itself.
+var rootCmd = &cobra.Command{
+	Use:               "karman",
+	Short:             "Karman - The Karaoke Manager",
+	Long:              `The Karaoke Manager helps you organize your UltraStar Karaoke songs.`,
+	SilenceUsage:      true,
+	DisableAutoGenTag: true,
+	Args:              cobra.NoArgs,
+	Version:           version,
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		if cmd == versionCmd {
+			// do not load config for version command
+			return nil
+		}
+		if err := loadConfig(); err != nil {
+			return err
+		}
+		if err := setupLogger(); err != nil {
+			return err
+		}
+		if viper.ConfigFileUsed() != "" {
+			mainLogger.Info(fmt.Sprintf("Using configuration file %s.", viper.ConfigFileUsed()))
+		} else {
+			mainLogger.Info("No configuration file found.")
+		}
+		if config.Debug {
+			mainLogger.Warn("Debug mode is enabled.")
+		}
+		return nil
+	},
+}
 
 // loadConfig parses the configuration file and merges it with configuration data
 // from the environment and CLI flags.

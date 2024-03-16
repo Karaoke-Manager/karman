@@ -2,10 +2,14 @@ package songs
 
 import (
 	"context"
+	"errors"
 	"net/http"
+
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
@@ -44,8 +48,12 @@ func (h *Handler) FetchSong(next http.Handler) http.Handler {
 		id := middleware.MustGetUUID(r.Context())
 		// TODO: Maybe support 410 for soft deleted?
 		song, err := h.songRepo.GetSong(r.Context(), id)
-		if err != nil {
-			_ = render.Render(w, r, apierror.ServiceError(err))
+		if errors.Is(err, core.ErrNotFound) {
+			_ = render.Render(w, r, apierror.ErrNotFound)
+			return
+		} else if err != nil {
+			h.logger.Error("Could not fetch song.", "uuid", id, tint.Err(err))
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		}
 		ctx := SetSong(r.Context(), song)

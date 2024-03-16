@@ -28,7 +28,12 @@ type flatFS struct {
 
 // NewFlatFS creates a new [webdav.FileSystem] that serves songs in a flat hierarchy:
 // The root directory contains a folder for each song which in turn contains all the song's files.
-func NewFlatFS(logger *slog.Logger, songRepo songsvc.Repository, songSvc songsvc.Service, mediaStore media.Store) webdav.FileSystem {
+func NewFlatFS(
+	logger *slog.Logger,
+	songRepo songsvc.Repository,
+	songSvc songsvc.Service,
+	mediaStore media.Store,
+) webdav.FileSystem {
 	return &flatFS{logger, songRepo, songSvc, mediaStore}
 }
 

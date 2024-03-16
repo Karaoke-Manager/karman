@@ -26,9 +26,8 @@ type Repository interface {
 	// If no songs match, no error will be returned.
 	FindSongs(ctx context.Context, limit int, offset int64) ([]model.Song, int64, error)
 
-	// UpdateSong saves Updates for the specified song.
-	// The song's UUID must already exist in the database, otherwise e core.ErrNotFound
-	// will be returned.
+	// UpdateSong saves updates for the specified song.
+	// The song's UUID must already exist in the database, otherwise e core.ErrNotFound will be returned.
 	UpdateSong(ctx context.Context, song *model.Song) error
 
 	// DeleteSong deletes the song with the specified UUID.

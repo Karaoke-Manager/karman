@@ -2,14 +2,17 @@ package uploads
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"net/http"
 	"slices"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/lmittmann/tint"
 
 	"github.com/Karaoke-Manager/karman/api/apierror"
 	"github.com/Karaoke-Manager/karman/api/middleware"
+	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
@@ -45,8 +48,12 @@ func (h *Handler) FetchUpload(next http.Handler) http.Handler {
 		id := middleware.MustGetUUID(r.Context())
 		// TODO: Maybe support 410 for soft deleted?
 		upload, err := h.uploadRepo.GetUpload(r.Context(), id)
-		if err != nil {
-			_ = render.Render(w, r, apierror.ServiceError(err))
+		if errors.Is(err, core.ErrNotFound) {
+			_ = render.Render(w, r, apierror.ErrNotFound)
+			return
+		} else if err != nil {
+			h.logger.ErrorContext(r.Context(), "Could not fetch upload.", "uuid", id, tint.Err(err))
+			_ = render.Render(w, r, apierror.ErrInternalServerError)
 			return
 		}
 		ctx := SetUpload(r.Context(), upload)

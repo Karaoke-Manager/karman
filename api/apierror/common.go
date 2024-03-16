@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Karaoke-Manager/karman/core"
 	"github.com/Karaoke-Manager/karman/pkg/render"
 )
 
@@ -66,15 +65,4 @@ func JSONUnmarshalError(err *json.UnmarshalTypeError) *ProblemDetails {
 	return ValidationError(fmt.Sprintf("Expected type %s but got %s.", err.Type.Name(), err.Value), map[string]string{
 		field: fmt.Sprintf("expected type %s, got %s", err.Type.Name(), err.Value),
 	})
-}
-
-// ServiceError generates an error indicating that a service request was not successful.
-// This function maps known errors to their responses.
-func ServiceError(err error) *ProblemDetails {
-	switch {
-	case errors.Is(err, core.ErrNotFound):
-		return ErrNotFound
-	default:
-		return ErrInternalServerError
-	}
 }

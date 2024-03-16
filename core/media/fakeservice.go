@@ -6,6 +6,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Karaoke-Manager/karman/model"
 	"github.com/Karaoke-Manager/karman/pkg/mediatype"
 )
@@ -24,7 +26,7 @@ func NewFakeService(repo Repository) Service {
 
 // StoreFile fully reads r and returns a file with dummy values.
 // file.Type will be set to mediaType.
-func (f *fakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (model.File, error) {
+func (s *fakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaType, r io.Reader) (model.File, error) {
 	h := sha256.New()
 	n, err := io.Copy(h, r)
 	if err != nil {
@@ -38,8 +40,14 @@ func (f *fakeService) StoreFile(ctx context.Context, mediaType mediatype.MediaTy
 		Width:    512,
 		Height:   1089,
 	}
-	if err = f.repo.CreateFile(ctx, &file); err != nil {
+	if err = s.repo.CreateFile(ctx, &file); err != nil {
 		return file, err
 	}
 	return file, nil
+}
+
+// DeleteFile immediately proxies to the underlying store.
+func (s *fakeService) DeleteFile(ctx context.Context, id uuid.UUID) error {
+	_, err := s.repo.DeleteFile(ctx, id)
+	return err
 }

@@ -21,20 +21,41 @@ func NewFakeRepository() Repository {
 }
 
 // CreateFile stores file and sets its UUID, CreatedAt, and UpdatedAt.
-func (f fakeRepo) CreateFile(_ context.Context, file *model.File) error {
+func (r *fakeRepo) CreateFile(_ context.Context, file *model.File) error {
 	file.UUID = uuid.New()
 	file.CreatedAt = time.Now()
 	file.UpdatedAt = file.CreatedAt
-	f.files[file.UUID] = *file
+	r.files[file.UUID] = *file
 	return nil
 }
 
+// GetFile fetches the file with the specified UUID.
+func (r *fakeRepo) GetFile(_ context.Context, id uuid.UUID) (model.File, error) {
+	file, ok := r.files[id]
+	if !ok {
+		return file, core.ErrNotFound
+	}
+	return file, nil
+}
+
 // UpdateFile updates the stored version of file.
-func (f fakeRepo) UpdateFile(_ context.Context, file *model.File) error {
-	if _, ok := f.files[file.UUID]; !ok {
+func (r *fakeRepo) UpdateFile(_ context.Context, file *model.File) error {
+	if _, ok := r.files[file.UUID]; !ok {
 		return core.ErrNotFound
 	}
 	file.UpdatedAt = time.Now()
-	f.files[file.UUID] = *file
+	r.files[file.UUID] = *file
 	return nil
+}
+
+// DeleteFile deletes the file from the repo.
+func (r *fakeRepo) DeleteFile(_ context.Context, id uuid.UUID) (bool, error) {
+	_, ok := r.files[id]
+	delete(r.files, id)
+	return ok, nil
+}
+
+// FindOrphanedFiles always returns an empty list.
+func (r *fakeRepo) FindOrphanedFiles(_ context.Context, _ int64) ([]model.File, error) {
+	return nil, nil
 }

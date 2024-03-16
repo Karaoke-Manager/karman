@@ -99,7 +99,7 @@ func Test_fakeRepo_FindSongs(t *testing.T) {
 	}
 }
 
-func Test_fakeRepo_DeleteSongByUUID(t *testing.T) {
+func Test_fakeRepo_DeleteSong(t *testing.T) {
 	t.Parallel()
 
 	repo := NewFakeRepository()

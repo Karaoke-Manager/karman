@@ -123,6 +123,7 @@ func DefaultRequestContentType(v string) func(next http.Handler) http.Handler {
 			if r.Header.Get("Content-Type") == "" {
 				r.Header.Set("Content-Type", v)
 			}
+			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
 	}
@@ -137,6 +138,7 @@ func SetRequestContentType(v string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			r.Header.Set("Content-Type", v)
+			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)
 	}

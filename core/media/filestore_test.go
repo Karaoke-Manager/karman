@@ -189,3 +189,34 @@ func TestFileStore_Open(t *testing.T) {
 		}
 	})
 }
+
+func TestFileStore_Delete(t *testing.T) {
+	t.Parallel()
+
+	store, dir := fileStore(t)
+	id := uuid.MustParse("9c04D6a5-4848-4d57-b128-e8cd4090089b")
+	path := filepath.Join(dir, "9c", id.String())
+
+	if err := os.Mkdir(filepath.Dir(path), 0770); err != nil {
+		t.Fatalf("could not create directory at %q: %s", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, []byte("Test"), store.FileMode); err != nil {
+		t.Fatalf("could not create file at %q: %s", path, err)
+	}
+
+	ok, err := store.Delete(context.TODO(), mediatype.Nil, id)
+	if err != nil {
+		t.Errorf("Delete(ctx, nil, %q) returned an unexpected error: %s", id, err)
+	}
+	if !ok {
+		t.Errorf("Delete(ctx, nil, %q) = %t, _, expected %t", id, ok, true)
+	}
+	// Repeat delete to test idempotency
+	ok, err = store.Delete(context.TODO(), mediatype.Nil, id)
+	if err != nil {
+		t.Errorf("Delete(ctx, nil, %q) [2nd time] returned an unexpected error: %s", id, err)
+	}
+	if ok {
+		t.Errorf("Delete(ctx, nil, %q) = %t, _ [2nd time], expected %t", id, ok, false)
+	}
+}

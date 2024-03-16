@@ -9,7 +9,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.31.1
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/go-chi/chi/v5 v5.0.12
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/jackc/pgxutil v0.0.0-20231015020832-ec5434149869

@@ -100,7 +100,9 @@ var serverCmd = &cobra.Command{
 		return goose.Up(db, ".")
 	},
 	RunE: func(_ *cobra.Command, _ []string) error {
-		goose.SetLogger(goose.NopLogger())
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
 		cleanups := make([]func(), 0)
 		cleanup := func(close func()) {
 			cleanups = append(cleanups, close)
@@ -127,10 +129,10 @@ var serverCmd = &cobra.Command{
 		}
 		_ = setupAsynqClient(redisConn, cleanup)
 		_ = setupTaskInspector(redisConn, cleanup)
-		if _, err := setupTaskRunner(redisConn, services, cleanup); err != nil {
+		if _, err := setupTaskRunner(redisConn, services, sigs, cleanup); err != nil {
 			return err
 		}
-		if _, err := setupTaskScheduler(redisConn, cleanup); err != nil {
+		if _, err := setupTaskScheduler(redisConn, sigs, cleanup); err != nil {
 			return err
 		}
 		healthService := setupHealthCheck(redisConn, db, cleanup)
@@ -157,7 +159,7 @@ var serverCmd = &cobra.Command{
 			ErrorLog: slog.NewLogLogger(logger.With("log", "http").Handler(), config.Log.Level),
 		}
 
-		go waitForSignal(server)
+		go waitForSignal(sigs, server)
 
 		err = server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -289,7 +291,7 @@ func setupTaskInspector(redisConn asynq.RedisConnOpt, cleanup func(func())) *asy
 }
 
 // setupTaskRunner sets up the task runner that executes background tasks.
-func setupTaskRunner(redisConn asynq.RedisConnOpt, services *coreServices, cleanup func(func())) (*asynq.Server, error) {
+func setupTaskRunner(redisConn asynq.RedisConnOpt, services *coreServices, sig chan<- os.Signal, cleanup func(func())) (*asynq.Server, error) {
 	mainLogger.Info(fmt.Sprintf("Starting task runner with %d workers.", config.TaskRunner.Workers))
 	taskRunner := asynq.NewServer(redisConn, asynq.Config{
 		Concurrency: config.TaskRunner.Workers,
@@ -302,7 +304,7 @@ func setupTaskRunner(redisConn asynq.RedisConnOpt, services *coreServices, clean
 				logger.WarnContext(ctx, "Task failed. Will be retried shortly.", "log", "asynq.server", "task", task.Type(), "retried", retried, "maxRetry", maxRetry, tint.Err(err))
 			}
 		}),
-		Logger:   (*internal.AsynqLogger)(logger.With("log", "asynq.server")),
+		Logger:   &internal.AsynqLogger{Logger: logger.With("log", "asynq.server"), Sig: sig},
 		LogLevel: internal.AsynqLogLevel(config.Log.Level),
 		// We perform a health check on redis explicitly, so we do not need to use the health check of the task runner.
 	})
@@ -319,11 +321,11 @@ func setupTaskRunner(redisConn asynq.RedisConnOpt, services *coreServices, clean
 }
 
 // setupTaskScheduler sets up the task scheduler that creates specific task instances for scheduled tasks.
-func setupTaskScheduler(redis asynq.RedisConnOpt, cleanup func(func())) (*asynq.Scheduler, error) {
+func setupTaskScheduler(redis asynq.RedisConnOpt, sig chan<- os.Signal, cleanup func(func())) (*asynq.Scheduler, error) {
 	mainLogger.Info("Starting task scheduler.")
 	schedulerLogger := logger.With("log", "asynq.scheduler")
 	scheduler := asynq.NewScheduler(redis, &asynq.SchedulerOpts{
-		Logger:   (*internal.AsynqLogger)(schedulerLogger),
+		Logger:   &internal.AsynqLogger{Logger: schedulerLogger, Sig: sig},
 		LogLevel: internal.AsynqLogLevel(config.Log.Level),
 		Location: time.Local,
 		PreEnqueueFunc: func(task *asynq.Task, _ []asynq.Option) {
@@ -367,9 +369,7 @@ func setupHealthCheck(redisConn asynq.RedisConnOpt, db *pgxpool.Pool, cleanup fu
 
 // waitForSignal blocks until the program receives a SIGINT or SIGTERM signal.
 // When a signal is received, the server is closed.
-func waitForSignal(server *http.Server) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+func waitForSignal(sigs <-chan os.Signal, server *http.Server) {
 	sig := <-sigs
 	mainLogger.Warn(fmt.Sprintf("Stop signal %q received. Shutting down...", sig))
 	mainLogger.Info("Stopping HTTP server with 30 second timeout.")

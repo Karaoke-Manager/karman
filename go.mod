@@ -24,7 +24,7 @@ require (
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	github.com/testcontainers/testcontainers-go v0.29.1
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.29.1
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 )
 
 require (

@@ -12,7 +12,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.24.1
-	github.com/jackc/pgx/v5 v5.5.5
+	github.com/jackc/pgx/v5 v5.6.0
 	github.com/jackc/pgxutil v0.0.0-20231015020832-ec5434149869
 	github.com/lmittmann/tint v1.0.4
 	github.com/mattn/go-colorable v0.1.13

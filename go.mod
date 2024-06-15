@@ -19,7 +19,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pressly/goose/v3 v3.19.2
 	github.com/redis/go-redis/v9 v9.5.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	github.com/testcontainers/testcontainers-go v0.30.0

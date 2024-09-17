@@ -12,12 +12,12 @@ require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.24.1
-	github.com/jackc/pgx/v5 v5.6.0
+	github.com/jackc/pgx/v5 v5.7.1
 	github.com/jackc/pgxutil v0.0.0-20231015020832-ec5434149869
 	github.com/lmittmann/tint v1.0.5
 	github.com/mattn/go-colorable v0.1.13
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/pressly/goose/v3 v3.22.0
+	github.com/pressly/goose/v3 v3.22.1
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
@@ -54,8 +54,8 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/lufia/plan9stats v0.0.0-20231016141302-07b5767bb0ed // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -101,7 +101,7 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240314234333-6e1732d8331c // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

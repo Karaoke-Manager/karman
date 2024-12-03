@@ -1,6 +1,6 @@
 module github.com/Karaoke-Manager/karman
 
-go 1.23.3
+go 1.23.4
 
 require (
 	codello.dev/ultrastar v0.0.0-20231106075130-3362f15f34b7

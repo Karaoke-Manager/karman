@@ -1,6 +1,6 @@
 module github.com/Karaoke-Manager/karman
 
-go 1.23.3
+go 1.24
 
 require (
 	codello.dev/ultrastar v0.0.0-20231106075130-3362f15f34b7
@@ -9,7 +9,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/brianvoe/gofakeit/v7 v7.0.4
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.4.0
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.24.1
 	github.com/jackc/pgx/v5 v5.7.1
